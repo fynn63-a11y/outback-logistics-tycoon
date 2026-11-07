@@ -12,6 +12,14 @@ public class Game
     public bool IpoDone = false;
     public double SharePrice = 0;
     public bool GameOver = false;
+    public string Weather = "Sonne";
+    public int WeatherDays = 7;
+    public int TradeDealDays = 0, EmbargoDays = 0, PressDays = 0;
+    public int InsuranceTier = 0;
+    public double CnyHoldings = 0, CnyAvgRate = 0;
+    public double FxCny = 0.21;
+    public readonly Dictionary<string, int> Marketing = new();
+    public readonly Dictionary<string, int> ZoneAssignment = new();
     public bool Sandbox = false;
     public string CompanyName = "Outback Logistics";
     public string SelectedCity = "Sydney";
@@ -110,13 +118,29 @@ public class Game
         double rival = Math.Max(0.35, 1 - RivalShare);
         double era = 1 + Era * 0.35;
         var server = SitesIn(c.Name).FirstOrDefault(s => s.Operational);
-        double service = server != null ? (ServiceLevel)server.Service switch { ServiceLevel.SameDay => 1.35, ServiceLevel.NextDay => 1.15, _ => 1.0 } : 0.4;
-        return base_ * prime * Seasonality * pd * rep * rival * era * service;
+        if (ZoneAssignment.TryGetValue(c.Name, out int sid))
+            server = Sites.FirstOrDefault(x => x.Id == sid && x.Operational) ?? server;
+        double service = server != null ? server.Service switch { ServiceLevel.SameDay => 1.35, ServiceLevel.NextDay => 1.15, _ => 1.0 } : 0.4;
+        double weatherF = Weather is "Duerre" or "Hitzewelle" ? ((sku.Category == Category.Fmcg || sku.Category == Category.ColdChain) ? 1.2 : 0.9) : Weather == "Zyklon" ? 0.8 : Weather == "Regen" ? 0.95 : 1.0;
+        double mkt = 1 + Math.Min(0.5, (Marketing.GetValueOrDefault("TV") * 0.05 + Marketing.GetValueOrDefault("Online") * 0.08 + Marketing.GetValueOrDefault("Plakat") * 0.02) * (0.5 + c.PopMillions * 0.1));
+        double press = PressDays > 0 ? 0.97 : 1.0;
+        return base_ * prime * Seasonality * pd * rep * rival * era * service * weatherF * mkt * press;
     }
+
+    public double PowerProduced { get { double p = 500; foreach (var s in Sites) if (s.Type == SiteType.DataCenter && s.Operational) p += 2000.0 * s.Level; return p; } }
+    public double PowerUsed => Sites.Sum(s => s.Throughput(this) > 0 ? 50 : 0) + Sites.Sum(s => s.Level * 10);
+    public bool PowerShortage() => PowerUsed > PowerProduced;
 
     public void Tick()
     {
         Day++;
+        if (--WeatherDays <= 0) { WeatherDays = 7; Weather = new[]{"Sonne","Regen","Duerre","Zyklon","Hitzewelle"}[new Random().Next(5)]; Alert("Wetter: " + Weather); }
+        if (TradeDealDays > 0) TradeDealDays--;
+        if (EmbargoDays > 0) EmbargoDays--;
+        if (PressDays > 0) PressDays--;
+        if (new Random().NextDouble() < 0.01) { TradeDealDays = new Random().Next(2) == 0 ? 60 : 0; EmbargoDays = TradeDealDays == 0 && new Random().Next(2) == 0 ? 60 : 0; Alert(TradeDealDays > 0 ? "Handelsabkommen China (-10% Import)" : EmbargoDays > 0 ? "EMBARGO (+25% Import)" : "Diplomatie ruhig"); }
+        if (new Random().NextDouble() < 0.01) { PressDays = 3; Reputation = Math.Max(0, Reputation - 3); Alert("Negative Presse! -3% Nachfrage 3 Tage."); }
+        if (Rivals.Count == 0 && Day > 30 && new Random().NextDouble() < 0.01) { Cash -= 5_000_000; Reputation = Math.Max(0, Reputation - 15); Alert("KARTELLVERFAHREN: -5 Mio., Rep -15."); }
         if (PrimeDayLeft > 0) PrimeDayLeft--;
         else if (--PrimeDayIn <= 0) { PrimeDayLeft = 3; PrimeDayIn = 90; Alert("PRIMO DAY! Traffic x3.5 für 3 Tage."); }
 
@@ -146,6 +170,7 @@ public class Game
         Cash += revenue - costs;
         LastRevenue = revenue; LastCosts = costs;
         ResearchPoints += Developers * 2;
+        FxCny = Math.Clamp(FxCny * (1 + (new Random().NextDouble() - 0.5) * 0.02), 0.15, 0.30);
         Morale += (70 - Morale) * 0.01;
         foreach (var r in Rivals) r.MarketShare = Math.Clamp(r.MarketShare + 0.001 * r.Aggression, 0.02, 0.35);
         if (IpoDone) SharePrice = Math.Max(1, SharePrice * (1 + (revenue - costs) / 1_000_000.0 * 0.05));

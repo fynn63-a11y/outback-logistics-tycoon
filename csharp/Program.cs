@@ -10,6 +10,7 @@ public static class Program
         var name = Console.ReadLine();
         if (!string.IsNullOrWhiteSpace(name)) g.CompanyName = name.Trim();
         g.Sandbox = args.Contains("--sandbox");
+        
         Console.WriteLine($"Firma '{g.CompanyName}' gegründet. Befehle: status | day [n] | build <typ> | city <name> | tech | research <nr> | ipo | zones | save | load | alerts | quit");
         var rnd = new Random();
         while (!g.GameOver)
@@ -51,6 +52,19 @@ public static class Program
                         if (p.Length > 1 && int.TryParse(p[1], out var ti) && ti >= 0 && ti < Game.Techs.Length) g.Research(Game.Techs[ti]);
                         break;
                     case "dev": g.Developers++; break;
+                    case "service":
+                        if (p.Length > 2 && int.TryParse(p[1], out var si)) { var st = g.Sites.FirstOrDefault(x => x.Id == si); if (st != null && st.Service < ServiceLevel.SameDay) { st.Service++; Alert($"#{si} Service -> {st.Service}"); } }
+                        break;
+                    case "zone":
+                        if (p.Length > 2 && int.TryParse(p[2], out var zi)) g.ZoneAssignment[p[1]] = zi;
+                        Console.WriteLine("Zonen: " + string.Join(", ", g.ZoneAssignment.Select(kv => kv.Key + "->#" + kv.Value)));
+                        break;
+                    case "mkt":
+                        if (p.Length > 1) { int l = g.Marketing.GetValueOrDefault(p[1]); if (g.Charge(50_000.0 * (l + 1))) g.Marketing[p[1]] = l + 1; }
+                        break;
+                    case "fxbuy": g.CnyHoldings += 100_000 / g.FxCny; g.CnyAvgRate = g.FxCny; Alert("CNY gekauft zu " + g.FxCny); break;
+                    case "fxsell": { double proceeds = g.CnyHoldings * g.FxCny; g.Cash += proceeds; Alert($"CNY verkauft für {proceeds:N0} AUD (P/L {proceeds - g.CnyHoldings * g.CnyAvgRate:+N0})"); g.CnyHoldings = 0; break; }
+                    case "ins": g.InsuranceTier = p.Length > 1 ? int.Parse(p[1]) : 1; break;
                     case "ipo": g.DoIpo(); break;
                     case "alerts": foreach (var a in g.Alerts.Take(15)) Console.WriteLine("  " + a); break;
                     case "sandbox": g.Sandbox = !g.Sandbox; Console.WriteLine("Sandbox: " + g.Sandbox); break;
