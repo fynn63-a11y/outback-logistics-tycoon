@@ -73,9 +73,16 @@ public class MainWindow extends JFrame {
         Timer uiTimer = new Timer(200, e -> refresh());
         uiTimer.start();
 
-        if (game.settingFullscreen) {
-            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-            if (gd.isFullScreenSupported()) gd.setFullScreenWindow(this);
+        applyFullscreen();
+    }
+
+    public void applyFullscreen() {
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        if (game.settingFullscreen && gd.isFullScreenSupported()) {
+            gd.setFullScreenWindow(this);
+        } else {
+            gd.setFullScreenWindow(null);
+            setExtendedState(MAXIMIZED_BOTH);
         }
     }
 
@@ -228,11 +235,8 @@ public class MainWindow extends JFrame {
         int r = JOptionPane.showConfirmDialog(this, p, "Einstellungen", JOptionPane.OK_CANCEL_OPTION);
         if (r == JOptionPane.OK_OPTION) {
             game.settingFullscreen = fs.isSelected();
-            if (fs.isSelected()) {
-                GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-                if (gd.isFullScreenSupported()) gd.setFullScreenWindow(this);
-            } else {
-                GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(null);
+            applyFullscreen();
+            if (!fs.isSelected()) {
                 setSize(1280, 800);
                 setLocationRelativeTo(null);
             }

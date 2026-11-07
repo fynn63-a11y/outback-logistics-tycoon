@@ -214,6 +214,7 @@ public class MicroPanel extends JPanel {
                     }
                 }
             }
+            drawWarehouseFx(g, s, t, tw, th);
             if (hover != null && !eraseMode && s.grid[hover[0]][hover[1]] == null) {
                 int cx = originX() + (hover[0] - hover[1]) * tw / 2;
                 int cy = originY() + (hover[0] + hover[1]) * th / 2;
@@ -223,6 +224,36 @@ public class MicroPanel extends JPanel {
                 g.setColor(new Color(255, 255, 255, 160));
                 g.drawPolygon(new int[]{cx, cx + tw / 3, cx, cx - tw / 3},
                         new int[]{cy - th - th / 3, cy - th, cy - th + th / 3, cy - th}, 4);
+            }
+        }
+
+        private void drawWarehouseFx(Graphics2D g, Site s, long t, int tw, int th) {
+            int robots = 0;
+            for (int x = 0; x < Site.GRID; x++)
+                for (int y = 0; y < Site.GRID; y++)
+                    if (s.grid[x][y] == MachineType.ROBOT) robots++;
+            for (int i = 0; i < Math.min(3, robots); i++) {
+                int row = 4 + i * 6;
+                double p = ((t / 1600.0) + i * 0.37) % 2.0;
+                if (p > 1.0) p = 2.0 - p;
+                int bx = originX() + (int) ((p - 0.5) * 2 * Site.GRID * tw / 2);
+                int by = originY() + (row + row) * th / 2;
+                g.setColor(new Color(255, 150, 40));
+                g.fillRoundRect(bx - 5, by - 4, 10, 8, 3, 3);
+                g.setColor(Color.BLACK);
+                g.drawRoundRect(bx - 5, by - 4, 10, 8, 3, 3);
+                g.setColor(new Color(255, 255, 255));
+                g.fillRect(bx - 2, by - 2, 4, 3);
+            }
+            for (int x = 0; x < Site.GRID; x++) {
+                for (int y = 0; y < Site.GRID; y++) {
+                    if (s.grid[x][y] == null) continue;
+                    int cx = originX() + (x - y) * tw / 2;
+                    int cy = originY() + (x + y) * th / 2 - th;
+                    double blink = 0.25 + 0.75 * Math.abs(Math.sin(t / 350.0 + x * 1.7 + y * 2.3));
+                    g.setColor(new Color(120, 255, 140, (int) (blink * 220)));
+                    g.fillOval(cx + tw / 4 - 2, cy - 3, 4, 4);
+                }
             }
         }
 
