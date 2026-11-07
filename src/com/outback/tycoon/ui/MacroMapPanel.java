@@ -166,15 +166,16 @@ public class MacroMapPanel extends JPanel {
                     return;
                 }
                 if (nearest != null) {
-                    game.selectedCity = nearest.name;
-                    boolean terminal = game.hasContainerTerminal(nearest.name);
-                    long ships = game.shipments.stream().filter(sh -> sh.destCity.equals(nearest.name)).count();
+                    final City clicked = nearest;
+                    game.selectedCity = clicked.name;
+                    boolean terminal = game.hasContainerTerminal(clicked.name);
+                    long ships = game.shipments.stream().filter(sh -> sh.destCity.equals(clicked.name)).count();
                     if (terminal || ships > 0) {
                         JOptionPane.showMessageDialog(MacroMapPanel.this,
-                                "HAFEN " + nearest.name + ":\nContainer-Terminal: " + (terminal ? "vorhanden (Stau-Schwelle erhöht)" : "nein")
+                                "HAFEN " + clicked.name + ":\nContainer-Terminal: " + (terminal ? "vorhanden (Stau-Schwelle erhöht)" : "nein")
                                         + "\nAktive Seefrachten: " + ships
-                                        + "\nGesperrt (Katastrophe): " + (game.blockedCities.containsKey(nearest.name) ? "JA (" + game.blockedCities.get(nearest.name) + " Tage)" : "nein"),
-                                "Hafen-Info " + nearest.name, JOptionPane.INFORMATION_MESSAGE);
+                                        + "\nGesperrt (Katastrophe): " + (game.blockedCities.containsKey(clicked.name) ? "JA (" + game.blockedCities.get(clicked.name) + " Tage)" : "nein"),
+                                "Hafen-Info " + clicked.name, JOptionPane.INFORMATION_MESSAGE);
                     }
                     window.openMeso();
                 }
