@@ -288,6 +288,8 @@ public class MacroMapPanel extends JPanel {
             renderTerrain(g, au, 37);
         }
         drawRiversAndLakes(g);
+        drawNetwork(g, ROADS, new Color(120, 120, 128), 6f, false);
+        drawNetwork(g, RAILS, new Color(40, 36, 34), 5f, true);
         provinces(g, au);
 
         g.setColor(new Color(200, 225, 255, 70));
@@ -357,6 +359,24 @@ public class MacroMapPanel extends JPanel {
             new double[][]{{115.5,-26.0},{117.5,-24.5},{119.5,-23.0}}, // Gascoyne
             new double[][]{{151.0,-33.8},{150.5,-32.0}}, // Hawkesbury
     };
+    private static final String[][] ROADS = {
+            new[]{"Brisbane", "Sydney"}, new[]{"Sydney", "Melbourne"}, new[]{"Sydney", "Newcastle"},
+            new[]{"Melbourne", "Adelaide"}, new[]{"Adelaide", "Perth"}, new[]{"Adelaide", "Alice Springs"},
+            new[]{"Alice Springs", "Darwin"}, new[]{"Darwin", "Cairns"}, new[]{"Brisbane", "Cairns"},
+            new[]{"Perth", "Kalgoorlie"}, new[]{"Sydney", "Canberra"}, new[]{"Brisbane", "Gold Coast"},
+            new[]{"Melbourne", "Geelong"}, new[]{"Adelaide", "Whyalla"}, new[]{"Cairns", "Townsville"},
+    };
+    private static final String[][] RAILS = {
+            new[]{"Sydney", "Melbourne"}, new[]{"Melbourne", "Adelaide"}, new[]{"Adelaide", "Alice Springs"},
+            new[]{"Alice Springs", "Darwin"}, new[]{"Sydney", "Brisbane"}, new[]{"Brisbane", "Cairns"},
+            new[]{"Perth", "Kalgoorlie"},
+    };
+    private static final String[][] AIRROUTES = {
+            new[]{"Sydney", "Melbourne"}, new[]{"Sydney", "Brisbane"}, new[]{"Sydney", "Perth"},
+            new[]{"Sydney", "Adelaide"}, new[]{"Melbourne", "Perth"}, new[]{"Brisbane", "Cairns"},
+            new[]{"Perth", "Darwin"}, new[]{"Melbourne", "Adelaide"},
+    };
+
     private static final double[][] LAKES = {
             new double[]{135.9, -28.5}, new double[]{135.0, -30.5}, // Lake Eyre North/South
             new double[]{141.5, -31.5}, // Lake Torrens-Region
@@ -377,6 +397,25 @@ public class MacroMapPanel extends JPanel {
         for (double[] lake : LAKES) {
             g.fillOval(px(lake[0]) - 14, py(lake[1]) - 8, 28, 16);
         }
+    }
+
+    private void drawNetwork(Graphics2D g, String[][] edges, Color c, float w, boolean rail) {
+        g.setColor(c);
+        g.setStroke(rail ? new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10f, new float[]{12f, 8f}, 0f) : new BasicStroke(w, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        for (String[] e : edges) {
+            City a = game.cityByName(e[0]);
+            City b = game.cityByName(e[1]);
+            int x1 = px((a.mapX * 360 - 180));
+            int y1 = py(90 - a.mapY * 180);
+            int x2 = px((b.mapX * 360 - 180));
+            int y2 = py(90 - b.mapY * 180);
+            g.drawLine(x1, y1, x2, y2);
+        }
+        g.setStroke(new BasicStroke(1f));
+    }
+
+    private int[] cityScreen(City c, int[] o, double s) {
+        return new int[]{(int) (o[0] + c.mapX * VW * s), (int) (o[1] + c.mapY * VH * s)};
     }
 
     private void renderTerrain(Graphics2D g, Path2D.Double land, long seed) {
@@ -651,9 +690,42 @@ public class MacroMapPanel extends JPanel {
             g.fillOval(tx + 3, ty + 4, 3, 3);
         }
 
+        java.util.Random rr = new java.util.Random(7);
+        for (int i = 0; i < 4; i++) {
+            String[] e = ROADS[rr.Next(ROADS.Length)];
+            City a = game.cityByName(e[0]);
+            City b = game.cityByName(e[1]);
+            double p = (t * 0.00006 * (1 + i * 0.3) + i * 0.31) % 1.0;
+            int[] pa = cityScreen(a, o, s);
+            int[] pb = cityScreen(b, o, s);
+            int tx = (int) (pa[0] + (pb[0] - pa[0]) * p);
+            int ty = (int) (pa[1] + (pb[1] - pa[1]) * p);
+            g.setColor(new Color(255, 215, 80));
+            g.fillRect(tx - 5, ty - 3, 10, 6);
+            g.setColor(Color.BLACK);
+            g.fillOval(tx - 3, ty + 3, 3, 3);
+            g.fillOval(tx + 2, ty + 3, 3, 3);
+        }
+        for (int i = 0; i < 2; i++) {
+            String[] e = RAILS[rr.Next(RAILS.Length)];
+            City a = game.cityByName(e[0]);
+            City b = game.cityByName(e[1]);
+            double p = (t * 0.00004 * (1 + i * 0.5) + i * 0.5) % 1.0;
+            int[] pa = cityScreen(a, o, s);
+            int[] pb = cityScreen(b, o, s);
+            int tx = (int) (pa[0] + (pb[0] - pa[0]) * p);
+            int ty = (int) (pa[1] + (pb[1] - pa[1]) * p);
+            g.setColor(new Color(200, 60, 50));
+            g.fillRect(tx - 8, ty - 3, 16, 6);
+            g.setColor(Color.BLACK);
+            g.fillRect(tx - 8, ty + 3, 16, 2);
+        }
         drawPlane(g, o, s, game.cityByName("Sydney"), game.cityByName("Perth"), t, 0.0006);
         drawPlane(g, o, s, game.cityByName("Sydney"),
                 new City("Shenzhen", "China", "Asien", 17_000_000, 0.5, SHENZHEN_X, SHENZHEN_Y), t, 0.00055);
+        for (int i = 0; i < AIRROUTES.length; i++) {
+            drawPlane(g, o, s, game.cityByName(AIRROUTES[i][0]), game.cityByName(AIRROUTES[i][1]), t, 0.00025 + i * 0.00007);
+        }
     }
 
     private void drawPlane(Graphics2D g, int[] o, double s, City a, City b, long t, double speed) {
