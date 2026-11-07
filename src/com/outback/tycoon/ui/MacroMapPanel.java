@@ -692,7 +692,7 @@ public class MacroMapPanel extends JPanel {
 
         java.util.Random rr = new java.util.Random(7);
         for (int i = 0; i < 4; i++) {
-            String[] e = ROADS[rr.Next(ROADS.Length)];
+            String[] e = ROADS[rr.Next(ROADS.length)];
             City a = game.cityByName(e[0]);
             City b = game.cityByName(e[1]);
             double p = (t * 0.00006 * (1 + i * 0.3) + i * 0.31) % 1.0;
@@ -707,7 +707,7 @@ public class MacroMapPanel extends JPanel {
             g.fillOval(tx + 2, ty + 3, 3, 3);
         }
         for (int i = 0; i < 2; i++) {
-            String[] e = RAILS[rr.Next(RAILS.Length)];
+            String[] e = RAILS[rr.Next(RAILS.length)];
             City a = game.cityByName(e[0]);
             City b = game.cityByName(e[1]);
             double p = (t * 0.00004 * (1 + i * 0.5) + i * 0.5) % 1.0;
