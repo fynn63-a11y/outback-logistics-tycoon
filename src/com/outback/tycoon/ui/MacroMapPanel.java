@@ -41,6 +41,7 @@ public class MacroMapPanel extends JPanel {
     private int mouseX = -1;
     private int mouseY = -1;
     private String regionView = "Australien";
+    private boolean view3D = false;
     private final JComboBox<String> regionBox;
 
     public MacroMapPanel(Game game, MainWindow window) {
@@ -57,6 +58,13 @@ public class MacroMapPanel extends JPanel {
         top.setOpaque(false);
         top.add(new JLabel("Ansicht:"));
         top.add(regionBox);
+        JButton view3dBtn = new JButton("3D-Ansicht: aus");
+        view3dBtn.addActionListener(e -> {
+            view3D = !view3D;
+            view3dBtn.setText("3D-Ansicht: " + (view3D ? "an" : "aus"));
+            repaint();
+        });
+        top.add(view3dBtn);
         add(top, BorderLayout.NORTH);
 
         addMouseMotionListener(new MouseAdapter() {
@@ -137,10 +145,28 @@ public class MacroMapPanel extends JPanel {
         return new int[]{ox, oy};
     }
 
-    private int[] toVirtual(int mx, int my) {
+    private java.awt.geom.AffineTransform viewTransform() {
         int[] o = viewOffset();
         double s = viewScale();
-        return new int[]{(int) ((mx - o[0]) / s), (int) ((my - o[1]) / s)};
+        java.awt.geom.AffineTransform t = new java.awt.geom.AffineTransform();
+        t.translate(o[0], o[1]);
+        if (view3D) {
+            t.scale(s, s * 0.60);
+            t.shear(0.22, 0);
+        } else {
+            t.scale(s, s);
+        }
+        return t;
+    }
+
+    private int[] toVirtual(int mx, int my) {
+        try {
+            java.awt.geom.AffineTransform inv = viewTransform().createInverse();
+            java.awt.geom.Point2D p = inv.transform(new java.awt.geom.Point2D.Double(mx, my), null);
+            return new int[]{(int) p.getX(), (int) p.getY()};
+        } catch (Exception e) {
+            return new int[]{mx, my};
+        }
     }
 
     private static Color terrainColor(double h) {
@@ -241,10 +267,7 @@ public class MacroMapPanel extends JPanel {
         if (baseCache == null) renderBase();
         Graphics2D g = (Graphics2D) g0;
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        int[] o = viewOffset();
-        double s = viewScale();
-        g.translate(o[0], o[1]);
-        g.scale(s, s);
+        g.transform(viewTransform());
         g.drawImage(baseCache, 0, 0, null);
 
         drawTopBar(g);
