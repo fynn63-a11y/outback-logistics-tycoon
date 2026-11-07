@@ -33,7 +33,10 @@ public class CompanyPanel extends JPanel {
         root.add(loan);
         root.add(label(String.format("Letzter Tag: Umsatz %,.0f AUD, Kosten %,.0f AUD, Saldo %,.0f AUD",
                 game.lastDailyRevenue, game.lastDailyCosts, game.lastDailyRevenue - game.lastDailyCosts)));
-        root.add(label(String.format("Marktkapitalisierung (Schätzung): %,.0f AUD", game.marketCapEstimate())));
+        root.add(label(String.format("Marktkapitalisierung: %,.0f AUD%s", game.marketCapEstimate(),
+                game.ipoDone ? String.format(" (Aktienkurs %.2f AUD x %d Mio. Aktien)", game.sharePrice, Game.SHARES / 1_000_000) : " (Schätzung)")));
+        root.add(label("Epoche: " + game.eraName() + " | Szenario: " + game.scenario.label
+                + (game.won ? " | SIEG!" : "")));
         root.add(label(String.format("Netzwerk-Durchsatz: %.0f Einheiten/Tag | Serverkapazität: %.0f", game.networkThroughput(), game.serverCapacity())));
         root.add(label("Aktive Seefrachten: " + game.shipments.size()));
 
@@ -46,6 +49,31 @@ public class CompanyPanel extends JPanel {
             refresh();
         });
         root.add(ipo);
+        root.add(Box.createVerticalStrut(10));
+
+        root.add(section("Flotte & Letzte Meile (Stadt: " + game.selectedCity + ")"));
+        JPanel fleetRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton truck = new JButton("LKW kaufen (80.000 AUD)");
+        truck.addActionListener(e -> {
+            game.buyTruck();
+            refresh();
+        });
+        JButton van = new JButton("Transporter kaufen (30.000 AUD)");
+        van.addActionListener(e -> {
+            game.buyVan();
+            refresh();
+        });
+        JCheckBox lastMile = new JCheckBox("Eigener Zustelldienst (Letzte Meile)", game.ownLastMile);
+        lastMile.addActionListener(e -> game.ownLastMile = lastMile.isSelected());
+        fleetRow.add(truck);
+        fleetRow.add(van);
+        fleetRow.add(lastMile);
+        root.add(fleetRow);
+        root.add(label("LKW in " + game.selectedCity + ": " + game.trucks.getOrDefault(game.selectedCity, 0)
+                + " | Transporter: " + game.vans.getOrDefault(game.selectedCity, 0)));
+        root.add(label(game.researched.contains(com.outback.tycoon.model.Tech.AWS_CLOUD)
+                ? "AWS WebServices aktiv: passive Einnahmen + Webshop-Bonus x1.15 + FBA +20%"
+                : "AWS WebServices noch nicht erforscht (Techbaum, Cloud-Ära)."));
         root.add(Box.createVerticalStrut(10));
 
         root.add(section("Marken-Inkubator (Private Labeling)"));

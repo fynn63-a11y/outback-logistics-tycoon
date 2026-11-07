@@ -118,3 +118,20 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
   zur Laufzeit erzeugt, die Makro-Karte ist eine Weltkarte mit Textur-Look, das Mikro-Grid ist
   isometrisch-2.5D mit animiertem Warenfluss auf den Rollbahnen und Anzeige der maximalen
   Lagerkapazität (Paletten).
+- **Szenarien:** Auswahl beim Start — Endlos-Sandbox, IPO-Rennen (Sieg beim Börsengang),
+  Prime-Day-Überleben (erster Prime Day ohne Server-Crash), Monopol (alle Konkurrenten übernehmen).
+- **Epochen:** Modem-Ära (1994–99), Breitband-Ära (2000–09), Cloud-Ära (2010–19), KI-Ära (ab 2020).
+  Jede Epoche hebt die E-Commerce-Nachfrage an und schaltet Tech-Tiers frei (z. B. AWS Cloud und
+  Kiva-Roboter erst ab Cloud-Ära).
+- **Flotte & Letzte Meile:** LKW/Transporter pro Stadt (+Durchsatz, -Frachtkosten, +Nachfrage);
+  eigener Zustelldienst (Letzte Meile) kostet mehr Fracht, bringt aber Nachfrage und Reputation.
+- **Warenwelt:** 9 Kategorien (Elektronik, günstige/Premium-Textilien, Sportschuhe, Autoteile,
+  FMCG, Kühlkette, Gefahrgut, Bulky) mit ~20 SKUs. Kühlkette und Gefahrgut verursachen laufende
+  Lagerkosten; Retouren werden als Statistik erfasst und kosten Bearbeitungsgebühr.
+- **Wirtschaft:** Nach dem IPO simulierter Aktienkurs an der ASX ( reagiert auf Gewinn und
+  Reputation), Marktkapitalisierung = Kurs x Aktien.
+- **Mitarbeiter-Skills:** Schulungen erhöhen die Skill-Stufe (+5% Durchsatz pro Stufe).
+- **AWS WebServices:** Mit AWS Cloud: Webshop x1.15, FBA +20%, passive WebService-Einnahmen.
+- **Statistik-Tab:** Verlaufsgraphen für Kasse, Tagesumsatz und Konkurrenz-Marktanteil.
+- **Speichern/Laden:** komplettes Spiel via Java-Serialisierung (Buttons im HUD).
+- **Sound:** Chiptune-Musik + Soundeffekte (Alert, Kasse bei IPO/Übernahme, Crash bei Bankrott).

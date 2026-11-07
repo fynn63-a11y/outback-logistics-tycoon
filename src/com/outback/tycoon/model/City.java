@@ -1,6 +1,7 @@
 package com.outback.tycoon.model;
 
-public class City {
+public class City implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     public final String name;
     public final String state;
     public final String region;

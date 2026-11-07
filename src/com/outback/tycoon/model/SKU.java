@@ -1,6 +1,7 @@
 package com.outback.tycoon.model;
 
-public class SKU {
+public class SKU implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     public final String id;
     public final String name;
     public final Category category;

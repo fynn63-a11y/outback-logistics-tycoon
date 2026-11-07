@@ -5,7 +5,8 @@ import com.outback.tycoon.core.Game;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Site {
+public class Site implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     public static final int GRID = 20;
     private static final int UNITS_PER_PALLET = 100;
 
@@ -95,6 +96,7 @@ public class Site {
         if (g.researched.contains(Tech.KIVA_ROBOTS)) t *= 1.5;
         if (g.researched.contains(Tech.HIGH_SPEED_CONVEYORS)) t *= 1.3;
         if (g.tempsDecember && g.month() == 12 && g.strikeDaysLeft <= 0) t *= 1.5;
+        t *= 1.0 + 0.05 * (g.staffSkill - 1);
         return t;
     }
 

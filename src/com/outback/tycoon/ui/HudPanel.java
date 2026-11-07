@@ -69,13 +69,49 @@ public class HudPanel extends JPanel {
         add(chkSourcing);
         add(Box.createVerticalStrut(8));
 
-        add(section("Musik"));
+        add(section("Musik & Sound"));
         musicBtn.addActionListener(e -> {
             music.toggle();
             musicBtn.setText(music.isEnabled() ? "Musik: an" : "Musik: aus");
         });
         musicBtn.setText("Musik: an");
         add(musicBtn);
+        JButton sfxBtn = new JButton("Soundeffekte: an");
+        sfxBtn.addActionListener(e -> {
+            com.outback.tycoon.audio.Sfx.setEnabled(!com.outback.tycoon.audio.Sfx.isEnabled());
+            sfxBtn.setText(com.outback.tycoon.audio.Sfx.isEnabled() ? "Soundeffekte: an" : "Soundeffekte: aus");
+        });
+        add(sfxBtn);
+        add(Box.createVerticalStrut(8));
+
+        add(section("Speichern / Laden"));
+        JButton saveBtn = new JButton("Spiel speichern...");
+        saveBtn.addActionListener(e -> {
+            JFileChooser fc = new JFileChooser();
+            if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                try {
+                    game.save(fc.getSelectedFile());
+                    game.alert("Spiel gespeichert: " + fc.getSelectedFile().getName());
+                } catch (Exception ex) {
+                    game.alert("Speichern fehlgeschlagen: " + ex.getMessage());
+                }
+            }
+        });
+        JButton loadBtn = new JButton("Spiel laden...");
+        loadBtn.addActionListener(e -> {
+            JFileChooser fc = new JFileChooser();
+            if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                try {
+                    Game loaded = Game.load(fc.getSelectedFile());
+                    game.copyFrom(loaded);
+                    game.alert("Spiel geladen: " + fc.getSelectedFile().getName());
+                } catch (Exception ex) {
+                    game.alert("Laden fehlgeschlagen: " + ex.getMessage());
+                }
+            }
+        });
+        add(saveBtn);
+        add(loadBtn);
         add(Box.createVerticalStrut(8));
 
         add(section("Meldungen"));

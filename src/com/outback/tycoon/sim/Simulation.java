@@ -8,11 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class Simulation {
+public class Simulation implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     public static final double[] SEASONALITY = {
             0.90, 0.85, 0.95, 1.00, 1.00, 1.05, 1.05, 1.00, 0.95, 1.00, 1.30, 2.00
     };
-    private static final double[] DEMAND_PER_MILLION = {8, 25, 60, 3};
+    private static final double[] DEMAND_PER_MILLION = {8, 25, 6, 10, 2, 60, 20, 4, 3};
     private static final double FULFILL_COST_PER_UNIT = 1.20;
     private static final double FBA_FEE_PER_ORDER = 3.50;
     private static final double WAGE_PER_PERSON_PER_DAY = 90_000.0 / 365.0;
@@ -58,17 +59,38 @@ public class Simulation {
 
                 int fulfilled = fulfill(g, c, sku, demand);
                 revenue += fulfilled * sku.price;
-                costs += fulfilled * (shippingCost(g, sku) + FULFILL_COST_PER_UNIT);
-                costs += fulfilled * sku.category.returnRate * sku.baseCost * 0.5;
+                costs += fulfilled * (shippingCost(g, sku, c) + FULFILL_COST_PER_UNIT);
+                double returns = fulfilled * sku.category.returnRate;
+                g.lastDailyReturns += (int) returns;
+                costs += returns * sku.baseCost * 0.3;
+                if (sku.category.coldChain) costs += fulfilled * 0.8;
+                if (sku.category.hazardous) costs += fulfilled * 0.5;
             }
             double fba = fbaOrders(g, c);
+            if (g.researched.contains(Tech.AWS_CLOUD)) fba *= 1.2;
             revenue += fba * FBA_FEE_PER_ORDER;
             costs += fba * 0.40;
+        }
+
+        if (g.researched.contains(Tech.AWS_CLOUD)) {
+            double web = 5_000 * (1 + g.networkThroughput() / 10_000.0);
+            revenue += web;
         }
 
         for (Site s : g.sites) {
             costs += s.type.baseCost * 0.002 * s.level;
             if (s.type == SiteType.DATA_CENTER) costs += 200;
+            boolean cold = false;
+            boolean haz = false;
+            for (String skuId : s.stock.keySet()) {
+                SKU sk = g.skuById(skuId);
+                if (sk != null && s.stock.get(skuId) > 0) {
+                    if (sk.category.coldChain) cold = true;
+                    if (sk.category.hazardous) haz = true;
+                }
+            }
+            if (cold) costs += 80;
+            if (haz) costs += 60;
         }
         costs += (g.permanentStaff + g.developers) * WAGE_PER_PERSON_PER_DAY;
         if (g.tempsDecember && g.month() == 12 && !strike) costs += TEMP_COUNT_DECEMBER * TEMP_WAGE_DECEMBER;
@@ -79,6 +101,35 @@ public class Simulation {
         g.cash += revenue - costs;
         g.lastDailyRevenue = revenue;
         g.lastDailyCosts = costs;
+
+        if (g.isPrimeDay() && !serverCrash) g.primeDaySurvived = true;
+
+        if (g.ipoDone && !g.sandboxMode) {
+            double profitFactor = Math.max(-0.05, Math.min(0.05, (revenue - costs) / 1_000_000.0));
+            g.sharePrice *= 1.0 + profitFactor + (g.reputation - 50) / 2000.0 + (rnd.nextDouble() - 0.5) * 0.01;
+            g.sharePrice = Math.max(1.0, g.sharePrice);
+        }
+        if (g.ownLastMile) g.reputation = Math.min(100, g.reputation + 0.05);
+
+        int era = g.eraIndex();
+        if (era != g.lastEraValue()) {
+            if (g.lastEraValue() >= 0) g.alert("NEUE EPOCHE: " + g.eraName() + "! E-Commerce-Nachfrage steigt.");
+            g.setLastEra(era);
+        }
+        if (!g.won && g.scenario.isWon(g)) {
+            g.won = true;
+            g.winMessage = "SIEG im Szenario '" + g.scenario.label + "'!";
+            g.alert("SIEG! " + g.winMessage);
+            com.outback.tycoon.audio.Sfx.coin();
+        }
+        g.histCash.add(g.cash);
+        g.histRevenue.add(revenue);
+        g.histRivalShare.add(g.totalRivalShare());
+        if (g.histCash.size() > 500) {
+            g.histCash.remove(0);
+            g.histRevenue.remove(0);
+            g.histRivalShare.remove(0);
+        }
 
         arriveShipments(g);
         if (g.autopilotSourcing) autopilotSourcing(g);
@@ -114,7 +165,12 @@ public class Simulation {
         double brandFactor = sku.brand != null ? sku.brand.demandBoost() : 1.0;
         double rivalFactor = Math.max(0.35, 1.0 - g.totalRivalShare());
         if (g.blockedCities.containsKey(c.name)) return 0;
-        return base * primeBoost * season * primeDay * repFactor * brandFactor * rivalFactor * sku.category.volumeFactor;
+        double eraFactor = g.eraDemandMultiplier();
+        double webFactor = g.researched.contains(Tech.AWS_CLOUD) ? 1.15 : 1.0;
+        double lastMileFactor = g.ownLastMile ? 1.10 : 1.0;
+        double vanFactor = 1.0 + 0.03 * g.vans.getOrDefault(c.name, 0);
+        return base * primeBoost * season * primeDay * repFactor * brandFactor * rivalFactor
+                * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor;
     }
 
     private void updateRivals(Game g) {
@@ -141,14 +197,14 @@ public class Simulation {
 
     private int fulfill(Game g, City c, SKU sku, double demand) {
         List<Site> sites = g.sitesIn(c.name);
-        sites.sort((a, b) -> Double.compare(b.throughput(g), a.throughput(g)));
+        sites.sort((a, b) -> Double.compare(g.siteThroughput(b), g.siteThroughput(a)));
         double remaining = demand;
         int fulfilled = 0;
         for (Site s : sites) {
             if (remaining <= 0) break;
             int have = s.stockOf(sku.id);
             if (have <= 0) continue;
-            double cap = s.throughput(g) / Math.max(1, g.catalog.size());
+            double cap = g.siteThroughput(s) / Math.max(1, g.catalog.size());
             int take = (int) Math.min(Math.min(have, remaining), cap);
             if (take > 0) {
                 s.removeStock(sku.id, take);
@@ -159,18 +215,21 @@ public class Simulation {
         return fulfilled;
     }
 
-    private double shippingCost(Game g, SKU sku) {
+    private double shippingCost(Game g, SKU sku, City c) {
         Carrier main = g.carriers.get(0);
         double normal = main.rate(sku.category.weightClass);
         double express = main.rate(WeightClass.EXPRESS);
         double blended = g.isPrimeDay() ? 0.7 * normal + 0.3 * express : normal;
+        double truckDiscount = Math.min(0.30, 0.05 * g.trucks.getOrDefault(c.name, 0));
+        blended *= (1.0 - truckDiscount);
+        if (g.ownLastMile) blended *= 1.25;
         if (g.researched.contains(Tech.OWN_FLEET)) blended *= 0.6;
         return blended;
     }
 
     private double fbaOrders(Game g, City c) {
         double localThroughput = 0;
-        for (Site s : g.sitesIn(c.name)) localThroughput += s.throughput(g);
+        for (Site s : g.sitesIn(c.name)) localThroughput += g.siteThroughput(s);
         return localThroughput * 0.02 * (0.5 + g.reputation / 100.0);
     }
 

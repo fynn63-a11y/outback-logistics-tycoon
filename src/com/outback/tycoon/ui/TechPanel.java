@@ -12,6 +12,14 @@ public class TechPanel extends JPanel {
     private final JLabel rpLabel = new JLabel();
     private final JLabel devLabel = new JLabel();
 
+    private static String eraName(int era) {
+        switch (era) {
+            case 1: return "Breitband-Ära (2000+)";
+            case 2: return "Cloud-Ära (2010+)";
+            default: return "Modem-Ära";
+        }
+    }
+
     public TechPanel(Game game) {
         this.game = game;
         setLayout(new BorderLayout());
@@ -45,10 +53,11 @@ public class TechPanel extends JPanel {
             boolean done = game.researched.contains(t);
             JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+            boolean eraOk = game.eraIndex() >= t.minEra;
             JLabel l = new JLabel((done ? "[ERFORSCHT] " : "") + t.label + " - " + t.description
-                    + (done ? "" : " (" + (int) t.rpCost + " RP)"));
-            JButton b = new JButton(done ? "Erforscht" : "Forschen (" + (int) t.rpCost + " RP)");
-            b.setEnabled(!done && game.researchPoints >= t.rpCost);
+                    + (done ? "" : " (" + (int) t.rpCost + " RP" + (t.minEra > 0 ? ", ab " + eraName(t.minEra) : "") + ")"));
+            JButton b = new JButton(done ? "Erforscht" : (eraOk ? "Forschen (" + (int) t.rpCost + " RP)" : "Gesperrt bis " + eraName(t.minEra)));
+            b.setEnabled(!done && eraOk && game.researchPoints >= t.rpCost);
             b.addActionListener(e -> {
                 game.researchTech(t);
                 refresh();

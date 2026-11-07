@@ -4,27 +4,38 @@ import com.outback.tycoon.model.*;
 import com.outback.tycoon.sim.Simulation;
 
 import javax.swing.Timer;
+import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-public class Game {
+public class Game implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     public static final LocalDate START_DATE = LocalDate.of(1994, 1, 1);
     public static final long DAY_MILLIS = 5_000;
     public static final double DEBT_LIMIT = 1_000_000;
     public static final double IPO_THRESHOLD = 50_000_000;
+    public static final int SHARES = 1_000_000;
 
     public long dayIndex = 0;
     public double cash = 500_000;
     public double debtLimit = DEBT_LIMIT;
     public double loanTaken = 0;
     public boolean insured = false;
-    public final java.util.Map<String, Integer> blockedCities = new java.util.HashMap<>();
+    public final Map<String, Integer> blockedCities = new HashMap<>();
     public double reputation = 50;
     public boolean gameOver = false;
     public String gameOverReason = "";
+
+    public Scenario scenario = Scenario.ENDLESS;
+    public boolean won = false;
+    public String winMessage = "";
+    public boolean primeDaySurvived = false;
 
     public final List<City> cities = new ArrayList<>();
     public final List<Site> sites = new ArrayList<>();
@@ -32,6 +43,7 @@ public class Game {
     public final List<SKU> catalog = new ArrayList<>();
     public final List<Brand> brands = new ArrayList<>();
     public final List<Carrier> carriers = new ArrayList<>();
+    public final List<RivalCompany> rivals = new ArrayList<>();
 
     public final Set<Tech> researched = EnumSet.noneOf(Tech.class);
     public double researchPoints = 0;
@@ -39,6 +51,7 @@ public class Game {
 
     public double morale = 70;
     public int permanentStaff = 10;
+    public int staffSkill = 1;
     public boolean tempsDecember = true;
     public int strikeDaysLeft = 0;
     public int primeDayIn = 60;
@@ -49,11 +62,19 @@ public class Game {
     public boolean autopilotSourcing = false;
 
     public boolean sandboxMode = false;
-    public final List<RivalCompany> rivals = new ArrayList<>();
 
     public boolean ipoDone = false;
+    public double sharePrice = 0;
+    public boolean ownLastMile = false;
+    public final Map<String, Integer> trucks = new HashMap<>();
+    public final Map<String, Integer> vans = new HashMap<>();
+
     public double lastDailyRevenue = 0;
     public double lastDailyCosts = 0;
+    public int lastDailyReturns = 0;
+    public final List<Double> histCash = new ArrayList<>();
+    public final List<Double> histRevenue = new ArrayList<>();
+    public final List<Double> histRivalShare = new ArrayList<>();
 
     public final List<String> alerts = new ArrayList<>();
     public String selectedCity = "Sydney";
@@ -61,9 +82,10 @@ public class Game {
 
     public int speed = 1;
     private int tickAcc = 0;
-    private Timer timer;
+    private transient Timer timer;
     private int nextSiteId = 1;
     private int nextShipmentId = 1;
+    private int lastEra = -1;
     private final Simulation sim = new Simulation();
 
     public Game() {
@@ -98,18 +120,30 @@ public class Game {
         brands.add(novaTech);
         brands.add(apexHome);
 
+        catalog.add(new SKU("el-1", "NovaPhone X", Category.ELECTRONICS, 320, novaTech));
+        catalog.add(new SKU("el-2", "SoundBuds Pro", Category.ELECTRONICS, 45, null));
+        catalog.add(new SKU("el-3", "UltraBook 15 Zoll", Category.ELECTRONICS, 900, null));
+        catalog.add(new SKU("el-4", "GameKonsole Z", Category.ELECTRONICS, 280, null));
+        catalog.add(new SKU("tx-1", "Basic Tee", Category.APPAREL_BASIC, 6, null));
+        catalog.add(new SKU("tx-2", "Socken 3er-Pack", Category.APPAREL_BASIC, 4, null));
+        catalog.add(new SKU("tx-3", "Designer Shirt", Category.APPAREL_LUXURY, 60, null));
+        catalog.add(new SKU("tx-4", "Massanzug", Category.APPAREL_LUXURY, 350, null));
+        catalog.add(new SKU("sn-1", "Runner Pro", Category.SNEAKERS, 80, null));
+        catalog.add(new SKU("sn-2", "Sneaker Classic", Category.SNEAKERS, 45, null));
+        catalog.add(new SKU("au-1", "Bremsbelag-Set", Category.CAR_PARTS, 35, null));
+        catalog.add(new SKU("au-2", "Motoröl 5L", Category.CAR_PARTS, 25, null));
+        catalog.add(new SKU("fm-1", "Outback Muesli 500g", Category.FMCG, 2.2, null));
+        catalog.add(new SKU("fm-2", "Shampoo 300ml", Category.FMCG, 1.8, null));
+        catalog.add(new SKU("cc-1", "Bio-Milch 1L", Category.COLD_CHAIN, 1.5, null));
+        catalog.add(new SKU("cc-2", "Rinderfilet 500g", Category.COLD_CHAIN, 12, null));
+        catalog.add(new SKU("hz-1", "WC-Reiniger", Category.HAZMAT, 2.5, null));
+        catalog.add(new SKU("hz-2", "Deo-Spray 150ml", Category.HAZMAT, 3, null));
+        catalog.add(new SKU("bu-1", "Loungesessel", Category.BULKY, 140, apexHome));
+        catalog.add(new SKU("bu-2", "Billy Regal", Category.BULKY, 60, null));
+
         rivals.add(new RivalCompany("Apex Logistics", 0.12, new java.awt.Color(220, 90, 90)));
         rivals.add(new RivalCompany("Southern Star Freight", 0.09, new java.awt.Color(230, 160, 60)));
         rivals.add(new RivalCompany("Pacific Rim Fulfilment", 0.07, new java.awt.Color(120, 140, 230)));
-
-        catalog.add(new SKU("el-1", "NovaPhone X", Category.ELECTRONICS, 320, novaTech));
-        catalog.add(new SKU("el-2", "SoundBuds Pro", Category.ELECTRONICS, 45, null));
-        catalog.add(new SKU("ap-1", "Basic Tee", Category.APPAREL, 6, null));
-        catalog.add(new SKU("ap-2", "Denim Jeans", Category.APPAREL, 18, null));
-        catalog.add(new SKU("fm-1", "Outback Muesli 500g", Category.FMCG, 2.2, null));
-        catalog.add(new SKU("fm-2", "Shampoo 300ml", Category.FMCG, 1.8, null));
-        catalog.add(new SKU("bu-1", "Loungesessel", Category.BULKY, 140, apexHome));
-        catalog.add(new SKU("bu-2", "Billy Regal", Category.BULKY, 60, null));
     }
 
     private void addDataCities(String region, String[] data, double cx, double cy, double w, double h) {
@@ -145,6 +179,35 @@ public class Game {
         return primeDayLeft > 0;
     }
 
+    public int eraIndex() {
+        int y = date().getYear();
+        if (y < 2000) return 0;
+        if (y < 2010) return 1;
+        if (y < 2020) return 2;
+        return 3;
+    }
+
+    public String eraName() {
+        switch (eraIndex()) {
+            case 0: return "Modem-Ära (1994-1999)";
+            case 1: return "Breitband-Ära (2000-2009)";
+            case 2: return "Cloud-Ära (2010-2019)";
+            default: return "KI-Ära (ab 2020)";
+        }
+    }
+
+    int lastEraValue() {
+        return lastEra;
+    }
+
+    void setLastEra(int e) {
+        lastEra = e;
+    }
+
+    public double eraDemandMultiplier() {
+        return 1.0 + eraIndex() * 0.35;
+    }
+
     public void start() {
         timer = new Timer(100, e -> onTick());
         timer.start();
@@ -163,6 +226,7 @@ public class Game {
     public void alert(String msg) {
         alerts.add(0, date() + " (Tag " + dayIndex + "): " + msg);
         if (alerts.size() > 80) alerts.remove(alerts.size() - 1);
+        com.outback.tycoon.audio.Sfx.alert();
     }
 
     public double serverCapacity() {
@@ -173,13 +237,19 @@ public class Game {
         return cap;
     }
 
+    public double siteThroughput(Site s) {
+        double bonus = 1.0 + 0.05 * trucks.getOrDefault(s.city, 0) + 0.02 * vans.getOrDefault(s.city, 0);
+        return s.throughput(this) * bonus;
+    }
+
     public double networkThroughput() {
         double t = 0;
-        for (Site s : sites) t += s.throughput(this);
+        for (Site s : sites) t += siteThroughput(s);
         return t;
     }
 
     public double marketCapEstimate() {
+        if (ipoDone) return sharePrice * SHARES;
         return Math.max(0, lastDailyRevenue * 365.0) * 8.0;
     }
 
@@ -190,15 +260,10 @@ public class Game {
     public void doIpo() {
         if (!ipoAvailable()) return;
         ipoDone = true;
+        sharePrice = 25.0;
         cash += 25_000_000;
-        alert("IPO an der ASX Sydney! 25 Mio. AUD Kapital aufgenommen.");
-    }
-
-    public boolean charge(double amount) {
-        if (sandboxMode) return true;
-        if (cash < amount) return false;
-        cash -= amount;
-        return true;
+        com.outback.tycoon.audio.Sfx.coin();
+        alert("IPO an der ASX Sydney! 25 Mio. AUD Kapital aufgenommen, Aktienkurs 25,00 AUD.");
     }
 
     public boolean isUnlocked(City c) {
@@ -211,6 +276,13 @@ public class Game {
         if (c.region.equals("Europa")) return "Europa schaltest du mit dem IPO an der ASX frei.";
         if (c.region.equals("Nordamerika")) return "Nordamerika (USA/Kanada) ab 200 Mio. AUD Marktkapitalisierung.";
         return "";
+    }
+
+    public boolean charge(double amount) {
+        if (sandboxMode) return true;
+        if (cash < amount) return false;
+        cash -= amount;
+        return true;
     }
 
     public Site buildSite(SiteType type) {
@@ -254,7 +326,7 @@ public class Game {
         return false;
     }
 
-    public Shipment orderContainer(String destCity, java.util.Map<String, Integer> goods, double cost) {
+    public Shipment orderContainer(String destCity, Map<String, Integer> goods, double cost) {
         long active = shipments.stream().filter(s -> s.destCity.equals(destCity)).count();
         int limit = hasContainerTerminal(destCity) ? 7 : 4;
         int congestion = (int) Math.max(0, active - limit) * 2;
@@ -284,8 +356,26 @@ public class Game {
         alert("Werbekampagne fuer " + b.name + " (Stufe " + b.marketingLevel + ").");
     }
 
+    public SKU developProduct(Brand b) {
+        if (b == null || !b.playerOwned) return null;
+        if (researchPoints < 30 || !charge(150_000)) {
+            alert("Produktentwicklung braucht 30 Forschungspunkte und 150.000 AUD.");
+            return null;
+        }
+        researchPoints -= 30;
+        Category[] cats = Category.values();
+        Category cat = cats[(int) (Math.random() * cats.length)];
+        String[] names = {"Outback Classic", "Red Dust Edition", "Coastal Pro", "Bush Ranger", "Sunset Series", "Blue Ocean"};
+        String name = names[(int) (Math.random() * names.length)];
+        SKU sku = new SKU("pl-" + (catalog.size() + 1), name, cat, 5 + Math.random() * 200, b);
+        sku.price = Math.round(sku.baseCost * 1.8 * 100.0) / 100.0;
+        catalog.add(sku);
+        alert("PRODUKT-LAUNCH: '" + name + "' (" + cat.label + ") der Eigenmarke " + b.name + " - hohe Marge!");
+        return sku;
+    }
+
     public void researchTech(Tech t) {
-        if (researched.contains(t) || researchPoints < t.rpCost) return;
+        if (researched.contains(t) || researchPoints < t.rpCost || eraIndex() < t.minEra) return;
         researchPoints -= t.rpCost;
         researched.add(t);
         alert("Technologie erforscht: " + t.label + " - " + t.description);
@@ -307,20 +397,16 @@ public class Game {
         if (permanentStaff > 1) permanentStaff--;
     }
 
-    public void negotiateCarrier(Carrier c) {
-        if (!c.canNegotiate() || !charge(c.negotiateCost())) return;
-        c.contractLevel++;
-        alert("Vertrag mit " + c.name + " ausgehandelt (Stufe " + c.contractLevel + ", -" + (8 * c.contractLevel) + "% Tarife).");
-    }
-
-    public double totalRivalShare() {
-        double sum = 0;
-        for (RivalCompany r : rivals) sum += r.marketShare;
-        return sum;
-    }
-
-    public double rivalValue(RivalCompany r) {
-        return 10_000_000 + r.marketShare * 100_000_000;
+    public void trainStaff() {
+        if (staffSkill >= 5) return;
+        double cost = 20_000.0 * staffSkill;
+        if (!charge(cost)) {
+            alert("Schulung kostet " + String.format("%,.0f", cost) + " AUD.");
+            return;
+        }
+        staffSkill++;
+        morale = Math.min(100, morale + 2);
+        alert("Mitarbeiter geschult: Skill Stufe " + staffSkill + " (+5% Durchsatz pro Stufe).");
     }
 
     public void takeLoan() {
@@ -339,22 +425,38 @@ public class Game {
         alert("Gewerkschaftsverhandlung erfolgreich: Lohnerhoehung, Moral +15. Streikrisiko sinkt.");
     }
 
-    public SKU developProduct(Brand b) {
-        if (b == null || !b.playerOwned) return null;
-        if (researchPoints < 30 || !charge(150_000)) {
-            alert("Produktentwicklung braucht 30 Forschungspunkte und 150.000 AUD.");
-            return null;
+    public void buyTruck() {
+        if (!charge(80_000)) {
+            alert("LKW kostet 80.000 AUD.");
+            return;
         }
-        researchPoints -= 30;
-        Category[] cats = Category.values();
-        Category cat = cats[(int) (Math.random() * cats.length)];
-        String[] names = {"Outback Classic", "Red Dust Edition", "Coastal Pro", "Bush Ranger", "Sunset Series", "Blue Ocean"};
-        String name = names[(int) (Math.random() * names.length)];
-        SKU sku = new SKU("pl-" + (catalog.size() + 1), name, cat, 5 + Math.random() * 200, b);
-        sku.price = Math.round(sku.baseCost * 1.8 * 100.0) / 100.0;
-        catalog.add(sku);
-        alert("PRODUKT-LAUNCH: '" + name + "' (" + cat.label + ") der Eigenmarke " + b.name + " - hohe Marge!");
-        return sku;
+        trucks.merge(selectedCity, 1, Integer::sum);
+        alert("LKW gekauft fuer Strecke " + selectedCity + " (+5% Durchsatz, -5% Fracht).");
+    }
+
+    public void buyVan() {
+        if (!charge(30_000)) {
+            alert("Transporter kostet 30.000 AUD.");
+            return;
+        }
+        vans.merge(selectedCity, 1, Integer::sum);
+        alert("Transporter gekauft fuer " + selectedCity + " (+2% Durchsatz, +3% Nachfrage).");
+    }
+
+    public void negotiateCarrier(Carrier c) {
+        if (!c.canNegotiate() || !charge(c.negotiateCost())) return;
+        c.contractLevel++;
+        alert("Vertrag mit " + c.name + " ausgehandelt (Stufe " + c.contractLevel + ", -" + (8 * c.contractLevel) + "% Tarife).");
+    }
+
+    public double totalRivalShare() {
+        double sum = 0;
+        for (RivalCompany r : rivals) sum += r.marketShare;
+        return sum;
+    }
+
+    public double rivalValue(RivalCompany r) {
+        return 10_000_000 + r.marketShare * 100_000_000;
     }
 
     public void acquireRival(RivalCompany r) {
@@ -365,6 +467,7 @@ public class Game {
         }
         rivals.remove(r);
         reputation = Math.min(100, reputation + 5);
+        com.outback.tycoon.audio.Sfx.coin();
         alert("UEBERNAHME: " + r.name + " (Marktanteil " + (int) (r.marketShare * 100) + "%) ist jetzt Teil deines Konzerns!");
     }
 
@@ -373,9 +476,81 @@ public class Game {
         return cities.get(0);
     }
 
+    public SKU skuById(String id) {
+        for (SKU s : catalog) if (s.id.equals(id)) return s;
+        return null;
+    }
+
     public List<Site> sitesIn(String cityName) {
         List<Site> out = new ArrayList<>();
         for (Site s : sites) if (s.city.equals(cityName)) out.add(s);
         return out;
+    }
+
+    public void save(File f) throws IOException {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f))) {
+            oos.writeObject(this);
+        }
+    }
+
+    public static Game load(File f) throws IOException, ClassNotFoundException {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f))) {
+            return (Game) ois.readObject();
+        }
+    }
+
+    public void copyFrom(Game o) {
+        dayIndex = o.dayIndex;
+        cash = o.cash;
+        debtLimit = o.debtLimit;
+        loanTaken = o.loanTaken;
+        insured = o.insured;
+        blockedCities.clear();
+        blockedCities.putAll(o.blockedCities);
+        reputation = o.reputation;
+        gameOver = o.gameOver;
+        gameOverReason = o.gameOverReason;
+        scenario = o.scenario;
+        won = o.won;
+        winMessage = o.winMessage;
+        primeDaySurvived = o.primeDaySurvived;
+        cities.clear(); cities.addAll(o.cities);
+        sites.clear(); sites.addAll(o.sites);
+        shipments.clear(); shipments.addAll(o.shipments);
+        catalog.clear(); catalog.addAll(o.catalog);
+        brands.clear(); brands.addAll(o.brands);
+        carriers.clear(); carriers.addAll(o.carriers);
+        rivals.clear(); rivals.addAll(o.rivals);
+        researched.clear(); researched.addAll(o.researched);
+        researchPoints = o.researchPoints;
+        developers = o.developers;
+        morale = o.morale;
+        permanentStaff = o.permanentStaff;
+        staffSkill = o.staffSkill;
+        tempsDecember = o.tempsDecember;
+        strikeDaysLeft = o.strikeDaysLeft;
+        primeDayIn = o.primeDayIn;
+        primeDayLeft = o.primeDayLeft;
+        autopilotRebalance = o.autopilotRebalance;
+        autopilotPricing = o.autopilotPricing;
+        autopilotSourcing = o.autopilotSourcing;
+        sandboxMode = o.sandboxMode;
+        ipoDone = o.ipoDone;
+        sharePrice = o.sharePrice;
+        ownLastMile = o.ownLastMile;
+        trucks.clear(); trucks.putAll(o.trucks);
+        vans.clear(); vans.putAll(o.vans);
+        lastDailyRevenue = o.lastDailyRevenue;
+        lastDailyCosts = o.lastDailyCosts;
+        lastDailyReturns = o.lastDailyReturns;
+        histCash.clear(); histCash.addAll(o.histCash);
+        histRevenue.clear(); histRevenue.addAll(o.histRevenue);
+        histRivalShare.clear(); histRivalShare.addAll(o.histRivalShare);
+        alerts.clear(); alerts.addAll(o.alerts);
+        selectedCity = o.selectedCity;
+        selectedSite = o.selectedSite;
+        nextSiteId = o.nextSiteId;
+        nextShipmentId = o.nextShipmentId;
+        lastEra = o.lastEra;
     }
 }

@@ -3,7 +3,8 @@ package com.outback.tycoon.model;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Shipment {
+public class Shipment implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     public static final int TRANSIT_DAYS = 21;
 
     public final int id;

@@ -3,7 +3,8 @@ package com.outback.tycoon.model;
 import java.util.EnumMap;
 import java.util.Map;
 
-public class Carrier {
+public class Carrier implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     public final String name;
     public final Map<WeightClass, Double> baseRates = new EnumMap<>(WeightClass.class);
     public final double fixedFeePerMonth;

@@ -33,8 +33,15 @@ public class HrPanel extends JPanel {
         moraleBar.setForeground(game.morale < 30 ? Color.RED : new Color(80, 180, 80));
         root.add(moraleBar);
 
-        staffLabel.setText("Festangestellte: " + game.permanentStaff);
+        staffLabel.setText("Festangestellte: " + game.permanentStaff + " | Skill-Stufe: " + game.staffSkill + "/5 (+5% Durchsatz pro Stufe)");
         root.add(staffLabel);
+        JButton train = new JButton("Mitarbeiter schulen (Kosten skalieren mit Stufe)");
+        train.setEnabled(game.staffSkill < 5);
+        train.addActionListener(e -> {
+            game.trainStaff();
+            refresh();
+        });
+        root.add(train);
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton hire = new JButton("Mitarbeiter einstellen");
         hire.addActionListener(e -> {

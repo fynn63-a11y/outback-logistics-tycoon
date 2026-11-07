@@ -2,7 +2,8 @@ package com.outback.tycoon.model;
 
 import java.awt.Color;
 
-public class RivalCompany {
+public class RivalCompany implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     public final String name;
     public double marketShare;
     public final Color color;

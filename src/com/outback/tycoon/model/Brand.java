@@ -1,6 +1,7 @@
 package com.outback.tycoon.model;
 
-public class Brand {
+public class Brand implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     public final String name;
     public final boolean playerOwned;
     public int marketingLevel = 0;
