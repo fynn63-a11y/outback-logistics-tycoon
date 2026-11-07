@@ -249,10 +249,12 @@ public class MacroMapPanel extends JPanel {
         }
     }
 
-    private static Color terrainColor(double h) {
-        if (h < 0.42) return new Color(206, 188, 138);
-        if (h < 0.52) return new Color(122, 168, 84);
-        if (h < 0.66) return new Color(140, 152, 92);
+    private static Color terrainColor(double h, double lon, double lat) {
+        if (h < 0.42) return new Color(216, 196, 148);
+        boolean desert = lon > 124 && lon < 141 && lat < -19 && lat > -31;
+        boolean tropic = lat > -20;
+        if (h < 0.52) return tropic ? new Color(96, 168, 74) : desert ? new Color(198, 128, 66) : new Color(122, 168, 84);
+        if (h < 0.66) return desert ? new Color(186, 110, 56) : new Color(140, 152, 92);
         if (h < 0.82) return new Color(134, 104, 70);
         return new Color(238, 240, 245);
     }
@@ -265,15 +267,16 @@ public class MacroMapPanel extends JPanel {
         for (int y = 0; y < VH; y += 2) {
             for (int x = 0; x < VW; x += 2) {
                 double depth = Textures.fbm(x * 0.004, y * 0.004, 8, 7, 3);
-                int r = (int) (10 + depth * 30);
-                int gg = (int) (28 + depth * 50);
-                int b = (int) (58 + depth * 60);
-                g.setColor(new Color(Math.min(60, r), Math.min(90, gg), Math.min(130, b)));
+                int r = (int) (16 + depth * 40);
+                int gg = (int) (52 + depth * 70);
+                int b = (int) (110 + depth * 90);
+                g.setColor(new Color(Math.min(70, r), Math.min(130, gg), Math.min(200, b)));
                 g.fillRect(x, y, 2, 2);
             }
         }
 
         Path2D.Double au = continent(AUSTRALIEN);
+        AUSTRALIEN_POLY = au;
         if (mapStyle == 1) {
             g.setPaint(new Color(148, 190, 110));
             g.fill(au);
@@ -314,6 +317,35 @@ public class MacroMapPanel extends JPanel {
         pg.dispose();
     }
 
+    private static boolean auNear(int x, int y) {
+        return AUSTRALIEN_POLY != null && distToPoly(x, y) < 26;
+    }
+
+    private static double distToPoly(int x, int y) {
+        double best = 1e9;
+        for (int i = 0; i < AUSTRALIEN.length; i++) {
+            double[] a = AUSTRALIEN[i];
+            double[] b = AUSTRALIEN[(i + 1) % AUSTRALIEN.length];
+            int ax = pxStatic(a[0]), ay = pyStatic(a[1]);
+            int bx = pxStatic(b[0]), by = pyStatic(b[1]);
+            double t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / (double) ((bx - ax) * (bx - ax) + (by - ay) * (by - ay) + 1)));
+            double dx = x - (ax + t * (bx - ax));
+            double dy = y - (ay + t * (by - ay));
+            best = Math.min(best, Math.hypot(dx, dy));
+        }
+        return best;
+    }
+
+    private static int pxStatic(double lon) {
+        return (int) ((lon + 180) / 360.0 * VW);
+    }
+
+    private static int pyStatic(double lat) {
+        return (int) ((90 - lat) / 180.0 * VH);
+    }
+
+    private static Path2D.Double AUSTRALIEN_POLY;
+
     private void renderTerrain(Graphics2D g, Path2D.Double land, long seed) {
         int step = 2;
         double[][] height = new double[VH / step + 2][VW / step + 2];
@@ -323,10 +355,15 @@ public class MacroMapPanel extends JPanel {
         BufferedImage img = new BufferedImage(VW, VH, BufferedImage.TYPE_INT_RGB);
         for (int y = 0; y < VH; y++) {
             for (int x = 0; x < VW; x++) {
-                if (!land.contains(x, y)) continue;
+                double lon = x / (double) VW * 360 - 180;
+                double lat = 90 - y / (double) VH * 180;
+                if (!land.contains(x, y)) {
+                    if (auNear(x, y)) img.setRGB(x, y, new Color(70, 130, 170).getRGB());
+                    continue;
+                }
                 double h = height[y / step][x / step];
                 double hill = height[y / step][Math.min(height[0].length - 1, x / step + 1)] - height[y / step][Math.max(0, x / step - 1)];
-                Color c = terrainColor(h);
+                Color c = terrainColor(h, lon, lat);
                 double light = 1.0 + hill * 6;
                 img.setRGB(x, y, new Color(
                         (int) Math.max(0, Math.min(255, c.getRed() * light)),
