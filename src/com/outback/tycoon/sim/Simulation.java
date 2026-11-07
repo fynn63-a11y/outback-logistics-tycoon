@@ -487,8 +487,8 @@ public class Simulation implements java.io.Serializable {
         Carrier main = g.carriers.get(0);
         double normal = main.rate(sku.category.weightClass);
         double express = main.rate(WeightClass.EXPRESS) * (g.airFreight ? 0.7 : 1.0);
-        Site server = g.servingSite(c.name);
-        String from = server != null ? server.city : c.name;
+        Site srv = g.servingSite(c.name);
+        String from = srv != null ? srv.city : c.name;
         TransportNetwork.Route route = g.routeBetween(from, c.name);
         if (route != null) {
             if (route.mode == TransportNetwork.Mode.RAIL && g.railHubs.contains(from) && g.railHubs.contains(c.name)) normal *= 0.7;
