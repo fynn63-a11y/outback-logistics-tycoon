@@ -43,6 +43,7 @@ public class MacroMapPanel extends JPanel {
     private int mouseY = -1;
     private String regionView = "Australien";
     private boolean view3D = false;
+    private int mapStyle = 0;
     private double zoom = 1.0;
     private City hoverCity = null;
     private double panX = 0;
@@ -66,6 +67,14 @@ public class MacroMapPanel extends JPanel {
         top.setOpaque(false);
         top.add(new JLabel("Ansicht:"));
         top.add(regionBox);
+        JButton styleBtn = new JButton("Stil: Satellit");
+        styleBtn.addActionListener(e -> {
+            mapStyle = 1 - mapStyle;
+            styleBtn.setText(mapStyle == 0 ? "Stil: Satellit" : "Stil: Politisch-flach");
+            baseCache = null;
+            repaint();
+        });
+        top.add(styleBtn);
         JButton view3dBtn = new JButton("3D-Ansicht: aus");
         view3dBtn.addActionListener(e -> {
             view3D = !view3D;
@@ -265,7 +274,14 @@ public class MacroMapPanel extends JPanel {
         }
 
         Path2D.Double au = continent(AUSTRALIEN);
-        renderTerrain(g, au, 37);
+        if (mapStyle == 1) {
+            g.setPaint(new Color(148, 190, 110));
+            g.fill(au);
+            g.setPaint(Textures.paint("flatNoise", Textures.generate(128, new Color(150, 192, 112), new Color(136, 182, 100), 8, 2, 55)));
+            g.fill(au);
+        } else {
+            renderTerrain(g, au, 37);
+        }
         provinces(g, au);
 
         g.setColor(new Color(200, 225, 255, 70));
@@ -364,7 +380,7 @@ public class MacroMapPanel extends JPanel {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.transform(viewTransform());
         g.drawImage(baseCache, 0, 0, null);
-        if (view3D && peaksCache != null) {
+        if (view3D && mapStyle == 0 && peaksCache != null) {
             g.translate(-14, -18);
             g.drawImage(peaksCache, 0, 0, null);
             g.translate(7, 9);

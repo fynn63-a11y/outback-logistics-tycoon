@@ -19,6 +19,7 @@ public class MicroPanel extends JPanel {
     private boolean eraseMode = false;
     private int[] hover = null;
     private boolean roofOn = true;
+    private boolean topDown = false;
     private Timer animTimer;
 
     public MicroPanel(Game game) {
@@ -131,6 +132,13 @@ public class MicroPanel extends JPanel {
         });
         palette.add(bpSave);
         palette.add(bpApply);
+        JButton viewBtn = new JButton("Ansicht: Iso");
+        viewBtn.addActionListener(e -> {
+            topDown = !topDown;
+            viewBtn.setText(topDown ? "Ansicht: Draufsicht" : "Ansicht: Iso");
+            canvas.repaint();
+        });
+        palette.add(viewBtn);
         JButton roof = new JButton("Dach an/aus");
         roof.addActionListener(e -> {
             roofOn = !roofOn;
@@ -229,6 +237,10 @@ public class MicroPanel extends JPanel {
                 g.drawString("Kein Standort ausgewaehlt.", 20, 30);
                 return;
             }
+            if (topDown) {
+                drawTopDown(g, s);
+                return;
+            }
             int tw = tileW();
             int th = tileH();
             long t = System.currentTimeMillis();
@@ -276,6 +288,46 @@ public class MicroPanel extends JPanel {
                 g.setColor(new Color(255, 255, 255, 160));
                 g.drawPolygon(new int[]{cx, cx + tw / 3, cx, cx - tw / 3},
                         new int[]{cy - th - th / 3, cy - th, cy - th + th / 3, cy - th}, 4);
+            }
+        }
+
+        private void drawTopDown(Graphics2D g, Site s) {
+            long t = System.currentTimeMillis();
+            int cell = Math.max(8, Math.min(getWidth() / gw(), getHeight() / gh()));
+            int ox = (getWidth() - gw() * cell) / 2;
+            int oy = (getHeight() - gh() * cell) / 2;
+            g.setColor(new Color(52, 58, 70));
+            g.fillRect(ox - 6, oy - 6, gw() * cell + 12, gh() * cell + 12);
+            for (int x = 0; x < gw(); x++) {
+                for (int y = 0; y < gh(); y++) {
+                    int px = ox + x * cell;
+                    int py = oy + y * cell;
+                    g.setColor(((x + y) % 2 == 0) ? new Color(96, 104, 122) : new Color(86, 94, 112));
+                    g.fillRect(px, py, cell, cell);
+                    MachineType m = s.grid[x][y];
+                    if (m != null) {
+                        Color c = machineColor(m);
+                        g.setColor(c);
+                        g.fillRect(px + 2, py + 2, cell - 4, cell - 4);
+                        g.setColor(new Color(0, 0, 0, 90));
+                        g.fillRect(px + 2, py + cell - 6, cell - 4, 4);
+                        g.setColor(Color.WHITE);
+                        if (cell >= 14) g.drawString(m.name().substring(0, 1), px + cell / 2 - 3, py + cell / 2 + 4);
+                        if (s.upgrades[x][y] > 0) {
+                            g.setColor(new Color(255, 215, 80));
+                            g.drawString("+" + s.upgrades[x][y], px + 3, py + 10);
+                        }
+                    }
+                    if (m == MachineType.CONVEYOR || m == MachineType.SPAWNER) {
+                        double phase = ((t / 120.0) + x * 3 + y * 5) % 1.0;
+                        g.setColor(new Color(255, 200, 90));
+                        g.fillRect(px + (int) (phase * (cell - 6)) + 3, py + cell / 2 - 2, 5, 5);
+                    }
+                }
+            }
+            if (s.hasMezzanine()) {
+                g.setColor(new Color(200, 210, 230, 60));
+                g.fillRect(ox - 6, oy - 6, gw() * cell + 12, gh() * cell + 12);
             }
         }
 
