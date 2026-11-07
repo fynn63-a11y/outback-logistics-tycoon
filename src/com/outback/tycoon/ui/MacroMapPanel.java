@@ -170,7 +170,7 @@ public class MacroMapPanel extends JPanel {
                     boolean terminal = game.hasContainerTerminal(nearest.name);
                     long ships = game.shipments.stream().filter(sh -> sh.destCity.equals(nearest.name)).count();
                     if (terminal || ships > 0) {
-                        JOptionPane.showMessageDialog(this,
+                        JOptionPane.showMessageDialog(MacroMapPanel.this,
                                 "HAFEN " + nearest.name + ":\nContainer-Terminal: " + (terminal ? "vorhanden (Stau-Schwelle erhöht)" : "nein")
                                         + "\nAktive Seefrachten: " + ships
                                         + "\nGesperrt (Katastrophe): " + (game.blockedCities.containsKey(nearest.name) ? "JA (" + game.blockedCities.get(nearest.name) + " Tage)" : "nein"),
