@@ -138,6 +138,43 @@ public class CompanyPanel extends JPanel {
         root.add(ecoRow);
         root.add(Box.createVerticalStrut(10));
 
+        root.add(section("Management & Infrastruktur (Stadt: " + game.selectedCity + ")"));
+        JPanel mgmt = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        for (String dept : new String[]{"Einkauf", "Marketing", "IT"}) {
+            JButton hb = new JButton(dept + "-Leiter (200.000 AUD)");
+            hb.setEnabled(!game.heads.contains(dept));
+            hb.addActionListener(e -> {
+                game.hireHead(dept);
+                refresh();
+            });
+            mgmt.add(hb);
+        }
+        JButton housing = new JButton(game.workersHousing ? "Wohnheim: gebaut" : "Mitarbeiter-Wohnheim (150.000 AUD, Moral-Ziel 80)");
+        housing.setEnabled(!game.workersHousing);
+        housing.addActionListener(e -> {
+            game.buildWorkersHousing();
+            refresh();
+        });
+        JButton rail = new JButton(game.railHubs.contains(game.selectedCity) ? "Bahnanschluss: vorhanden" : "Bahnanschluss " + game.selectedCity + " (300.000 AUD, -50% Distanzkosten)");
+        rail.setEnabled(!game.railHubs.contains(game.selectedCity));
+        rail.addActionListener(e -> {
+            game.buyRailHub();
+            refresh();
+        });
+        JButton air = new JButton(game.airFreight ? "Luftfracht-Vertrag: aktiv" : "Luftfracht-Vertrag (150.000 AUD, Express -30%)");
+        air.setEnabled(!game.airFreight);
+        air.addActionListener(e -> {
+            game.buyAirFreightContract();
+            refresh();
+        });
+        mgmt.add(housing);
+        mgmt.add(rail);
+        mgmt.add(air);
+        root.add(mgmt);
+        root.add(label("Chefs aktiv: " + (game.heads.isEmpty() ? "keine" : String.join(", ", game.heads))
+                + " | Missionen geschafft: " + game.missionsDone.size() + "/4"));
+        root.add(Box.createVerticalStrut(10));
+
         root.add(section("Blitzangebote & Tochterfirmen"));
         JPanel promoRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton flashAll = new JButton("Blitzangebot ALLE Kategorien (20.000 AUD, 3 Tage: -20% Preis, x1.6 Nachfrage)");

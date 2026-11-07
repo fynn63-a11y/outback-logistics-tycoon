@@ -67,6 +67,7 @@ public class Simulation implements java.io.Serializable {
                 fulfilledSum += fulfilled;
                 boolean flash = g.flashSaleDays > 0 && (g.flashSaleCategory == null || g.flashSaleCategory == sku.category);
                 double saleRev = fulfilled * sku.price * (flash ? 0.8 : 1.0);
+                if (g.priceWarDays > 0 && g.priceWarCounter) saleRev *= 0.9;
                 revenue += saleRev;
                 g.addRev("Verkauf (Eigenvertrieb)", saleRev);
                 double shipCost = fulfilled * (shippingCost(g, sku, c) + FULFILL_COST_PER_UNIT);
@@ -213,10 +214,10 @@ public class Simulation implements java.io.Serializable {
                     if (sk.category.hazardous) haz = true;
                 }
             }
-            if (cold) { costs += 80; g.addCost("Standortkosten (Miete/Strom)", 80); }
+            if (cold) { double cc = s.type == SiteType.COLD_STORAGE ? 20 : 80; costs += cc; g.addCost("Kuehlkette", cc); }
             if (haz) { costs += 60; g.addCost("Standortkosten (Miete/Strom)", 60); }
         }
-        double wages = (g.permanentStaff + g.developers) * WAGE_PER_PERSON_PER_DAY;
+        double wages = (g.permanentStaff + g.developers) * WAGE_PER_PERSON_PER_DAY + g.heads.size() * 30_000.0 / 30.0;
         costs += wages;
         g.addCost("Personal (Löhne)", wages);
         if (g.tempsDecember && g.month() == 12 && !strike) {
@@ -270,7 +271,8 @@ public class Simulation implements java.io.Serializable {
         if (g.autopilotZones) g.autoAssignZones();
 
         g.researchPoints += g.developers * 2.0;
-        g.morale += (70 - g.morale) * 0.01;
+        double moraleTarget = g.workersHousing ? 80 : 70;
+        g.morale += (moraleTarget - g.morale) * 0.01;
         sellRefurbished(g, refurbDemand);
         updateRivals(g);
         randomEvents(g);
@@ -278,6 +280,9 @@ public class Simulation implements java.io.Serializable {
         harborStrike(g);
         siteCrises(g);
         fleetAccident(g);
+        priceWarAndInsolvency(g);
+        checkMissions(g);
+        if (g.sabotageCooldown > 0) g.sabotageCooldown--;
         tenderEvents(g);
         tutorialCheck(g);
         java.util.Iterator<java.util.Map.Entry<String, Integer>> bit = g.blockedCities.entrySet().iterator();
@@ -321,9 +326,10 @@ public class Simulation implements java.io.Serializable {
             if (r.categories.contains(sku.category)) catRivalFactor *= 0.94;
         catRivalFactor = Math.max(0.6, catRivalFactor);
         double freshFactor = (g.primeFresh && (sku.category == Category.FMCG || sku.category == Category.COLD_CHAIN)) ? 1.2 : 1.0;
+        double eventFactor = worldEventFactor(g, c, sku);
         return base * primeBoost * season * primeDay * repFactor * brandFactor * rivalFactor
                 * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor * ratingFactor * flashFactor * catRivalFactor * freshFactor
-                * (1.0 + g.techBonus(Tech.Bonus.DEMAND));
+                * (1.0 + g.techBonus(Tech.Bonus.DEMAND)) * eventFactor;
     }
 
     private void sellRefurbished(Game g, double refurbDemand) {
@@ -353,7 +359,8 @@ public class Simulation implements java.io.Serializable {
         }
         double playerMomentum = Math.min(0.02, g.lastDailyRevenue / 500_000.0);
         for (RivalCompany r : g.rivals) {
-            r.marketShare += ((rnd.nextDouble() - 0.45) * 0.002 + 0.0005 + r.sites * 0.0004) * g.difficulty.rivalMult;
+            double warBoost = (g.priceWarDays > 0 && r.name.equals(g.priceWarRival) && !g.priceWarCounter) ? 0.002 : 0.0;
+            r.marketShare += ((rnd.nextDouble() - 0.45) * 0.002 + 0.0005 + r.sites * 0.0004 + warBoost) * g.difficulty.rivalMult;
             r.marketShare -= playerMomentum;
             r.marketShare = Math.max(0.02, Math.min(0.35, r.marketShare));
         }
@@ -411,14 +418,15 @@ public class Simulation implements java.io.Serializable {
     private double shippingCost(Game g, SKU sku, City c) {
         Carrier main = g.carriers.get(0);
         double normal = main.rate(sku.category.weightClass);
-        double express = main.rate(WeightClass.EXPRESS);
+        double express = main.rate(WeightClass.EXPRESS) * (g.airFreight ? 0.7 : 1.0);
         double blended = g.isPrimoDay() ? 0.7 * normal + 0.3 * express : normal;
         if (g.hasAirHub(c.name)) blended *= 0.92;
         double truckDiscount = Math.min(0.30, 0.05 * g.effectiveTrucks(c.name));
         blended *= (1.0 - truckDiscount);
         Site server = g.servingSite(c.name);
         double dist = server != null ? g.distanceKm(g.cityByName(server.city), c) : 1_500;
-        blended *= 1.0 + dist / 5_000.0;
+        double distDiv = g.railHubs.contains(c.name) ? 10_000.0 : 5_000.0;
+        blended *= 1.0 + dist / distDiv;
         if (server != null && server.serviceLevel == com.outback.tycoon.model.ServiceLevel.SAME_DAY)
             blended += com.outback.tycoon.model.ServiceLevel.SAME_DAY.surchargePerParcel;
         blended *= 1.0 + 0.2 * sku.category.spaceFactor;
@@ -604,6 +612,79 @@ public class Simulation implements java.io.Serializable {
             g.tutorialStep++;
             if (g.tutorialStep > 4) g.alert("TUTORIAL abgeschlossen! Viel Erfolg mit " + g.companyName + ".");
             else g.alert("Tutorial-Schritt " + g.tutorialStep + " erledigt!");
+        }
+    }
+
+    private double worldEventFactor(Game g, City c, SKU sku) {
+        int y = g.date().getYear();
+        int m = g.month();
+        int d = g.date().getDayOfMonth();
+        double f = 1.0;
+        if (y == 2000 && m >= 8 && m <= 9 && c.name.equals("Sydney")) {
+            f *= 3.0;
+            flagOnce(g, "olympics2000", "WELT-EVENT: Olympische Spiele Sydney 2000! Sydney-Nachfrage x3 im Aug/Sep.");
+        }
+        if (y == 2020 && m >= 3 && m <= 6) {
+            boolean online = sku.category == Category.ELECTRONICS || sku.category == Category.FMCG || sku.category == Category.COLD_CHAIN;
+            f *= online ? 1.5 : 0.7;
+            flagOnce(g, "covid2020", "WELT-EVENT: Pandemie 2020! Online-Kategorien x1.5, Rest x0.7 (Mrz-Jun).");
+        }
+        if (m == 11 && d >= 22 && d <= 30) {
+            f *= 2.5;
+            flagOnce(g, "blackfriday" + y, "WELT-EVENT: Black Friday! Nachfrage x2.5 (letzte Novemberwoche).");
+        }
+        return f;
+    }
+
+    private void flagOnce(Game g, String key, String msg) {
+        if (g.eventFlags.add(key)) g.alert(msg);
+    }
+
+    private void checkMissions(Game g) {
+        int y = g.date().getYear();
+        if (!g.missionsDone.contains(0) && g.sites.size() >= 5 && y < 2001) {
+            g.missionsDone.add(0);
+            g.cash += 100_000;
+            g.alert("MISSION (Modem-Aera) geschafft: 5 Standorte bis 2000! Belohnung +100.000 AUD.");
+        }
+        if (!g.missionsDone.contains(1) && g.lastDailyRevenue >= 1_000_000 && y < 2011) {
+            g.missionsDone.add(1);
+            g.cash += 500_000;
+            g.alert("MISSION (Breitband-Aera) geschafft: 1 Mio. AUD Tagesumsatz bis 2010! Belohnung +500.000 AUD.");
+        }
+        if (!g.missionsDone.contains(2) && g.ipoDone && y < 2021) {
+            g.missionsDone.add(2);
+            g.cash += 2_000_000;
+            g.alert("MISSION (Cloud-Aera) geschafft: IPO bis 2020! Belohnung +2.000.000 AUD.");
+        }
+        if (!g.missionsDone.contains(3) && g.rivals.isEmpty() && g.dayIndex > 30) {
+            g.missionsDone.add(3);
+            g.cash += 5_000_000;
+            g.alert("MISSION (KI-Aera) geschafft: Monopol! Belohnung +5.000.000 AUD.");
+        }
+    }
+
+    private void priceWarAndInsolvency(Game g) {
+        if (g.priceWarDays > 0) {
+            g.priceWarDays--;
+            if (g.priceWarDays == 0) {
+                g.alert("Der Dumping-Preiskrieg mit " + g.priceWarRival + " ist vorbei.");
+                g.priceWarRival = "";
+                g.priceWarCounter = false;
+            }
+        } else if (rnd.nextDouble() < 0.012 && !g.rivals.isEmpty()) {
+            RivalCompany top = null;
+            for (RivalCompany r : g.rivals) if (top == null || r.marketShare > top.marketShare) top = r;
+            g.priceWarDays = 14 + rnd.nextInt(14);
+            g.priceWarRival = top.name;
+            g.alert("DUMPING-PREISKRIEG! " + top.name + " senkt die Preise (" + g.priceWarDays + " Tage) - Marktanteil waechst schneller. Im Tab 'Konkurrenz' kannst du mitziehen.");
+        }
+        if (rnd.nextDouble() < 0.008 && !g.rivals.isEmpty()) {
+            RivalCompany r = g.rivals.get(rnd.nextInt(g.rivals.size()));
+            if (!r.insolvent) {
+                r.insolvent = true;
+                g.alert("INSOLVENZ! " + r.name + " ist pleite - Uebernahme zum Spottpreis (20% des Werts) im Tab 'Konkurrenz'!");
+            }
         }
     }
 

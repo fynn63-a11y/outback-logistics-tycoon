@@ -10,7 +10,9 @@ public enum SiteType {
     DATA_CENTER("Rechenzentrum (WebServices)", 900_000, 0, 0, 18),
     AIR_HUB("Air-Hub (Flughafen)", 700_000, 300, 200, 16),
     HIGHLAGER("Hochregallager", 800_000, 1200, 150, 22),
-    OUTBACK_GO("Outback-Go-Store (kassenlos)", 300_000, 0, 60, 8);
+    OUTBACK_GO("Outback-Go-Store (kassenlos)", 300_000, 0, 60, 8),
+    COLD_STORAGE("Kuehllager (nur Kuehlkette)", 700_000, 400, 120, 20),
+    HAZ_STORAGE("Gefahrgut-Lager (Lizenz noetig)", 900_000, 300, 120, 20);
 
     public final String label;
     public final double baseCost;

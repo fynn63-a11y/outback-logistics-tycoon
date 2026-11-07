@@ -10,6 +10,7 @@ public class RivalCompany implements java.io.Serializable {
     public int sites = 0;
     public final java.util.List<String> siteCities = new java.util.ArrayList<>();
     public double aggression = 1.0;
+    public boolean insolvent = false;
     public final java.util.Set<Category> categories = java.util.EnumSet.noneOf(Category.class);
 
     public RivalCompany(String name, double marketShare, Color color) {

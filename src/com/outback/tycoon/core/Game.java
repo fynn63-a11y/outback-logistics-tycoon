@@ -323,10 +323,23 @@ public class Game implements Serializable {
     public double techBonus(Tech.Bonus b) {
         double sum = 0;
         for (Tech t : researched) if (t.bonus == b) sum += t.bonusValue;
+        if (b == Tech.Bonus.COST && heads.contains("Einkauf")) sum += 0.03;
+        if (b == Tech.Bonus.DEMAND && heads.contains("Marketing")) sum += 0.03;
+        if (b == Tech.Bonus.THROUGHPUT && heads.contains("IT")) sum += 0.03;
         return sum;
     }
 
     public SiteType pendingBuildType = null;
+    public final java.util.Set<String> heads = new java.util.HashSet<>();
+    public boolean workersHousing = false;
+    public boolean airFreight = false;
+    public final java.util.Set<String> railHubs = new java.util.HashSet<>();
+    public int priceWarDays = 0;
+    public String priceWarRival = "";
+    public boolean priceWarCounter = false;
+    public final java.util.Set<Integer> missionsDone = new java.util.HashSet<>();
+    public final java.util.Set<String> eventFlags = new java.util.HashSet<>();
+    public int sabotageCooldown = 0;
 
     public double serverCapacity() {
         double cap = techBonus(Tech.Bonus.SERVER);
@@ -417,6 +430,10 @@ public class Game implements Serializable {
     }
 
     public Site buildSite(SiteType type) {
+        if (type == SiteType.HAZ_STORAGE && !researched.contains(Tech.PA_HAZMAT)) {
+            alert("Gefahrgut-Lager braucht die Lizenz-Technologie 'Hazmat-Routing beim Packen'.");
+            return null;
+        }
         City c = cityByName(selectedCity);
         if (!isUnlocked(c)) {
             alert(c.name + " ist noch gesperrt. " + unlockHint(c));
@@ -559,6 +576,54 @@ public class Game implements Serializable {
         return sku;
     }
 
+    public void hireHead(String dept) {
+        if (heads.contains(dept) || !charge(200_000)) return;
+        heads.add(dept);
+        alert("Neuer Abteilungsleiter eingestellt: " + dept + " (200.000 AUD, Gehalt laufend).");
+    }
+
+    public void buildWorkersHousing() {
+        if (workersHousing || !charge(150_000)) return;
+        workersHousing = true;
+        morale = Math.min(100, morale + 10);
+        alert("Mitarbeiter-Wohnheim gebaut: Moral-Ziel steigt auf 80.");
+    }
+
+    public void buyAirFreightContract() {
+        if (airFreight || !charge(150_000)) return;
+        airFreight = true;
+        alert("Luftfracht-Vertrag: Express-Rate -30% zwischen Air-Hubs.");
+    }
+
+    public void buyRailHub() {
+        if (railHubs.contains(selectedCity) || !charge(300_000)) return;
+        railHubs.add(selectedCity);
+        alert("Bahnanschluss fuer " + selectedCity + ": guenstigere Langstrecke (-50% Distanzkosten).");
+    }
+
+    public void sabotage(RivalCompany r) {
+        if (sabotageCooldown > 0 || !charge(500_000)) {
+            alert("Sabotage kostet 500.000 AUD (Cooldown aktiv oder zu wenig Kapital).");
+            return;
+        }
+        sabotageCooldown = 30;
+        if (Math.random() < 0.6) {
+            r.marketShare *= 0.7;
+            if (!r.siteCities.isEmpty()) {
+                r.siteCities.remove(r.siteCities.size() - 1);
+                r.sites = Math.max(0, r.sites - 1);
+            }
+            alert("SABOTAGE erfolgreich gegen " + r.name + "! Marktanteil faellt, ein Standort zerstoert.");
+        } else {
+            reputation = Math.max(0, reputation - 8);
+            alert("PR-SKANDAL! Sabotage gegen " + r.name + " aufgeflogen - Reputation -8.");
+        }
+    }
+
+    public void counterPriceWar() {
+        if (priceWarDays > 0) priceWarCounter = true;
+    }
+
     public void researchTech(Tech t) {
         if (researched.contains(t) || researchPoints < t.rpCost || eraIndex() < t.minEra) return;
         researchPoints -= t.rpCost;
@@ -671,7 +736,8 @@ public class Game implements Serializable {
     }
 
     public double rivalValue(RivalCompany r) {
-        return 10_000_000 + r.marketShare * 100_000_000;
+        double v = 10_000_000 + r.marketShare * 100_000_000;
+        return r.insolvent ? v * 0.2 : v;
     }
 
     public void acquireRival(RivalCompany r) {
@@ -783,6 +849,16 @@ public class Game implements Serializable {
         tutorialStep = o.tutorialStep;
         settingFullscreen = o.settingFullscreen;
         pendingBuildType = o.pendingBuildType;
+        heads.clear(); heads.addAll(o.heads);
+        workersHousing = o.workersHousing;
+        airFreight = o.airFreight;
+        railHubs.clear(); railHubs.addAll(o.railHubs);
+        priceWarDays = o.priceWarDays;
+        priceWarRival = o.priceWarRival;
+        priceWarCounter = o.priceWarCounter;
+        missionsDone.clear(); missionsDone.addAll(o.missionsDone);
+        eventFlags.clear(); eventFlags.addAll(o.eventFlags);
+        sabotageCooldown = o.sabotageCooldown;
         difficulty = o.difficulty;
         fleetDown.clear(); fleetDown.putAll(o.fleetDown);
         cityRating.clear(); cityRating.putAll(o.cityRating);

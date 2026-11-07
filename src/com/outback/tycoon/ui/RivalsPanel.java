@@ -44,7 +44,7 @@ public class RivalsPanel extends JPanel {
                 if (cats.length() > 0) cats.append(", ");
                 cats.append(cat.label.split(" ")[0]);
             }
-            row.add(new JLabel(r.name + " | Aggressivität x" + r.aggression
+            row.add(new JLabel((r.insolvent ? "[INSOLVENT!] " : "") + r.name + " | Aggressivität x" + r.aggression
                     + (r.sites > 0 ? " | Standorte: " + r.sites + " in " + String.join(", ", r.siteCities) : "")
                     + (cats.length() > 0 ? " | Artikelgruppen: " + cats : "")));
             row.add(share);
@@ -55,7 +55,26 @@ public class RivalsPanel extends JPanel {
                 refresh();
             });
             row.add(buy);
+            JButton sab = new JButton("Sabotage (500.000 AUD)");
+            sab.setEnabled(game.sabotageCooldown <= 0);
+            sab.addActionListener(e -> {
+                game.sabotage(r);
+                refresh();
+            });
+            row.add(sab);
             root.add(row);
+        }
+        if (game.priceWarDays > 0) {
+            JPanel warRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            warRow.add(new JLabel("PREISKRIEG gegen " + game.priceWarRival + " läuft noch " + game.priceWarDays + " Tage!"));
+            JButton counter = new JButton(game.priceWarCounter ? "Mitziehen aktiv (Marge -10%)" : "Mitziehen (Preise senken, Marktanteil halten)");
+            counter.setEnabled(!game.priceWarCounter);
+            counter.addActionListener(e -> {
+                game.counterPriceWar();
+                refresh();
+            });
+            warRow.add(counter);
+            root.add(warRow);
         }
         JLabel total = new JLabel("Gesamt-Marktanteil der Konkurrenz: " + (int) (game.totalRivalShare() * 100)
                 + "% (dein Marktanteil: " + (100 - (int) (game.totalRivalShare() * 100)) + "%)");

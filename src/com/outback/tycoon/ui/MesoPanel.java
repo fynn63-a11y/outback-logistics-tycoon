@@ -85,6 +85,8 @@ public class MesoPanel extends JPanel {
             case HIGHLAGER: return new Color(121, 85, 72);
             case DATA_CENTER: return new Color(103, 58, 183);
             case OUTBACK_GO: return new Color(230, 126, 34);
+            case COLD_STORAGE: return new Color(100, 200, 255);
+            case HAZ_STORAGE: return new Color(200, 60, 60);
             default: return new Color(60, 66, 80);
         }
     }
