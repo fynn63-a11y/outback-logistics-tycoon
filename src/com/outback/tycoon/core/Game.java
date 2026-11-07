@@ -71,6 +71,16 @@ public class Game implements Serializable {
     public final java.util.Set<String> achievements = new java.util.HashSet<>();
     public double lastFillRate = 1.0;
     public final Map<String, Integer> refurbStock = new HashMap<>();
+    public final Map<String, Double> revBy = new java.util.LinkedHashMap<>();
+    public final Map<String, Double> costBy = new java.util.LinkedHashMap<>();
+
+    public void addRev(String key, double v) {
+        revBy.merge(key, v, Double::sum);
+    }
+
+    public void addCost(String key, double v) {
+        costBy.merge(key, v, Double::sum);
+    }
 
     public boolean sandboxMode = false;
 
@@ -169,9 +179,19 @@ public class Game implements Serializable {
         catalog.add(new SKU("se-3", "Sonnenbrille Summer", Category.APPAREL_LUXURY, 25, null, new Integer[]{12, 1, 2}));
         catalog.add(new SKU("se-4", "Sonnencreme LSF50", Category.FMCG, 6, null, new Integer[]{12, 1, 2}));
 
-        rivals.add(new RivalCompany("Apex Logistics", 0.12, new java.awt.Color(220, 90, 90)));
-        rivals.add(new RivalCompany("Southern Star Freight", 0.09, new java.awt.Color(230, 160, 60)));
-        rivals.add(new RivalCompany("Pacific Rim Fulfilment", 0.07, new java.awt.Color(120, 140, 230)));
+        RivalCompany apex = new RivalCompany("Apex Logistics", 0.12, new java.awt.Color(220, 90, 90));
+        apex.sites = 2;
+        apex.siteCities.add("Melbourne");
+        apex.siteCities.add("London");
+        RivalCompany southern = new RivalCompany("Southern Star Freight", 0.09, new java.awt.Color(230, 160, 60));
+        southern.sites = 1;
+        southern.siteCities.add("Sydney");
+        RivalCompany pacific = new RivalCompany("Pacific Rim Fulfilment", 0.07, new java.awt.Color(120, 140, 230));
+        pacific.sites = 1;
+        pacific.siteCities.add("New York");
+        rivals.add(apex);
+        rivals.add(southern);
+        rivals.add(pacific);
     }
 
     private void addDataCities(String region, String[] data, double cx, double cy, double w, double h) {
@@ -719,5 +739,7 @@ public class Game implements Serializable {
         achievements.clear(); achievements.addAll(o.achievements);
         lastFillRate = o.lastFillRate;
         refurbStock.clear(); refurbStock.putAll(o.refurbStock);
+        revBy.clear(); revBy.putAll(o.revBy);
+        costBy.clear(); costBy.putAll(o.costBy);
     }
 }

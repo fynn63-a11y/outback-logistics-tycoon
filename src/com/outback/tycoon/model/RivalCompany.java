@@ -8,7 +8,7 @@ public class RivalCompany implements java.io.Serializable {
     public double marketShare;
     public final Color color;
     public int sites = 0;
-    public String lastCity = "";
+    public final java.util.List<String> siteCities = new java.util.ArrayList<>();
 
     public RivalCompany(String name, double marketShare, Color color) {
         this.name = name;

@@ -175,13 +175,12 @@ public class MacroMapPanel extends JPanel {
         }
 
         for (com.outback.tycoon.model.RivalCompany r : game.rivals) {
-            if (r.sites == 0 || r.lastCity.isEmpty()) continue;
-            City rc = game.cityByName(r.lastCity);
-            int rx = (int) (rc.mapX * getWidth());
-            int ry = (int) (rc.mapY * getHeight());
-            for (int i = 0; i < r.sites; i++) {
+            for (int i = 0; i < r.siteCities.size(); i++) {
+                City rc = game.cityByName(r.siteCities.get(i));
+                int rx = (int) (rc.mapX * getWidth());
+                int ry = (int) (rc.mapY * getHeight());
                 g.setColor(r.color);
-                g.fillRect(rx - 10 - i * 5, ry - 10 - i * 3, 4, 4);
+                g.fillRect(rx - 10 - (i % 5) * 5, ry - 10 - (i % 5) * 3, 4, 4);
             }
         }
 

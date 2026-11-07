@@ -25,6 +25,8 @@ public class Simulation implements java.io.Serializable {
     public void dailyTick(Game g) {
         double revenue = 0;
         double costs = 0;
+        g.revBy.clear();
+        g.costBy.clear();
 
         if (g.primeDayLeft > 0) {
             g.primeDayLeft--;
@@ -64,11 +66,16 @@ public class Simulation implements java.io.Serializable {
                 demandSum += demand;
                 fulfilledSum += fulfilled;
                 boolean flash = g.flashSaleDays > 0 && (g.flashSaleCategory == null || g.flashSaleCategory == sku.category);
-                revenue += fulfilled * sku.price * (flash ? 0.8 : 1.0);
-                costs += fulfilled * (shippingCost(g, sku, c) + FULFILL_COST_PER_UNIT);
+                double saleRev = fulfilled * sku.price * (flash ? 0.8 : 1.0);
+                revenue += saleRev;
+                g.addRev("Verkauf (Eigenvertrieb)", saleRev);
+                double shipCost = fulfilled * (shippingCost(g, sku, c) + FULFILL_COST_PER_UNIT);
+                costs += shipCost;
+                g.addCost("Fracht & Fulfillment", shipCost);
                 double returns = fulfilled * sku.category.returnRate;
                 g.lastDailyReturns += (int) returns;
                 costs += returns * sku.baseCost * 0.3;
+                g.addCost("Retouren/Refurbished", returns * sku.baseCost * 0.3);
                 if ((int) returns > 0) {
                     int pool = g.refurbStock.getOrDefault(sku.id, 0);
                     int add = (int) returns;
@@ -76,20 +83,26 @@ public class Simulation implements java.io.Serializable {
                     if (add > 0) g.refurbStock.merge(sku.id, add, Integer::sum);
                     refurbDemand += demand * 0.15;
                 }
-                if (sku.category.coldChain) costs += fulfilled * 0.8;
-                if (sku.category.hazardous) costs += fulfilled * 0.5;
+                if (sku.category.coldChain) { costs += fulfilled * 0.8; g.addCost("Kuehlkette", fulfilled * 0.8); }
+                if (sku.category.hazardous) { costs += fulfilled * 0.5; g.addCost("Gefahrgut", fulfilled * 0.5); }
             }
             double fba = fbaOrders(g, c);
             if (g.researched.contains(Tech.AWS_CLOUD)) fba *= 1.2;
             revenue += fba * FBA_FEE_PER_ORDER;
+            g.addRev("FBA Marketplace (Drittanbieter)", fba * FBA_FEE_PER_ORDER);
             costs += fba * 0.40;
         }
 
-        if (g.researched.contains(Tech.AWS_CLOUD)) {
-            double web = 5_000 * (1 + g.networkThroughput() / 10_000.0);
-            revenue += web;
+        double dcIncome = 0;
+        for (Site s : g.sites)
+            if (s.type == SiteType.DATA_CENTER && s.isOperational()) dcIncome += 800.0 * s.level;
+        if (g.researched.contains(Tech.AWS_CLOUD)) dcIncome += 5_000 * (1 + g.networkThroughput() / 10_000.0);
+        revenue += dcIncome;
+        g.addRev("WebServices / AWS (eigene Rechenzentren)", dcIncome);
+        if (!g.subsidiaries.isEmpty() && !g.sandboxMode) {
+            revenue += g.subsidiaries.size() * 3_000;
+            g.addRev("Tochterfirmen", g.subsidiaries.size() * 3_000);
         }
-        if (!g.subsidiaries.isEmpty() && !g.sandboxMode) revenue += g.subsidiaries.size() * 3_000;
         if (g.flashSaleDays > 0) g.flashSaleDays--;
         g.lastFillRate = demandSum > 0 ? fulfilledSum / demandSum : 1.0;
 
@@ -114,6 +127,7 @@ public class Simulation implements java.io.Serializable {
         if (!g.sites.isEmpty()) b2b += 500;
         g.lastB2B = b2b;
         revenue += b2b;
+        g.addRev("B2B-Lagerhotel", b2b);
 
         for (DealerContract ct : new java.util.ArrayList<>(g.contracts)) {
             int stock = 0;
@@ -125,6 +139,7 @@ public class Simulation implements java.io.Serializable {
             double rate = Math.min(1.0, stock / (double) Math.max(1, ct.unitsPerDay * 7));
             double sold = ct.unitsPerDay * rate * (g.isPrimeDay() ? 2.0 : 1.0) * g.seasonality();
             revenue += sold * ct.pricePerUnit;
+            g.addRev("Vertragshändler", sold * ct.pricePerUnit);
             if (rate < 0.8) {
                 double penalty = (0.8 - rate) * ct.unitsPerDay * ct.penaltyPerMissedUnit;
                 costs += penalty;
@@ -149,6 +164,7 @@ public class Simulation implements java.io.Serializable {
             double tax = Math.max(0, profit) * 0.30;
             costs += tax;
             g.cash -= tax;
+            g.addCost("Steuern (30% Körperschaftsteuer)", tax);
             double eps = profit / Game.SHARES;
             g.alert(String.format("QUARTALSBERICHT: Umsatz %,.0f AUD | Kosten %,.0f AUD | Gewinn %,.0f AUD | Steuer (30%%) %,.0f AUD | EPS %.2f AUD",
                     g.quarterRevenue, g.quarterCosts, profit, tax, eps));
@@ -170,6 +186,7 @@ public class Simulation implements java.io.Serializable {
             double rent = s.type.baseCost * 0.002 * s.level;
             if (g.cityByName(s.city).region.equals("Nordamerika")) rent *= g.fxUsd / 0.65;
             costs += rent;
+            g.addCost("Standortkosten (Miete/Strom)", rent);
             if (s.type == SiteType.DATA_CENTER) costs += 200;
             boolean cold = false;
             boolean haz = false;
@@ -180,14 +197,22 @@ public class Simulation implements java.io.Serializable {
                     if (sk.category.hazardous) haz = true;
                 }
             }
-            if (cold) costs += 80;
-            if (haz) costs += 60;
+            if (cold) { costs += 80; g.addCost("Standortkosten (Miete/Strom)", 80); }
+            if (haz) { costs += 60; g.addCost("Standortkosten (Miete/Strom)", 60); }
         }
-        costs += (g.permanentStaff + g.developers) * WAGE_PER_PERSON_PER_DAY;
-        if (g.tempsDecember && g.month() == 12 && !strike) costs += TEMP_COUNT_DECEMBER * TEMP_WAGE_DECEMBER;
-        for (Carrier c : g.carriers) costs += c.fixedFeePerMonth / 30.0;
-        if (g.insured && !g.sandboxMode) costs += 8_000.0 / 30.0;
-        if (g.cash < 0 && !g.sandboxMode) costs += -g.cash * 0.12 / 365.0;
+        double wages = (g.permanentStaff + g.developers) * WAGE_PER_PERSON_PER_DAY;
+        costs += wages;
+        g.addCost("Personal (Löhne)", wages);
+        if (g.tempsDecember && g.month() == 12 && !strike) {
+            costs += TEMP_COUNT_DECEMBER * TEMP_WAGE_DECEMBER;
+            g.addCost("Personal (Löhne)", TEMP_COUNT_DECEMBER * TEMP_WAGE_DECEMBER);
+        }
+        for (Carrier c : g.carriers) {
+            costs += c.fixedFeePerMonth / 30.0;
+            g.addCost("Frachtpartner (Fixkosten)", c.fixedFeePerMonth / 30.0);
+        }
+        if (g.insured && !g.sandboxMode) { costs += 8_000.0 / 30.0; g.addCost("Versicherung", 8_000.0 / 30.0); }
+        if (g.cash < 0 && !g.sandboxMode) { double z = -g.cash * 0.12 / 365.0; costs += z; g.addCost("Zinsen (12% p.a.)", z); }
 
         g.cash += revenue - costs;
         g.lastDailyRevenue = revenue;
@@ -290,6 +315,7 @@ public class Simulation implements java.io.Serializable {
                 double earn = sold * sku.price * 0.6;
                 g.cash += earn;
                 g.lastDailyRevenue += earn;
+                g.addRev("Refurbished (Gebrauchtwaren)", earn);
             }
         }
     }
@@ -313,8 +339,8 @@ public class Simulation implements java.io.Serializable {
                 if (r.marketShare > 0.05 && rnd.nextDouble() < 0.6) {
                     r.sites++;
                     City c = g.cities.get(rnd.nextInt(g.cities.size()));
-                    r.lastCity = c.name;
-                    g.alert("KI-KONKURRENT " + r.name + " eroeffnet Standort #" + r.sites + " in " + c.name + " (sichtbar auf der Karte, Farbe = Rivale).");
+                    r.siteCities.add(c.name);
+                    g.alert("KI-KONKURRENT " + r.name + " eroeffnet Standort #" + r.sites + " in " + c.name + " (" + c.region + ") - sichtbar auf der Karte in Rivalen-Farbe.");
                 }
             }
         }

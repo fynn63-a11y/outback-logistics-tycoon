@@ -172,6 +172,21 @@ public class CompanyPanel extends JPanel {
         }
         root.add(Box.createVerticalStrut(10));
 
+        root.add(section("GuV - Einnahmen & Ausgaben (letzter Tag)"));
+        double revSum = 0;
+        for (java.util.Map.Entry<String, Double> e : game.revBy.entrySet()) {
+            root.add(label(String.format("  + %s: %,.0f AUD", e.getKey(), e.getValue())));
+            revSum += e.getValue();
+        }
+        root.add(label(String.format("  = Einnahmen gesamt: %,.0f AUD", revSum)));
+        double costSum = 0;
+        for (java.util.Map.Entry<String, Double> e : game.costBy.entrySet()) {
+            root.add(label(String.format("  - %s: %,.0f AUD", e.getKey(), e.getValue())));
+            costSum += e.getValue();
+        }
+        root.add(label(String.format("  = Ausgaben gesamt: %,.0f AUD | Saldo: %,.0f AUD", costSum, revSum - costSum)));
+        root.add(Box.createVerticalStrut(10));
+
         root.add(section("Katalog & Autopilot-Preise"));
         for (SKU sku : game.catalog) {
             root.add(label(String.format("%s [%s] | EK %.2f | VK %.2f | Marge %.0f%% | Marke: %s",
