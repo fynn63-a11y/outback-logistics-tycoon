@@ -49,6 +49,22 @@ public class Game implements Serializable {
     public final List<Brand> brands = new ArrayList<>();
     public final List<Carrier> carriers = new ArrayList<>();
     public final List<RivalCompany> rivals = new ArrayList<>();
+    public final List<TransportNetwork.Route> routes = new ArrayList<>();
+
+    public void buildRoutes() {
+        for (String[] e : TransportNetwork.ROADS) routes.add(new TransportNetwork.Route(e[0], e[1], TransportNetwork.Mode.ROAD, 400));
+        for (String[] e : TransportNetwork.RAILS) routes.add(new TransportNetwork.Route(e[0], e[1], TransportNetwork.Mode.RAIL, 800));
+        for (String[] e : TransportNetwork.AIR) routes.add(new TransportNetwork.Route(e[0], e[1], TransportNetwork.Mode.AIR, 200));
+    }
+
+    public TransportNetwork.Route routeBetween(String a, String b) {
+        TransportNetwork.Route best = null;
+        for (TransportNetwork.Route r : routes)
+            if (r.connects(a, b)) {
+                if (best == null || r.mode == TransportNetwork.Mode.AIR || (r.mode == TransportNetwork.Mode.RAIL && best.mode == TransportNetwork.Mode.ROAD)) best = r;
+            }
+        return best;
+    }
 
     public final Set<Tech> researched = EnumSet.noneOf(Tech.class);
     public double researchPoints = 0;
@@ -265,6 +281,7 @@ public class Game implements Serializable {
         rivals.add(apex);
         rivals.add(southern);
         rivals.add(pacific);
+        buildRoutes();
     }
 
     private void generateMinorCities() {
@@ -975,6 +992,7 @@ public class Game implements Serializable {
         brands.clear(); brands.addAll(o.brands);
         carriers.clear(); carriers.addAll(o.carriers);
         rivals.clear(); rivals.addAll(o.rivals);
+        routes.clear(); routes.addAll(o.routes);
         researched.clear(); researched.addAll(o.researched);
         researchPoints = o.researchPoints;
         developers = o.developers;

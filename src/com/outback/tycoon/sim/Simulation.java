@@ -312,6 +312,10 @@ public class Simulation implements java.io.Serializable {
         double moraleTarget = (g.workersHousing ? 80 : 70) - (night ? 5 : 0);
         g.morale += (moraleTarget - g.morale) * 0.01;
         sellRefurbished(g, refurbDemand);
+        for (TransportNetwork.Route r : g.routes) {
+            if (r.congested() && rnd.nextDouble() < 0.05) g.alert("STAU auf Strecke " + r.a + " <-> " + r.b + " (" + r.mode + ")! Fracht +30% dort.");
+            r.load = 0;
+        }
         updateWeather(g);
         diplomacy(g);
         if (g.tradeDealDays > 0) g.tradeDealDays--;
@@ -454,6 +458,8 @@ public class Simulation implements java.io.Serializable {
                 fulfilled += take;
                 remaining -= take;
                 fulfillCostAcc[0] += take * unitCost(g, s);
+                TransportNetwork.Route r = g.routeBetween(s.city, c.name);
+                if (r != null) r.load += take / 50.0;
             }
         }
         return fulfilled;
@@ -481,6 +487,14 @@ public class Simulation implements java.io.Serializable {
         Carrier main = g.carriers.get(0);
         double normal = main.rate(sku.category.weightClass);
         double express = main.rate(WeightClass.EXPRESS) * (g.airFreight ? 0.7 : 1.0);
+        Site server = g.servingSite(c.name);
+        String from = server != null ? server.city : c.name;
+        TransportNetwork.Route route = g.routeBetween(from, c.name);
+        if (route != null) {
+            if (route.mode == TransportNetwork.Mode.RAIL && g.railHubs.contains(from) && g.railHubs.contains(c.name)) normal *= 0.7;
+            if (route.mode == TransportNetwork.Mode.AIR && g.hasAirHub(from) && g.hasAirHub(c.name)) express *= 0.6;
+            if (route.congested()) normal *= 1.3;
+        }
         double blended = g.isPrimoDay() ? 0.7 * normal + 0.3 * express : normal;
         if (g.hasAirHub(c.name)) blended *= 0.92;
         double truckDiscount = Math.min(0.30, 0.05 * g.effectiveTrucks(c.name));
