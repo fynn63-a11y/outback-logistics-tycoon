@@ -185,6 +185,10 @@ public class Simulation implements java.io.Serializable {
             g.cash -= tax;
             g.addCost("Steuern (30% Körperschaftsteuer)", tax);
             double eps = profit / Game.SHARES;
+            double forecastHit = profit > 0 ? 1.05 : 0.95;
+            g.sharePrice *= forecastHit;
+            g.alert(String.format("ANALYSTEN-PROGNOSE: Quartal %s -> Kurs %s 5%% (Kurs jetzt %.2f AUD).",
+                    profit > 0 ? "positiv erfuellt" : "verfehlt", profit > 0 ? "+" : "-", g.sharePrice));
             g.alert(String.format("QUARTALSBERICHT: Umsatz %,.0f AUD | Kosten %,.0f AUD | Gewinn %,.0f AUD | Steuer (30%%) %,.0f AUD | EPS %.2f AUD",
                     g.quarterRevenue, g.quarterCosts, profit, tax, eps));
             if (profit < 0) g.reputation = Math.max(0, g.reputation - 3);
@@ -283,6 +287,7 @@ public class Simulation implements java.io.Serializable {
         double moraleTarget = (g.workersHousing ? 80 : 70) - (night ? 5 : 0);
         g.morale += (moraleTarget - g.morale) * 0.01;
         sellRefurbished(g, refurbDemand);
+        updateWeather(g);
         updateRivals(g);
         randomEvents(g);
         disasters(g);
@@ -335,10 +340,10 @@ public class Simulation implements java.io.Serializable {
             if (r.categories.contains(sku.category)) catRivalFactor *= 0.94;
         catRivalFactor = Math.max(0.6, catRivalFactor);
         double freshFactor = (g.primeFresh && (sku.category == Category.FMCG || sku.category == Category.COLD_CHAIN)) ? 1.2 : 1.0;
-        double eventFactor = worldEventFactor(g, c, sku);
+        double eventFactor = worldEventFactor(g, c, sku) * weatherFactor(g, sku);
         return base * primeBoost * season * primeDay * repFactor * brandFactor * rivalFactor
                 * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor * ratingFactor * flashFactor * catRivalFactor * freshFactor
-                * (1.0 + g.techBonus(Tech.Bonus.DEMAND)) * eventFactor;
+                * (1.0 + g.techBonus(Tech.Bonus.DEMAND)) * eventFactor * marketingFactor(g, c);
     }
 
     private void sellRefurbished(Game g, double refurbDemand) {
@@ -717,6 +722,38 @@ public class Simulation implements java.io.Serializable {
         }
     }
 
+    private void updateWeather(Game g) {
+        if (--g.weatherDays > 0) return;
+        g.weatherDays = 7;
+        String[] w = {"Sonne", "Regen", "Duerre", "Zyklon", "Hitzewelle"};
+        g.weather = w[rnd.nextInt(w.length)];
+        g.alert("WETTER: " + g.weather + " (naechste Woche moeglich geaendert).");
+        if (g.weather.equals("Zyklon") && rnd.nextBoolean()) {
+            g.blockedCities.put("Sydney", 3);
+            for (Shipment sh : g.shipments) if (sh.destCity.equals("Sydney")) sh.daysLeft += 4;
+            g.alert("Zyklon ueber Sydney! Hafen 3 Tage gesperrt, Seefracht +4 Tage.");
+        }
+    }
+
+    private double weatherFactor(Game g, SKU sku) {
+        switch (g.weather) {
+            case "Duerre": case "Hitzewelle":
+                return (sku.category == Category.FMCG || sku.category == Category.COLD_CHAIN) ? 1.2 : 0.9;
+            case "Regen": return 0.95;
+            case "Zyklon": return 0.8;
+            default: return 1.0;
+        }
+    }
+
+    private double marketingFactor(Game g, City c) {
+        double boost = 0;
+        int tv = g.marketing.getOrDefault("TV", 0);
+        int on = g.marketing.getOrDefault("Online", 0);
+        int pl = g.marketing.getOrDefault("Plakat", 0);
+        boost += tv * 0.05 + on * 0.08 + pl * 0.02;
+        return 1.0 + Math.min(0.5, boost * (0.5 + c.popMillions() * 0.1));
+    }
+
     private void disasters(Game g) {
         if (rnd.nextDouble() > 0.012 * g.difficulty.disasterMult) return;
         List<City> open = new java.util.ArrayList<>();
@@ -735,6 +772,12 @@ public class Simulation implements java.io.Serializable {
     }
 
     private void randomEvents(Game g) {
+        if (rnd.nextDouble() < 0.01) {
+            int lost = Math.max(1, g.permanentStaff / 5);
+            g.permanentStaff -= lost;
+            g.morale = Math.max(0, g.morale - 10);
+            g.alert("KUENDIGUNGSWELLE! " + lost + " Mitarbeiter weg - Moral -10. Mehr zahlen oder Wohnheim bauen.");
+        }
         double sec = Math.min(5, g.techBonus(Tech.Bonus.SECURITY));
         if (g.morale < 30 && rnd.nextDouble() < 0.08 * (1 - 0.15 * sec) && g.strikeDaysLeft == 0) {
             g.strikeDaysLeft = 2 + rnd.nextInt(4);

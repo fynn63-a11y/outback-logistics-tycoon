@@ -40,6 +40,7 @@ public class DashboardPanel extends JPanel {
                 game.date(), game.cash, (int) game.reputation)));
         root.add(row(String.format("Letzter Tag: Umsatz %,.0f AUD | Kosten %,.0f AUD | Saldo %,.0f AUD",
                 game.lastDailyRevenue, game.lastDailyCosts, game.lastDailyRevenue - game.lastDailyCosts)));
+        root.add(row(String.format("Strom: %.0f / %.0f kW %s", game.powerUsed(), game.powerProduced(), game.powerShortage() ? "--> AUSFALL (Durchsatz -50%)!" : "ok")));
         root.add(row(String.format("Standorte gesamt: %d | Netzwerk-Durchsatz: %.0f Einheiten/Tag | Serverkapazität: %.0f",
                 game.sites.size(), game.networkThroughput(), game.serverCapacity())));
         root.add(row(String.format("Aktive Seefrachten: %d | Gesperrte Städte (Katastrophe): %d | Primo Day: %s",

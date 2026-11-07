@@ -175,6 +175,20 @@ public class CompanyPanel extends JPanel {
                 + " | Missionen geschafft: " + game.missionsDone.size() + "/4"));
         root.add(Box.createVerticalStrut(10));
 
+        root.add(section("Werbung nach Kanal (Reichweite je Stadt)"));
+        JPanel mkt = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        for (String ch : new String[]{"TV", "Online", "Plakat"}) {
+            int lvl = game.marketing.getOrDefault(ch, 0);
+            JButton b = new JButton(ch + " (Stufe " + lvl + ", naechste " + String.format("%,.0f", 50_000.0 * (lvl + 1)) + " AUD)");
+            b.addActionListener(e -> {
+                game.buyMarketing(ch);
+                refresh();
+            });
+            mkt.add(b);
+        }
+        root.add(mkt);
+        root.add(Box.createVerticalStrut(10));
+
         root.add(section("Blitzangebote & Tochterfirmen"));
         JPanel promoRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton flashAll = new JButton("Blitzangebot ALLE Kategorien (20.000 AUD, 3 Tage: -20% Preis, x1.6 Nachfrage)");

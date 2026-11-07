@@ -544,6 +544,9 @@ public class MacroMapPanel extends JPanel {
         g.setColor(new Color(255, 200, 90));
         g.drawString(game.isPrimoDay() ? "PRIMO DAY aktiv!" : "Naechster Primo Day in " + game.primeDayIn + " Tagen",
                 getWidth() - 320, 22);
+        String wIcon = switch (game.weather) { case "Duerre" -> "[DUERRE]"; case "Zyklon" -> "[ZYKLON!]"; case "Regen" -> "[Regen]"; case "Hitzewelle" -> "[Hitze]"; default -> "[Sonne]"; };
+        g.setColor(new Color(140, 200, 255));
+        g.drawString("Wetter: " + wIcon + " (noch " + game.weatherDays + "d)", 14, 56);
     }
 
     private void drawBuilding(Graphics2D g, int bx, int by, int sz) {

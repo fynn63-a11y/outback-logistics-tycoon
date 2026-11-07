@@ -25,6 +25,9 @@ public class Site implements java.io.Serializable {
     public final Map<String, Integer> stock = new HashMap<>();
     public final MachineType[][] grid = new MachineType[MAX_GRID][MAX_GRID];
     public final int[][] upgrades = new int[MAX_GRID][MAX_GRID];
+    public final MachineType[][] grid2 = new MachineType[MAX_GRID][MAX_GRID];
+    public final int[][] upgrades2 = new int[MAX_GRID][MAX_GRID];
+    public boolean level2 = false;
 
     public Site(int id, SiteType type, String city) {
         this.id = id;
@@ -43,7 +46,7 @@ public class Site implements java.io.Serializable {
     public boolean hasMezzanine() {
         for (int x = 0; x < w; x++)
             for (int y = 0; y < h; y++)
-                if (grid[x][y] == MachineType.MEZZANINE) return true;
+                if (grid[x][y] == MachineType.MEZZANINE) { level2 = true; return true; }
         return false;
     }
 
@@ -94,6 +97,7 @@ public class Site implements java.io.Serializable {
         for (int x = 0; x < w; x++)
             for (int y = 0; y < h; y++)
                 if (grid[x][y] != null) s += grid[x][y].score * (1 + upgrades[x][y] / 2) * cellFactor(x, y);
+                if (level2 && grid2[x][y] != null) s += grid2[x][y].score * (1 + upgrades2[x][y] / 2);
         return (int) s;
     }
 
@@ -102,6 +106,7 @@ public class Site implements java.io.Serializable {
         for (int x = 0; x < w; x++)
             for (int y = 0; y < h; y++)
                 if (grid[x][y] != null && grid[x][y].stage == st) s += grid[x][y].score * (1 + upgrades[x][y] / 2) * cellFactor(x, y);
+                if (level2 && grid2[x][y] != null && grid2[x][y].stage == st) s += grid2[x][y].score * (1 + upgrades2[x][y] / 2);
         return (int) s;
     }
 
@@ -199,6 +204,7 @@ public class Site implements java.io.Serializable {
         }
         t *= flowPenalty();
         t *= 1.0 - 0.3 * wear;
+        if (g.powerShortage()) t *= 0.5;
         if (g.researched.contains(Tech.KIVA_ROBOTS)) t *= 1.5;
         if (g.researched.contains(Tech.HIGH_SPEED_CONVEYORS)) t *= 1.3;
         if (g.tempsDecember && g.month() == 12 && g.strikeDaysLeft <= 0) t *= 1.5;

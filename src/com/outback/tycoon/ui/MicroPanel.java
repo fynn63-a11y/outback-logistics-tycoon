@@ -20,6 +20,7 @@ public class MicroPanel extends JPanel {
     private int[] hover = null;
     private boolean roofOn = true;
     private boolean topDown = false;
+    private boolean showLevel2 = false;
     private Timer animTimer;
 
     public MicroPanel(Game game) {
@@ -66,30 +67,30 @@ public class MicroPanel extends JPanel {
                 int gx = cell[0];
                 int gy = cell[1];
                 if (eraseMode) {
-                    if (s.grid[gx][gy] != null) {
-                        s.grid[gx][gy] = null;
-                        s.upgrades[gx][gy] = 0;
+                    if (showLevel2 ? s.grid2[gx][gy] != null : s.grid[gx][gy] != null) {
+                        if (showLevel2) { s.grid2[gx][gy] = null; s.upgrades2[gx][gy] = 0; }
+                        else { s.grid[gx][gy] = null; s.upgrades[gx][gy] = 0; }
                     }
                 } else {
                     if (selectedMachine.requiredTech != null && !game.researched.contains(selectedMachine.requiredTech)) {
                         game.alert(selectedMachine.label + " erfordert Tech: " + selectedMachine.requiredTech.label + ".");
                         return;
                     }
-                    if (s.grid[gx][gy] == selectedMachine) {
-                        double upCost = selectedMachine.cost * 0.5 * (s.upgrades[gx][gy] + 1);
+                    if ((showLevel2 ? s.grid2[gx][gy] : s.grid[gx][gy]) == selectedMachine) {
+                        double upCost = selectedMachine.cost * 0.5 * ((showLevel2 ? s.upgrades2[gx][gy] : s.upgrades[gx][gy]) + 1);
                         if (!game.charge(upCost)) {
                             game.alert("Modul-Upgrade kostet " + String.format("%,.0f", upCost) + " AUD.");
                             return;
                         }
-                        if (s.upgrades[gx][gy] < 4) s.upgrades[gx][gy]++;
-                        game.alert("Modul '" + selectedMachine.label + "' auf Stufe +" + s.upgrades[gx][gy] + " geupgradet (+50% Score/Stufe, mehr Durchsatz).");
+                        if (showLevel2) { if (s.upgrades2[gx][gy] < 4) s.upgrades2[gx][gy]++; } else if (s.upgrades[gx][gy] < 4) s.upgrades[gx][gy]++;
+                        game.alert("Modul '" + selectedMachine.label + "' auf Stufe +" + (showLevel2 ? s.upgrades2[gx][gy] : s.upgrades[gx][gy]) + " geupgradet (Ebene " + (showLevel2 ? 2 : 1) + ").");
                     } else {
                         if (!game.charge(selectedMachine.cost)) {
                             game.alert("Nicht genug Kapital fuer " + selectedMachine.label + ".");
                             return;
                         }
-                        s.grid[gx][gy] = selectedMachine;
-                        s.upgrades[gx][gy] = 0;
+                        if (showLevel2) { s.grid2[gx][gy] = selectedMachine; s.upgrades2[gx][gy] = 0; }
+                        else { s.grid[gx][gy] = selectedMachine; s.upgrades[gx][gy] = 0; }
                     }
                 }
                 refreshStatus();
@@ -132,6 +133,17 @@ public class MicroPanel extends JPanel {
         });
         palette.add(bpSave);
         palette.add(bpApply);
+        JButton lvl2 = new JButton("Ebene 1");
+        lvl2.addActionListener(e -> {
+            if (game.selectedSite != null && game.selectedSite.hasMezzanine()) {
+                showLevel2 = !showLevel2;
+                lvl2.setText(showLevel2 ? "Ebene 2" : "Ebene 1");
+            } else {
+                game.alert("Ebene 2 braucht ein Mezzanin-Modul (Stage Einlagern).");
+            }
+            canvas.repaint();
+        });
+        palette.add(lvl2);
         JButton viewBtn = new JButton("Ansicht: Iso");
         viewBtn.addActionListener(e -> {
             topDown = !topDown;
@@ -259,8 +271,14 @@ public class MicroPanel extends JPanel {
                     g.setColor(new Color(72, 80, 98));
                     g.drawPolygon(new int[]{cx, cx + tw / 2, cx, cx - tw / 2}, new int[]{cy - th / 2, cy, cy + th / 2, cy}, 4);
 
-                    MachineType m = s.grid[x][y];
-                    if (m != null) drawMachine(g, m, cx, cy, tw, th, t, s.upgrades[x][y]);
+                    MachineType m = showLevel2 ? s.grid2[x][y] : s.grid[x][y];
+                    if (m != null) drawMachine(g, m, cx, cy - (showLevel2 ? th * 6 : 0), tw, th, t, showLevel2 ? s.upgrades2[x][y] : s.upgrades[x][y]);
+                    if (m == MachineType.CONVEYOR && !hasConveyorNeighbor(showLevel2 ? s.grid2 : s.grid, x, y, s.w, s.h)) {
+                        double blink = 0.3 + 0.7 * Math.abs(Math.sin(t / 200.0 + x + y));
+                        g.setColor(new Color(255, 60, 40, (int) (blink * 255)));
+                        g.fillRect(cx - 3, cy - 3, 6, 6);
+                        g.fillRect(cx - 3, cy + 2, 6, 6);
+                    }
                     if (m == MachineType.CONVEYOR || m == MachineType.SPAWNER) {
                         double phase = ((t / 120.0) + x * 3 + y * 5) % 1.0;
                         int px = cx + (int) ((phase - 0.5) * tw * 0.6);
@@ -310,7 +328,7 @@ public class MicroPanel extends JPanel {
                     int py = oy + y * cell;
                     g.setColor(((x + y) % 2 == 0) ? new Color(96, 104, 122) : new Color(86, 94, 112));
                     g.fillRect(px, py, cell, cell);
-                    MachineType m = s.grid[x][y];
+                    MachineType m = showLevel2 ? s.grid2[x][y] : s.grid[x][y];
                     if (m != null) {
                         Color c = machineColor(m);
                         g.setColor(c);
@@ -335,6 +353,13 @@ public class MicroPanel extends JPanel {
                 g.setColor(new Color(200, 210, 230, 60));
                 g.fillRect(ox - 6, oy - 6, gw() * cell + 12, gh() * cell + 12);
             }
+        }
+
+        private boolean hasConveyorNeighbor(MachineType[][] grid, int x, int y, int w, int h) {
+            int[][] nb = { { x + 1, y }, { x - 1, y }, { x, y + 1 }, { x, y - 1 } };
+            for (int[] n : nb)
+                if (n[0] >= 0 && n[0] < w && n[1] >= 0 && n[1] < h && grid[n[0]][n[1]] == MachineType.CONVEYOR) return true;
+            return false;
         }
 
         private void drawWallsAndRoof(Graphics2D g, Site s, int tw, int th) {

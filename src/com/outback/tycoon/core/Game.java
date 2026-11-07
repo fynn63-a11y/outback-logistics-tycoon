@@ -402,6 +402,33 @@ public class Game implements Serializable {
     public final java.util.Set<Integer> missionsDone = new java.util.HashSet<>();
     public final java.util.Set<String> eventFlags = new java.util.HashSet<>();
     public int sabotageCooldown = 0;
+    public String weather = "Sonne";
+    public int weatherDays = 7;
+    public final Map<String, Integer> marketing = new HashMap<>();
+
+    public double powerProduced() {
+        double p = 500;
+        for (Site s : sites) if (s.type == SiteType.DATA_CENTER && s.isOperational()) p += 2_000.0 * s.level;
+        return p;
+    }
+
+    public double powerUsed() {
+        double u = 0;
+        foreach (Site s : sites) u += s.machineScore() * 2;
+        return u;
+    }
+
+    public boolean powerShortage() {
+        return powerUsed() > powerProduced();
+    }
+
+    public void buyMarketing(String channel) {
+        int lvl = marketing.getOrDefault(channel, 0);
+        double cost = 50_000.0 * (lvl + 1);
+        if (!charge(cost)) { alert("Werbung " + channel + " kostet " + String.format("%,.0f", cost) + " AUD."); return; }
+        marketing.put(channel, lvl + 1);
+        alert("Werbekampagne " + channel + " Stufe " + (lvl + 1) + ".");
+    }
     public final Map<String, int[][][]> blueprints = new HashMap<>();
 
     public void saveBlueprint(String name, Site s) {
@@ -974,6 +1001,9 @@ public class Game implements Serializable {
         missionsDone.clear(); missionsDone.addAll(o.missionsDone);
         eventFlags.clear(); eventFlags.addAll(o.eventFlags);
         sabotageCooldown = o.sabotageCooldown;
+        weather = o.weather;
+        weatherDays = o.weatherDays;
+        marketing.clear(); marketing.putAll(o.marketing);
         blueprints.clear();
         for (java.util.Map.Entry<String, int[][][]> e : o.blueprints.entrySet()) {
             int[][][] copy = new int[3][Site.MAX_GRID][Site.MAX_GRID];
