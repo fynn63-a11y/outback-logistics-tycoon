@@ -184,7 +184,7 @@ public class MicroPanel extends JPanel {
                 for (int y = 0; y < Site.GRID; y++) {
                     int cx = originX() + (x - y) * tw / 2;
                     int cy = originY() + (x + y) * th / 2;
-                    Paint tilePaint = ((x + y) % 2 == 0) ? Textures.floorAPaint() : Textures.floorBPaint();
+                    Paint tilePaint = ((x + y) % 2 == 0) ? Textures.paint("fA", Textures.generate(64, new Color(78, 88, 108), new Color(64, 73, 92), 8, 3, 21)) : Textures.paint("fB", Textures.generate(64, new Color(68, 77, 96), new Color(56, 64, 82), 8, 3, 33));
                     diamond(g, cx, cy, tw, th, tilePaint);
                     g.setColor(new Color(72, 80, 98));
                     g.drawPolygon(new int[]{cx, cx + tw / 2, cx, cx - tw / 2}, new int[]{cy - th / 2, cy, cy + th / 2, cy}, 4);
@@ -194,6 +194,9 @@ public class MicroPanel extends JPanel {
                         int lift = th;
                         Color c = machineColor(m);
                         diamond(g, cx, cy - lift, tw * 2 / 3, th * 2 / 3, c);
+                        g.setColor(Color.WHITE);
+                        g.drawPolygon(new int[]{cx - tw / 3, cx, cx + tw / 3, cx},
+                                new int[]{cy - lift - th / 3, cy - lift, cy - lift + th / 3, cy - lift}, 4);
                         g.setColor(c.darker());
                         g.fillPolygon(new int[]{cx - tw / 3, cx, cx, cx - tw / 3 + 0},
                                 new int[]{cy - lift, cy - lift + th / 3, cy + th / 3, cy}, 4);

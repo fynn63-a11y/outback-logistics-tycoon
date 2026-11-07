@@ -127,9 +127,11 @@ public class MacroMapPanel extends JPanel {
         Path2D.Double eu = continent(EUROPA);
         Path2D.Double au = continent(AUSTRALIEN);
 
-        g.setPaint(Textures.landPaint());
+        g.setPaint(Textures.paint("landNa", Textures.generate(128, new Color(146, 168, 116), new Color(112, 134, 84), 4, 4, 11)));
         g.fill(na);
+        g.setPaint(Textures.paint("landEu", Textures.generate(128, new Color(128, 152, 196), new Color(96, 120, 168), 4, 4, 23)));
         g.fill(eu);
+        g.setPaint(Textures.paint("landAu", Textures.generate(128, new Color(214, 178, 116), new Color(178, 142, 84), 4, 4, 37)));
         g.fill(au);
 
         hillshade(g, na);
@@ -140,6 +142,11 @@ public class MacroMapPanel extends JPanel {
         provinces(g, eu);
         provinces(g, au);
 
+        g.setColor(new Color(180, 220, 255, 60));
+        g.setStroke(new BasicStroke(7f));
+        g.draw(na);
+        g.draw(eu);
+        g.draw(au);
         g.setColor(new Color(30, 22, 12));
         g.setStroke(new BasicStroke(3f));
         g.draw(na);
@@ -184,15 +191,15 @@ public class MacroMapPanel extends JPanel {
     }
 
     private void provinces(Graphics2D g, Path2D.Double land) {
-        int cell = 26;
+        int cell = 34;
         java.util.Random r = new java.util.Random(42);
         for (int y = cell / 2; y < baseH; y += cell) {
             for (int x = cell / 2; x < baseW; x += cell) {
                 if (!land.contains(x, y)) continue;
                 int v = r.nextInt(26) - 13;
-                g.setColor(new Color(255, 245, 220, 10 + Math.abs(v) / 2));
+                g.setColor(new Color(255, 250, 230, 6 + Math.abs(v) / 4));
                 g.fillRect(x - cell / 2, y - cell / 2, cell, cell);
-                g.setColor(new Color(60, 45, 25, 60));
+                g.setColor(new Color(40, 32, 18, 34));
                 g.drawRect(x - cell / 2, y - cell / 2, cell, cell);
             }
         }
