@@ -360,21 +360,21 @@ public class MacroMapPanel extends JPanel {
             new double[][]{{151.0,-33.8},{150.5,-32.0}}, // Hawkesbury
     };
     private static final String[][] ROADS = {
-            new[]{"Brisbane", "Sydney"}, new[]{"Sydney", "Melbourne"}, new[]{"Sydney", "Newcastle"},
-            new[]{"Melbourne", "Adelaide"}, new[]{"Adelaide", "Perth"}, new[]{"Adelaide", "Alice Springs"},
-            new[]{"Alice Springs", "Darwin"}, new[]{"Darwin", "Cairns"}, new[]{"Brisbane", "Cairns"},
-            new[]{"Perth", "Kalgoorlie"}, new[]{"Sydney", "Canberra"}, new[]{"Brisbane", "Gold Coast"},
-            new[]{"Melbourne", "Geelong"}, new[]{"Adelaide", "Whyalla"}, new[]{"Cairns", "Townsville"},
+            new String[]{"Brisbane", "Sydney"}, new String[]{"Sydney", "Melbourne"}, new String[]{"Sydney", "Newcastle"},
+            new String[]{"Melbourne", "Adelaide"}, new String[]{"Adelaide", "Perth"}, new String[]{"Adelaide", "Alice Springs"},
+            new String[]{"Alice Springs", "Darwin"}, new String[]{"Darwin", "Cairns"}, new String[]{"Brisbane", "Cairns"},
+            new String[]{"Perth", "Kalgoorlie"}, new String[]{"Sydney", "Canberra"}, new String[]{"Brisbane", "Gold Coast"},
+            new String[]{"Melbourne", "Geelong"}, new String[]{"Adelaide", "Whyalla"}, new String[]{"Cairns", "Townsville"},
     };
     private static final String[][] RAILS = {
-            new[]{"Sydney", "Melbourne"}, new[]{"Melbourne", "Adelaide"}, new[]{"Adelaide", "Alice Springs"},
-            new[]{"Alice Springs", "Darwin"}, new[]{"Sydney", "Brisbane"}, new[]{"Brisbane", "Cairns"},
-            new[]{"Perth", "Kalgoorlie"},
+            new String[]{"Sydney", "Melbourne"}, new String[]{"Melbourne", "Adelaide"}, new String[]{"Adelaide", "Alice Springs"},
+            new String[]{"Alice Springs", "Darwin"}, new String[]{"Sydney", "Brisbane"}, new String[]{"Brisbane", "Cairns"},
+            new String[]{"Perth", "Kalgoorlie"},
     };
     private static final String[][] AIRROUTES = {
-            new[]{"Sydney", "Melbourne"}, new[]{"Sydney", "Brisbane"}, new[]{"Sydney", "Perth"},
-            new[]{"Sydney", "Adelaide"}, new[]{"Melbourne", "Perth"}, new[]{"Brisbane", "Cairns"},
-            new[]{"Perth", "Darwin"}, new[]{"Melbourne", "Adelaide"},
+            new String[]{"Sydney", "Melbourne"}, new String[]{"Sydney", "Brisbane"}, new String[]{"Sydney", "Perth"},
+            new String[]{"Sydney", "Adelaide"}, new String[]{"Melbourne", "Perth"}, new String[]{"Brisbane", "Cairns"},
+            new String[]{"Perth", "Darwin"}, new String[]{"Melbourne", "Adelaide"},
     };
 
     private static final double[][] LAKES = {
