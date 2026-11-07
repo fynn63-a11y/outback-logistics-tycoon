@@ -101,6 +101,7 @@ public class MicroPanel extends JPanel {
     }
 
     private void refreshStatus() {
+        if (game == null) return;
         Site s = game.selectedSite;
         if (s == null) {
             status.setText("Kein Standort ausgewaehlt - waehle zuerst in 'Stadt & Bau (Meso)' einen Standort.");
@@ -118,7 +119,7 @@ public class MicroPanel extends JPanel {
     @Override
     public void repaint() {
         super.repaint();
-        refreshStatus();
+        if (game != null) refreshStatus();
     }
 
     private class GridCanvas extends JPanel {
