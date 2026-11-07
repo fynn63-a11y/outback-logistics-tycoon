@@ -62,15 +62,17 @@ public class Simulation implements java.io.Serializable {
                 if (serverCrash) demand *= 0.05;
                 if (strike) demand *= 0.10;
 
-                int fulfilled = fulfill(g, c, sku, demand);
                 demandSum += demand;
+                int fulfilled;
+                double[] fc = {0};
+                fulfilled = fulfill(g, c, sku, demand, fc);
                 fulfilledSum += fulfilled;
                 boolean flash = g.flashSaleDays > 0 && (g.flashSaleCategory == null || g.flashSaleCategory == sku.category);
                 double saleRev = fulfilled * sku.price * (flash ? 0.8 : 1.0);
                 if (g.priceWarDays > 0 && g.priceWarCounter) saleRev *= 0.9;
                 revenue += saleRev;
                 g.addRev("Verkauf (Eigenvertrieb)", saleRev);
-                double shipCost = fulfilled * (shippingCost(g, sku, c) + FULFILL_COST_PER_UNIT);
+                double shipCost = fulfilled * shippingCost(g, sku, c) + fc[0];
                 costs += shipCost;
                 g.addCost("Fracht & Fulfillment", shipCost);
                 double returns = fulfilled * sku.category.returnRate;
@@ -386,7 +388,7 @@ public class Simulation implements java.io.Serializable {
         }
     }
 
-    private int fulfill(Game g, City c, SKU sku, double demand) {
+    private int fulfill(Game g, City c, SKU sku, double demand, double[] fulfillCostAcc) {
         List<Site> sites = new java.util.ArrayList<>(g.sitesIn(c.name));
         Site server = g.servingSite(c.name);
         if (server != null && sites.contains(server)) {
@@ -410,9 +412,28 @@ public class Simulation implements java.io.Serializable {
                 s.removeStock(sku.id, take);
                 fulfilled += take;
                 remaining -= take;
+                fulfillCostAcc[0] += take * unitCost(g, s);
             }
         }
         return fulfilled;
+    }
+
+    private double unitCost(Game g, Site s) {
+        double base = FULFILL_COST_PER_UNIT;
+        double typeFactor;
+        switch (s.type) {
+            case FC_HUB: typeFactor = 0.85; break;
+            case VERTEILZENTRUM: typeFactor = 0.80; break;
+            case HIGHLAGER: typeFactor = 0.88; break;
+            case UMSCHLAGZENTRUM: typeFactor = 0.90; break;
+            case CONTAINER_TERMINAL: typeFactor = 0.90; break;
+            case DEPOT: typeFactor = 0.95; break;
+            case AIR_HUB: typeFactor = 0.92; break;
+            default: typeFactor = 1.0;
+        }
+        double levelDiscount = 1.0 - 0.04 * (s.level - 1);
+        double techDiscount = 1.0 - Math.min(0.3, g.techBonus(Tech.Bonus.THROUGHPUT) * 0.2);
+        return base * typeFactor * Math.max(0.6, levelDiscount) * techDiscount;
     }
 
     private double shippingCost(Game g, SKU sku, City c) {
