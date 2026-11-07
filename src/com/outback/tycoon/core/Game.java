@@ -215,11 +215,11 @@ public class Game implements Serializable {
         }
     }
 
-    int lastEraValue() {
+    public int lastEraValue() {
         return lastEra;
     }
 
-    void setLastEra(int e) {
+    public void setLastEra(int e) {
         lastEra = e;
     }
 

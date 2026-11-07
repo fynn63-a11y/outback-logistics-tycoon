@@ -6,7 +6,6 @@ import com.outback.tycoon.model.Scenario;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyStroke;
 
 public class MainWindow extends JFrame {
     private final Game game;

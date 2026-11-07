@@ -18,14 +18,14 @@ public class Sfx {
 
     public static void tone(double freq, int ms, double vol) {
         if (!enabled) return;
-        Thread t = new Thread(() -> {
+        Thread th = new Thread(() -> {
             try {
                 int n = RATE * ms / 1000;
                 byte[] buf = new byte[n];
                 for (int i = 0; i < n; i++) {
-                    double t = i / (double) RATE;
+                    double tt = i / (double) RATE;
                     double env = Math.min(1.0, (n - i) / (double) (n * 0.3));
-                    buf[i] = (byte) (128 + vol * env * 100 * Math.sin(2 * Math.PI * freq * t));
+                    buf[i] = (byte) (128 + vol * env * 100 * Math.sin(2 * Math.PI * freq * tt));
                 }
                 AudioFormat fmt = new AudioFormat(RATE, 8, 1, true, false);
                 try (SourceDataLine line = AudioSystem.getSourceDataLine(fmt)) {
@@ -37,8 +37,8 @@ public class Sfx {
             } catch (Exception ignored) {
             }
         }, "sfx");
-        t.setDaemon(true);
-        t.start();
+        th.setDaemon(true);
+        th.start();
     }
 
     public static void alert() {
