@@ -37,7 +37,7 @@ public class MesoPanel extends JPanel {
         siteList.removeAll();
         City c = game.cityByName(game.selectedCity);
         JLabel head = new JLabel(String.format(
-                "%s, %s - %,d Einwohner, Prime-Quote %.0f%%, Saisonfaktor x%.2f",
+                "%s, %s - %,d Einwohner, Primo-Quote %.0f%%, Saisonfaktor x%.2f",
                 c.name, c.state, c.population, c.primeQuote * 100, game.seasonality()));
         head.setFont(head.getFont().deriveFont(Font.BOLD, 14f));
         head.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));

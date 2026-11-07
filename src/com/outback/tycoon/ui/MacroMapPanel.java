@@ -163,15 +163,15 @@ public class MacroMapPanel extends JPanel {
                 g.setColor(Color.WHITE);
                 String label = c.name + (unlocked ? "" : " (gesperrt)");
                 g.drawString(label, x + r + 4, y - 2);
-                g.drawString(String.format("%,d Einw. | Prime %.0f%% | Standorte: %d",
+                g.drawString(String.format("%,d Einw. | Primo %.0f%% | Standorte: %d",
                         c.population, c.primeQuote * 100, citySites.size()), x + r + 4, y + 11);
             }
         }
 
-        if (game.isPrimeDay()) {
+        if (game.isPrimoDay()) {
             g.setColor(Color.RED);
             g.setFont(g.getFont().deriveFont(Font.BOLD, 22f));
-            g.drawString("PRIME DAY! Traffic x3.5", getWidth() / 2 - 120, 30);
+            g.drawString("PRIMO DAY! Traffic x3.5", getWidth() / 2 - 120, 30);
         }
 
         for (com.outback.tycoon.model.RivalCompany r : game.rivals) {

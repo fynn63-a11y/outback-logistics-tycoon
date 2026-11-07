@@ -1,7 +1,7 @@
 # Outback Logistics Tycoon
 
 Ein Echtzeit-Logistik-Tycoon in Java (Swing, keine externen Abhängigkeiten): Baue dein eigenes
-Amazon-ähnliches Imperium in Australien auf — von der ersten Garage 1994 bis zum Börsengang an
+Outback-ähnliches Imperium in Australien auf — von der ersten Garage 1994 bis zum Börsengang an
 der ASX. Inspiriert von Hearts of Iron 4 (Makro-Karte), GeoPolitik 5 und Production Line
 (isometrisches Intralogistik-Grid), mit leichter Chiptune-Musik.
 
@@ -72,9 +72,9 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
 ### Ebenen
 
 1. **Makro (Karte):** Interaktive Karte Australiens mit Sydney, Melbourne, Brisbane, Perth und
-   Adelaide (Einwohnerzahlen, Prime-Quote, Saisonfaktor). Klick wählt die Stadt.
+   Adelaide (Einwohnerzahlen, Primo-Quote, Saisonfaktor). Klick wählt die Stadt.
 2. **Meso (Stadt & Bau):** Baue modular Lager, FC-Hubs, Zwischenlager, Verteilzentren,
-   Umschlagzentren, Container-Terminals (senken Hafen-Stau) und AWS-Rechenzentren. Größere
+   Umschlagzentren, Container-Terminals (senken Hafen-Stau) und OWS-Rechenzentren. Größere
    Ausbaustufen kosten mehr, fassen mehr Paletten. Jeder Standort hat 1–5 Automatisierungs-Sterne.
 3. **Mikro (20x20-Grid):** Isometrischer 2.5D-Baukasten pro Standort mit kategorisiertem Packbau
    (Wareneingang, Transport, Lagerung, Kommissionierung, Verpackung, Sortierung, Versand):
@@ -93,15 +93,15 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
   Frachtklassen.
 - **Private Label:** Gründe eigene Marken (250.000 AUD), finanziere Werbekampagnen und verdränge
   Rivalen.
-- **Nachfrage:** Skaliert pro Million Einwohner, Prime-Quote, 12-Monats-Saison-Array (Dezember x2.0)
-  und periodischem **Prime Day** (x3.5 Traffic).
+- **Nachfrage:** Skaliert pro Million Einwohner, Primo-Quote, 12-Monats-Saison-Array (Dezember x2.0)
+  und periodischem **Primo Day** (x3.5 Traffic).
 - **SCM:** Containerseefracht Shenzhen/Shanghai → Sydney/Melbourne (21 Tage + Hafen-Stau bei
   Port Congestion), begrenzte Paletten-Slots.
-- **Marketplace (FBA):** Drittanbieter zahlen Lager- und Kommissioniergebühren.
+- **Marketplace (MF):** Drittanbieter zahlen Lager- und Kommissioniergebühren.
 - **Frachtpartner:** 3 Dienstleister, 5 Gewichtsklassen, Vertragsverhandlungen senken Tarife.
 - **Technikbaum:** Forschungspunkte durch Entwickler; Kiva-Roboter, High-Speed-Rollbahnen,
-  Smart Slotting AI, AWS Cloud, eigene Flotte, Patentschutz.
-- **AWS/Rechenzentren:** Serverkapazität gegen Prime-Day-Crashes.
+  Smart Slotting AI, OWS Cloud, eigene Flotte, Patentschutz.
+- **OWS/Rechenzentren:** Serverkapazität gegen Primo-Day-Crashes.
 - **IPO:** Ab 50 Mio. AUD geschätzter Marktkapitalisierung an die ASX Sydney (+25 Mio. AUD).
 - **HR & Risiken:** Moral, wilde Streiks, PR-Krisen, saisonale Aushilfen im Dezember,
   Industriespionage durch KI-Konkurrenten.
@@ -126,9 +126,9 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
   isometrisch-2.5D mit animiertem Warenfluss auf den Rollbahnen und Anzeige der maximalen
   Lagerkapazität (Paletten).
 - **Szenarien:** Auswahl beim Start — Endlos-Sandbox, IPO-Rennen (Sieg beim Börsengang),
-  Prime-Day-Überleben (erster Prime Day ohne Server-Crash), Monopol (alle Konkurrenten übernehmen).
+  Primo-Day-Überleben (erster Primo Day ohne Server-Crash), Monopol (alle Konkurrenten übernehmen).
 - **Epochen:** Modem-Ära (1994–99), Breitband-Ära (2000–09), Cloud-Ära (2010–19), KI-Ära (ab 2020).
-  Jede Epoche hebt die E-Commerce-Nachfrage an und schaltet Tech-Tiers frei (z. B. AWS Cloud und
+  Jede Epoche hebt die E-Commerce-Nachfrage an und schaltet Tech-Tiers frei (z. B. OWS Cloud und
   Kiva-Roboter erst ab Cloud-Ära).
 - **Flotte & Letzte Meile:** LKW/Transporter pro Stadt (+Durchsatz, -Frachtkosten, +Nachfrage);
   eigener Zustelldienst (Letzte Meile) kostet mehr Fracht, bringt aber Nachfrage und Reputation.
@@ -138,7 +138,7 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
 - **Wirtschaft:** Nach dem IPO simulierter Aktienkurs an der ASX ( reagiert auf Gewinn und
   Reputation), Marktkapitalisierung = Kurs x Aktien.
 - **Mitarbeiter-Skills:** Schulungen erhöhen die Skill-Stufe (+5% Durchsatz pro Stufe).
-- **AWS WebServices:** Mit AWS Cloud: Webshop x1.15, FBA +20%, passive WebService-Einnahmen.
+- **OWS WebServices:** Mit OWS Cloud: Webshop x1.15, MF +20%, passive WebService-Einnahmen.
 - **Statistik-Tab:** Verlaufsgraphen für Kasse, Tagesumsatz und Konkurrenz-Marktanteil.
 - **Speichern/Laden:** komplettes Spiel via Java-Serialisierung (Buttons im HUD).
 - **Sound:** Chiptune-Musik + Soundeffekte (Alert, Kasse bei IPO/Übernahme, Crash bei Bankrott).
@@ -168,16 +168,16 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
   Konkurrenz-Härte).
 - **Gebrauchtwaren-Markt (Refurbished):** Retouren landen im Refurb-Pool (max. 5.000/SKU) und werden
   automatisch als Gebrauchtware zu 60% des Neupreises verkauft (eigene Nachfrage-Quelle). Pool-Anzeige im Dashboard.
-- **Prime-Ökosystem:** Werbekampagnen steigern Prime-Abonnenten (9,99 AUD/Monat Einkommen, globale
-  Prime-Quote pusht die Nachfrage); freischaltbar: Prime Video, Prime Music, Prime Fresh (Lebensmittel,
-  +20% FMCG/Kühlkette); eigener Standort-Typ **Amazon-Go-Store** (kassenloser Laden, Direktverkauf).
+- **Primo-Ökosystem:** Werbekampagnen steigern Primo-Abonnenten (9,99 AUD/Monat Einkommen, globale
+  Primo-Quote pusht die Nachfrage); freischaltbar: Primo View, Primo Tunes, Primo Fresh (Lebensmittel,
+  +20% FMCG/Kühlkette); eigener Standort-Typ **Outback-Go-Store** (kassenloser Laden, Direktverkauf).
 - **Aktive KI-Konkurrenten mit Aggressivität & Fokus:** jeder Rivale hat eine Aggressivität (x0.8–x1.6,
   bestimmt Bautempo) und expandiert in **Artikelgruppen** — jede besetzte Gruppe drückt deine Nachfrage
   in dieser Kategorie um 6%. Rivals eröffnen alle ~30 Tage sichtbare eigene Standorte auf der Karte
   (farbige Kästchen in Rivalen-Farbe, zuletzt in welcher Stadt), jeder Standort pusht ihren Marktanteil.
 - **Animationen auf der Karte:** umkreisende Drohnen an Standorten, fahrende LKWs in Flotten-Städten,
   Flugzeuge auf Langstrecken (Sydney→London, Sydney→LA, Sydney→Shenzhen).
-- **Nachfrage & Angebot (Prinzip):** Nachfrage pro Stadt = Einwohner/Mio x Kategorie-Faktor x Prime-Quote
+- **Nachfrage & Angebot (Prinzip):** Nachfrage pro Stadt = Einwohner/Mio x Kategorie-Faktor x Primo-Quote
   x Saison x Epoche x Reputation x Konkurrenz x Service-Level x Webshop/Last-Mile. Angebot = Durchsatz
   der zugewiesenen Standorte (Stufe x Sterne x Grid-Effizienz x Prozesskette x Tech x Skills x Flotte).
   Ungedeckte Nachfrage = verlorene Verkaeufe; Frachtkosten = Gewichtsklasse x Distanz x Service x Rabatte.

@@ -15,7 +15,7 @@ public class Simulation implements java.io.Serializable {
     };
     private static final double[] DEMAND_PER_MILLION = {8, 25, 6, 10, 2, 60, 20, 4, 3};
     private static final double FULFILL_COST_PER_UNIT = 1.20;
-    private static final double FBA_FEE_PER_ORDER = 3.50;
+    private static final double MF_FEE_PER_ORDER = 3.50;
     private static final double WAGE_PER_PERSON_PER_DAY = 90_000.0 / 365.0;
     private static final double TEMP_WAGE_DECEMBER = 200.0;
     private static final int TEMP_COUNT_DECEMBER = 40;
@@ -35,7 +35,7 @@ public class Simulation implements java.io.Serializable {
             if (g.primeDayIn <= 0) {
                 g.primeDayLeft = 3;
                 g.primeDayIn = 90;
-                g.alert("PRIME DAY! Traffic x3.5 fuer 3 Tage.");
+                g.alert("PRIMO DAY! Traffic x3.5 fuer 3 Tage.");
             }
         }
 
@@ -49,9 +49,9 @@ public class Simulation implements java.io.Serializable {
         for (City c : g.cities)
             for (SKU sku : g.catalog) totalDemand += demand(g, c, sku);
 
-        boolean serverCrash = g.isPrimeDay() && totalDemand > g.serverCapacity();
+        boolean serverCrash = g.isPrimoDay() && totalDemand > g.serverCapacity();
         if (serverCrash) {
-            g.alert("SERVER-CRASH beim Prime Day! AWS-Kapazitaet ueberschritten, Bestellungen fallen aus.");
+            g.alert("SERVER-CRASH beim Primo Day! OWS-Kapazitaet ueberschritten, Bestellungen fallen aus.");
             g.reputation = Math.max(0, g.reputation - 3);
         }
 
@@ -87,18 +87,18 @@ public class Simulation implements java.io.Serializable {
                 if (sku.category.hazardous) { costs += fulfilled * 0.5; g.addCost("Gefahrgut", fulfilled * 0.5); }
             }
             double fba = fbaOrders(g, c);
-            if (g.researched.contains(Tech.AWS_CLOUD)) fba *= 1.2;
-            revenue += fba * FBA_FEE_PER_ORDER;
-            g.addRev("FBA Marketplace (Drittanbieter)", fba * FBA_FEE_PER_ORDER);
+            if (g.researched.contains(Tech.OWS_CLOUD)) fba *= 1.2;
+            revenue += fba * MF_FEE_PER_ORDER;
+            g.addRev("MF-Marktplatz Fulfillment (Drittanbieter)", fba * MF_FEE_PER_ORDER);
             costs += fba * 0.40;
         }
 
         double dcIncome = 0;
         for (Site s : g.sites)
             if (s.type == SiteType.DATA_CENTER && s.isOperational()) dcIncome += 800.0 * s.level;
-        if (g.researched.contains(Tech.AWS_CLOUD)) dcIncome += 5_000 * (1 + g.networkThroughput() / 10_000.0);
+        if (g.researched.contains(Tech.OWS_CLOUD)) dcIncome += 5_000 * (1 + g.networkThroughput() / 10_000.0);
         revenue += dcIncome;
-        g.addRev("WebServices / AWS (eigene Rechenzentren)", dcIncome);
+        g.addRev("WebServices / OWS (eigene Rechenzentren)", dcIncome);
         if (!g.subsidiaries.isEmpty() && !g.sandboxMode) {
             revenue += g.subsidiaries.size() * 3_000;
             g.addRev("Tochterfirmen", g.subsidiaries.size() * 3_000);
@@ -132,16 +132,16 @@ public class Simulation implements java.io.Serializable {
         if (g.primeSubscribers > 0) {
             double primeFee = g.primeSubscribers * 9.99 / 30.0;
             revenue += primeFee;
-            g.addRev("Prime-Abos (9,99 AUD/Monat)", primeFee);
-            if (g.primeVideo) { revenue += g.primeSubscribers * 0.06; g.addRev("Prime Video", g.primeSubscribers * 0.06); }
-            if (g.primeMusic) { revenue += g.primeSubscribers * 0.05; g.addRev("Prime Music", g.primeSubscribers * 0.05); }
+            g.addRev("Primo-Abos (9,99 AUD/Monat)", primeFee);
+            if (g.primeVideo) { revenue += g.primeSubscribers * 0.06; g.addRev("Primo View", g.primeSubscribers * 0.06); }
+            if (g.primeMusic) { revenue += g.primeSubscribers * 0.05; g.addRev("Primo Tunes", g.primeSubscribers * 0.05); }
         }
         g.primeSubscribers += (long) (g.reputation / 100.0 * g.sites.size() * 3);
         for (Site s : g.sites) {
             if (s.type == SiteType.AMAZON_GO && s.isOperational()) {
                 double go = g.siteThroughput(s) * 15.0;
                 revenue += go;
-                g.addRev("Amazon-Go-Stores", go);
+                g.addRev("Outback-Go-Stores", go);
             }
         }
 
@@ -153,7 +153,7 @@ public class Simulation implements java.io.Serializable {
                     if (sk != null && sk.category == ct.category) stock += e.getValue();
                 }
             double rate = Math.min(1.0, stock / (double) Math.max(1, ct.unitsPerDay * 7));
-            double sold = ct.unitsPerDay * rate * (g.isPrimeDay() ? 2.0 : 1.0) * g.seasonality();
+            double sold = ct.unitsPerDay * rate * (g.isPrimoDay() ? 2.0 : 1.0) * g.seasonality();
             revenue += sold * ct.pricePerUnit;
             g.addRev("Vertragshändler", sold * ct.pricePerUnit);
             if (rate < 0.8) {
@@ -234,7 +234,7 @@ public class Simulation implements java.io.Serializable {
         g.lastDailyRevenue = revenue;
         g.lastDailyCosts = costs;
 
-        if (g.isPrimeDay() && !serverCrash) g.primeDaySurvived = true;
+        if (g.isPrimoDay() && !serverCrash) g.primeDaySurvived = true;
 
         if (g.ipoDone && !g.sandboxMode) {
             double profitFactor = Math.max(-0.05, Math.min(0.05, (revenue - costs) / 1_000_000.0));
@@ -298,16 +298,16 @@ public class Simulation implements java.io.Serializable {
     public double demand(Game g, City c, SKU sku) {
         if (!sku.availableIn(g.month())) return 0;
         double base = DEMAND_PER_MILLION[sku.category.ordinal()] * c.popMillions();
-        double effPrime = Math.max(c.primeQuote, g.primeShare());
-        double primeBoost = 1.0 + effPrime * 0.5;
+        double effPrimo = Math.max(c.primeQuote, g.primeShare());
+        double primeBoost = 1.0 + effPrimo * 0.5;
         double season = g.seasonality();
-        double primeDay = g.isPrimeDay() ? 3.5 : 1.0;
+        double primeDay = g.isPrimoDay() ? 3.5 : 1.0;
         double repFactor = 0.5 + g.reputation / 100.0;
         double brandFactor = sku.brand != null ? sku.brand.demandBoost() : 1.0;
         double rivalFactor = Math.max(0.35, 1.0 - g.totalRivalShare());
         if (g.blockedCities.containsKey(c.name)) return 0;
         double eraFactor = g.eraDemandMultiplier();
-        double webFactor = g.researched.contains(Tech.AWS_CLOUD) ? 1.15 : 1.0;
+        double webFactor = g.researched.contains(Tech.OWS_CLOUD) ? 1.15 : 1.0;
         double lastMileFactor = g.ownLastMile ? 1.10 : 1.0;
         double vanFactor = 1.0 + 0.03 * g.effectiveVans(c.name);
         Site server = g.servingSite(c.name);
@@ -411,7 +411,7 @@ public class Simulation implements java.io.Serializable {
         Carrier main = g.carriers.get(0);
         double normal = main.rate(sku.category.weightClass);
         double express = main.rate(WeightClass.EXPRESS);
-        double blended = g.isPrimeDay() ? 0.7 * normal + 0.3 * express : normal;
+        double blended = g.isPrimoDay() ? 0.7 * normal + 0.3 * express : normal;
         double truckDiscount = Math.min(0.30, 0.05 * g.effectiveTrucks(c.name));
         blended *= (1.0 - truckDiscount);
         Site server = g.servingSite(c.name);

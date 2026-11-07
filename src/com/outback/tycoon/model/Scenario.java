@@ -15,7 +15,7 @@ public enum Scenario {
             return g.ipoDone;
         }
     },
-    PRIME_SURVIVAL("Prime-Day-Überleben", "Überlebe deinen ersten Prime Day ohne Server-Crash.") {
+    PRIME_SURVIVAL("Primo-Day-Überleben", "Überlebe deinen ersten Primo Day ohne Server-Crash.") {
         @Override
         public boolean isWon(Game g) {
             return g.primeDaySurvived;

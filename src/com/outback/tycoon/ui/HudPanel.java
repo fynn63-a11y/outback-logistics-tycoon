@@ -147,10 +147,10 @@ public class HudPanel extends JPanel {
         dateLabel.setText("Datum: " + game.date() + " (Tag " + game.dayIndex + ", Jahr " + game.date().getYear() + ")");
         pnlLabel.setText(String.format("Gestern: +%,.0f / -%,.0f AUD", game.lastDailyRevenue, game.lastDailyCosts));
         repLabel.setText("Reputation: " + (int) game.reputation + "/100");
-        primeLabel.setText(game.isPrimeDay()
-                ? "PRIME DAY aktiv! x3.5 (" + game.primeDayLeft + " Tage)"
-                : "Naechster Prime Day in " + game.primeDayIn + " Tagen");
-        primeLabel.setForeground(game.isPrimeDay() ? Color.RED : Color.getHSBColor(0.33f, 0.7f, 0.6f));
+        primeLabel.setText(game.isPrimoDay()
+                ? "PRIMO DAY aktiv! x3.5 (" + game.primeDayLeft + " Tage)"
+                : "Naechster Primo Day in " + game.primeDayIn + " Tagen");
+        primeLabel.setForeground(game.isPrimoDay() ? Color.RED : Color.getHSBColor(0.33f, 0.7f, 0.6f));
         String hint = game.tutorialHint();
         tutorialLabel.setText(hint.isEmpty() ? " " : "<html><div style='width:260px'>" + hint + "</div></html>");
         Vector<String> v = new Vector<>(game.alerts);

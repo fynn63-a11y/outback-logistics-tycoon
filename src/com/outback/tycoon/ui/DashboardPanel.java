@@ -42,8 +42,8 @@ public class DashboardPanel extends JPanel {
                 game.lastDailyRevenue, game.lastDailyCosts, game.lastDailyRevenue - game.lastDailyCosts)));
         root.add(row(String.format("Standorte gesamt: %d | Netzwerk-Durchsatz: %.0f Einheiten/Tag | Serverkapazität: %.0f",
                 game.sites.size(), game.networkThroughput(), game.serverCapacity())));
-        root.add(row(String.format("Aktive Seefrachten: %d | Gesperrte Städte (Katastrophe): %d | Prime Day: %s",
-                game.shipments.size(), game.blockedCities.size(), game.isPrimeDay() ? "AKTIV x3.5" : "in " + game.primeDayIn + " Tagen")));
+        root.add(row(String.format("Aktive Seefrachten: %d | Gesperrte Städte (Katastrophe): %d | Primo Day: %s",
+                game.shipments.size(), game.blockedCities.size(), game.isPrimoDay() ? "AKTIV x3.5" : "in " + game.primeDayIn + " Tagen")));
         root.add(row(String.format("Konkurrenten: %d | deren Marktanteil gesamt: %d%%",
                 game.rivals.size(), (int) (game.totalRivalShare() * 100))));
         root.add(row(String.format("Wechselkurse: 1 CNY = %.3f AUD | 1 USD = %.3f AUD | B2B-Lagerhotel gestern: %,.0f AUD | Refurbished-Pool (Gebrauchtwaren): %d Einheiten",
@@ -54,7 +54,7 @@ public class DashboardPanel extends JPanel {
                 assets, game.loanTaken, assets - game.loanTaken, 90 - game.quarterDay)));
         root.add(row(String.format("Forschungspunkte: %.0f | Entwickler: %d | Moral: %d/100 | Streik: %s",
                 game.researchPoints, game.developers, (int) game.morale, game.strikeDaysLeft > 0 ? game.strikeDaysLeft + " Tage" : "nein")));
-        root.add(row(String.format("Prime-Abonnenten: %,d (Ökosystem: Video %s, Music %s, Fresh %s)",
+        root.add(row(String.format("Primo-Abonnenten: %,d (Ökosystem: Video %s, Music %s, Fresh %s)",
                 game.primeSubscribers, game.primeVideo ? "an" : "aus", game.primeMusic ? "an" : "aus", game.primeFresh ? "an" : "aus")));
 
         double auto = globalAutomation();

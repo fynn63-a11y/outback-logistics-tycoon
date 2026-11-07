@@ -4,7 +4,7 @@ public enum Tech {
     HIGH_SPEED_CONVEYORS("High-Speed-Rollbahnen", 40, "+30% Durchsatz aller Standorte", 0),
     KIVA_ROBOTS("Kiva-Roboter", 80, "+50% Durchsatz, schaltet Kiva-Roboter im Grid frei (ab Cloud-Ära)", 2),
     SMART_SLOTTING("Smart Slotting AI", 60, "+25% Grid-Effizienz (Laufweg-Optimierung)", 1),
-    AWS_CLOUD("AWS Cloud / WebServices", 100, "+200.000 Serverkapazität, Webshop x1.15, WebServices-Einnahmen (ab Cloud-Ära)", 2),
+    OWS_CLOUD("OWS Cloud / WebServices", 100, "+200.000 Serverkapazität, Webshop x1.15, WebServices-Einnahmen (ab Cloud-Ära)", 2),
     OWN_FLEET("Eigene Flotte", 120, "-40% Frachtkosten", 1),
     AUTOMATION_PROTOCOLS("Automatisierungs-Protokolle", 50, "Schaltet Autopilot-Features frei (ab Breitband-Ära)", 1),
     PATENT_PROTECTION("Patentschutz", 70, "Schützt F&E vor Industriespionage", 1),

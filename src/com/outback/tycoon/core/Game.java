@@ -82,14 +82,14 @@ public class Game implements Serializable {
         return Math.min(0.45, primeSubscribers / 5_000_000.0);
     }
 
-    public void campaignPrime() {
+    public void campaignPrimo() {
         if (!charge(100_000)) {
-            alert("Prime-Werbekampagne kostet 100.000 AUD.");
+            alert("Primo-Werbekampagne kostet 100.000 AUD.");
             return;
         }
         long newSubs = 20_000 + (long) (reputation * 500) + (long) networkThroughput();
         primeSubscribers += newSubs;
-        alert("PRIME-KAMPAGNE: +" + newSubs + " Abonnenten (gesamt " + primeSubscribers + ").");
+        alert("PRIMO-KAMPAGNE: +" + newSubs + " Abonnenten (gesamt " + primeSubscribers + ").");
     }
 
     public void unlockEcosystem(boolean video, boolean music, boolean fresh) {
@@ -101,7 +101,7 @@ public class Game implements Serializable {
         primeVideo = primeVideo || video;
         primeMusic = primeMusic || music;
         primeFresh = primeFresh || fresh;
-        alert("Ökosystem erweitert: " + (video ? "Prime Video " : "") + (music ? "Prime Music " : "") + (fresh ? "Prime Fresh (Lebensmittel)" : ""));
+        alert("Ökosystem erweitert: " + (video ? "Primo View " : "") + (music ? "Primo Tunes " : "") + (fresh ? "Primo Fresh (Lebensmittel)" : ""));
     }
 
     public void addRev(String key, double v) {
@@ -259,7 +259,7 @@ public class Game implements Serializable {
         return Simulation.SEASONALITY[month() - 1];
     }
 
-    public boolean isPrimeDay() {
+    public boolean isPrimoDay() {
         return primeDayLeft > 0;
     }
 
@@ -323,7 +323,7 @@ public class Game implements Serializable {
         double cap = 0;
         for (Site s : sites)
             if (s.type == SiteType.DATA_CENTER) cap += 5_000.0 * s.level;
-        if (researched.contains(Tech.AWS_CLOUD)) cap += 200_000;
+        if (researched.contains(Tech.OWS_CLOUD)) cap += 200_000;
         return cap;
     }
 
