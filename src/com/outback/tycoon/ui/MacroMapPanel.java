@@ -62,6 +62,25 @@ public class MacroMapPanel extends JPanel {
                         nearest = c;
                     }
                 }
+                for (City c : game.cities) {
+                    java.util.List<Site> cs = game.sitesIn(c.name);
+                    if (cs.isEmpty()) continue;
+                    double d = Math.hypot(c.mapX * getWidth() - e.getX(), c.mapY * getHeight() - e.getY());
+                    if (d < 24) {
+                        game.selectedCity = c.name;
+                        game.selectedSite = cs.get(0);
+                        window.openMicro();
+                        return;
+                    }
+                }
+                if (game.pendingBuildType != null && nearest != null) {
+                    game.selectedCity = nearest.name;
+                    Site s = game.buildSite(game.pendingBuildType);
+                    if (s != null) game.selectedSite = s;
+                    game.pendingBuildType = null;
+                    window.openMeso();
+                    return;
+                }
                 if (nearest != null) {
                     game.selectedCity = nearest.name;
                     window.openMeso();

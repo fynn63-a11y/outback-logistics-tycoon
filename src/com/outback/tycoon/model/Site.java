@@ -110,6 +110,7 @@ public class Site implements java.io.Serializable {
         if (g.researched.contains(Tech.HIGH_SPEED_CONVEYORS)) t *= 1.3;
         if (g.tempsDecember && g.month() == 12 && g.strikeDaysLeft <= 0) t *= 1.5;
         t *= 1.0 + 0.05 * (g.staffSkill - 1);
+        t *= 1.0 + g.techBonus(Tech.Bonus.THROUGHPUT);
         return t;
     }
 

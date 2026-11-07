@@ -54,7 +54,8 @@ public class TechPanel extends JPanel {
             JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
             boolean eraOk = game.eraIndex() >= t.minEra;
-            JLabel l = new JLabel((done ? "[ERFORSCHT] " : "") + t.label + " - " + t.description
+            String bonusText = t.bonus == null ? "" : "  [Effekt: " + (t.bonus == Tech.Bonus.SERVER ? "+" + (int) t.bonusValue + " Server" : "+" + (int) (t.bonusValue * 100) + "% " + t.bonus.name()) + "]";
+            JLabel l = new JLabel((done ? "[ERFORSCHT] " : "") + t.label + " - " + t.description + bonusText
                     + (done ? "" : " (" + (int) t.rpCost + " RP" + (t.minEra > 0 ? ", ab " + eraName(t.minEra) : "") + ")"));
             JButton b = new JButton(done ? "Erforscht" : (eraOk ? "Forschen (" + (int) t.rpCost + " RP)" : "Gesperrt bis " + eraName(t.minEra)));
             b.setEnabled(!done && eraOk && game.researchPoints >= t.rpCost);

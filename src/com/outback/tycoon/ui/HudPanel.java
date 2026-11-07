@@ -92,30 +92,7 @@ public class HudPanel extends JPanel {
 
         add(section("Speichern / Laden"));
         JButton saveBtn = new JButton("Spiel speichern...");
-        saveBtn.addActionListener(e -> {
-            JFileChooser fc = new JFileChooser();
-            if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-                try {
-                    game.save(fc.getSelectedFile());
-                    game.alert("Spiel gespeichert: " + fc.getSelectedFile().getName());
-                } catch (Exception ex) {
-                    game.alert("Speichern fehlgeschlagen: " + ex.getMessage());
-                }
-            }
-        });
-        JButton loadBtn = new JButton("Spiel laden...");
-        loadBtn.addActionListener(e -> {
-            JFileChooser fc = new JFileChooser();
-            if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                try {
-                    Game loaded = Game.load(fc.getSelectedFile());
-                    game.copyFrom(loaded);
-                    game.alert("Spiel geladen: " + fc.getSelectedFile().getName());
-                } catch (Exception ex) {
-                    game.alert("Laden fehlgeschlagen: " + ex.getMessage());
-                }
-            }
-        });
+        saveBtn.addActionListener(e -> { if (window != null) window.saveGame(); });
         add(saveBtn);
         add(loadBtn);
         add(Box.createVerticalStrut(8));

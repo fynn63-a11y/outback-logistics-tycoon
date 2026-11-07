@@ -138,11 +138,67 @@ public class MainWindow extends JFrame {
             }
         });
         rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('m'), "music");
+        rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "esc");
+        rp.getActionMap().put("esc", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                openPauseMenu();
+            }
+        });
         rp.getActionMap().put("music", new AbstractAction() {
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 music.toggle();
             }
         });
+    }
+
+    public void openPauseMenu() {
+        boolean wasRunning = game.speed > 0 && !game.gameOver;
+        if (wasRunning) game.speed = 0;
+        JPanel p = new JPanel(new GridLayout(0, 1, 4, 4));
+        JButton cont = new JButton("Weiterspielen");
+        JButton save = new JButton("Spiel speichern...");
+        JButton load = new JButton("Spiel laden...");
+        JButton settings = new JButton("Einstellungen...");
+        JButton quit = new JButton("Spiel beenden");
+        p.add(cont); p.add(save); p.add(load); p.add(settings); p.add(quit);
+        final boolean[] open = {true};
+        cont.addActionListener(e -> { if (wasRunning) game.speed = 1; open[0] = false; });
+        save.addActionListener(e -> { saveGame(); });
+        load.addActionListener(e -> { loadGame(); });
+        settings.addActionListener(e -> { openSettings(); });
+        quit.addActionListener(e -> {
+            if (JOptionPane.showConfirmDialog(this, "Wirklich beenden? Nicht gespeicherter Fortschritt geht verloren.",
+                    "Beenden", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) System.exit(0);
+        });
+        JOptionPane pane = new JOptionPane(p, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION);
+        JDialog dlg = pane.createDialog(this, "Menü (ESC) - " + game.companyName);
+        cont.addActionListener(e -> dlg.dispose());
+        dlg.setVisible(true);
+    }
+
+    public void saveGame() {
+        JFileChooser fc = new JFileChooser();
+        if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                game.save(fc.getSelectedFile());
+                game.alert("Spiel gespeichert: " + fc.getSelectedFile().getName());
+            } catch (Exception ex) {
+                game.alert("Speichern fehlgeschlagen: " + ex.getMessage());
+            }
+        }
+    }
+
+    public void loadGame() {
+        JFileChooser fc = new JFileChooser();
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                Game loaded = Game.load(fc.getSelectedFile());
+                game.copyFrom(loaded);
+                game.alert("Spiel geladen: " + fc.getSelectedFile().getName());
+            } catch (Exception ex) {
+                game.alert("Laden fehlgeschlagen: " + ex.getMessage());
+            }
+        }
     }
 
     public void openSettings() {

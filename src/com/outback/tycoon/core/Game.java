@@ -320,8 +320,16 @@ public class Game implements Serializable {
         com.outback.tycoon.audio.Sfx.alert();
     }
 
+    public double techBonus(Tech.Bonus b) {
+        double sum = 0;
+        for (Tech t : researched) if (t.bonus == b) sum += t.bonusValue;
+        return sum;
+    }
+
+    public SiteType pendingBuildType = null;
+
     public double serverCapacity() {
-        double cap = 0;
+        double cap = techBonus(Tech.Bonus.SERVER);
         for (Site s : sites)
             if (s.type == SiteType.DATA_CENTER) cap += 5_000.0 * s.level;
         if (researched.contains(Tech.OWS_CLOUD)) cap += 200_000;
@@ -774,6 +782,7 @@ public class Game implements Serializable {
         tutorialOn = o.tutorialOn;
         tutorialStep = o.tutorialStep;
         settingFullscreen = o.settingFullscreen;
+        pendingBuildType = o.pendingBuildType;
         difficulty = o.difficulty;
         fleetDown.clear(); fleetDown.putAll(o.fleetDown);
         cityRating.clear(); cityRating.putAll(o.cityRating);

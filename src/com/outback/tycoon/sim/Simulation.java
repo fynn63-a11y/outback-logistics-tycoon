@@ -322,7 +322,8 @@ public class Simulation implements java.io.Serializable {
         catRivalFactor = Math.max(0.6, catRivalFactor);
         double freshFactor = (g.primeFresh && (sku.category == Category.FMCG || sku.category == Category.COLD_CHAIN)) ? 1.2 : 1.0;
         return base * primeBoost * season * primeDay * repFactor * brandFactor * rivalFactor
-                * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor * ratingFactor * flashFactor * catRivalFactor * freshFactor;
+                * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor * ratingFactor * flashFactor * catRivalFactor * freshFactor
+                * (1.0 + g.techBonus(Tech.Bonus.DEMAND));
     }
 
     private void sellRefurbished(Game g, double refurbDemand) {
@@ -424,6 +425,7 @@ public class Simulation implements java.io.Serializable {
         if (sku.category.hazardous) blended += 0.5;
         if (g.ownLastMile) blended *= 1.25;
         if (g.researched.contains(Tech.OWN_FLEET)) blended *= 0.6;
+        blended *= 1.0 - Math.min(0.5, g.techBonus(Tech.Bonus.COST));
         return blended;
     }
 
@@ -623,12 +625,13 @@ public class Simulation implements java.io.Serializable {
     }
 
     private void randomEvents(Game g) {
-        if (g.morale < 30 && rnd.nextDouble() < 0.08 && g.strikeDaysLeft == 0) {
+        double sec = Math.min(5, g.techBonus(Tech.Bonus.SECURITY));
+        if (g.morale < 30 && rnd.nextDouble() < 0.08 * (1 - 0.15 * sec) && g.strikeDaysLeft == 0) {
             g.strikeDaysLeft = 2 + rnd.nextInt(4);
             g.reputation = Math.max(0, g.reputation - 4);
             g.alert("WILDER STREIK! Arbeitsniederlegung fuer " + g.strikeDaysLeft + " Tage. PR-Krise in den Medien!");
         }
-        if (!g.researched.contains(Tech.PATENT_PROTECTION) && rnd.nextDouble() < 0.05) {
+        if (!g.researched.contains(Tech.PATENT_PROTECTION) && rnd.nextDouble() < 0.05 * (1 - 0.2 * sec)) {
             double stolen = Math.min(g.researchPoints, 20);
             g.researchPoints -= stolen;
             g.alert("INDUSTRIESPIONAGE! KI-Konkurrent hat " + (int) stolen + " Forschungspunkte gestohlen.");

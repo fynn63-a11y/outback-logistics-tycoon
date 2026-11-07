@@ -22,7 +22,7 @@ public class MesoPanel extends JPanel {
 
         JPanel buildBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         buildBar.setBackground(new Color(24, 28, 38));
-        buildBar.setBorder(BorderFactory.createTitledBorder("BAUMENÜ - Standort wählen und bauen"));
+        buildBar.setBorder(BorderFactory.createTitledBorder("BAUMENÜ - bauen (danach Klick auf die Karte platziert den nächsten Standort)"));
         for (SiteType t : SiteType.values()) {
             JButton b = new JButton(t.label + "  |  " + String.format("%,.0f", t.baseCost) + " AUD  |  Bauzeit " + t.buildDays + "d");
             b.setBackground(typeColor(t));
@@ -33,7 +33,10 @@ public class MesoPanel extends JPanel {
             b.setFont(b.getFont().deriveFont(Font.BOLD, 12f));
             b.addActionListener(e -> {
                 Site s = game.buildSite(t);
-                if (s != null) game.selectedSite = s;
+                if (s != null) {
+                    game.selectedSite = s;
+                    game.pendingBuildType = t;
+                }
                 refresh();
             });
             buildBar.add(b);
