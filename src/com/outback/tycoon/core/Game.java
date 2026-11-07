@@ -141,6 +141,7 @@ public class Game implements Serializable {
     public final List<Double> histCash = new ArrayList<>();
     public final List<Double> histRevenue = new ArrayList<>();
     public final List<Double> histRivalShare = new ArrayList<>();
+    public final List<Double> histShare = new ArrayList<>();
 
     public final List<String> alerts = new ArrayList<>();
     public String selectedCity = "Sydney";
@@ -941,6 +942,7 @@ public class Game implements Serializable {
         histCash.clear(); histCash.addAll(o.histCash);
         histRevenue.clear(); histRevenue.addAll(o.histRevenue);
         histRivalShare.clear(); histRivalShare.addAll(o.histRivalShare);
+        histShare.clear(); histShare.addAll(o.histShare);
         alerts.clear(); alerts.addAll(o.alerts);
         selectedCity = o.selectedCity;
         selectedSite = o.selectedSite;

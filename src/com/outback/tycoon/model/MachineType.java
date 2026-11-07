@@ -27,7 +27,9 @@ public enum MachineType {
     LOAD_DOCK("Verladetor (LKW)", 6_000, 4, null, Stage.LOAD),
     PALLETIZER("Paketstapler (Palette/Container)", 8_000, 4, Tech.PALLETIZING, Stage.LOAD),
     DRONE_PAD("Lieferdrohnen-Landeplatz (Versand)", 45_000, 7, Tech.LM_DRONE, Stage.SHIP),
-    ESTOP("E-Stop-Sicherheitszone", 1_000, 1, null, Stage.MOVE);
+    ESTOP("E-Stop-Sicherheitszone", 1_000, 1, null, Stage.MOVE),
+    MEZZANINE("Mezzanin-Ebene (Zwischengeschoss, +50% Paletten)", 40_000, 8, null, Stage.STOW),
+    DIVERT("Förderband-Weiche (Routing)", 2_500, 2, null, Stage.MOVE);
 
     public enum Stage {
         DELIVERY("Anlieferung"), UNLOAD("Entladen"), BOOKING("Buchen (ASN)"), INBOUND("Wareneingang"),

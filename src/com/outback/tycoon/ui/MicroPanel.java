@@ -253,7 +253,20 @@ public class MicroPanel extends JPanel {
                 }
             }
             drawWallsAndRoof(g, s, tw, th);
+            if (s.hasMezzanine()) {
+                g.setColor(new Color(200, 210, 230, 70));
+                g.fillPolygon(new int[]{originX(), originX() + gw() * tw / 2, originX(), originX() - gw() * tw / 2},
+                        new int[]{originY() - th * 4, originY() + gh() * th / 2 - th * 4, originY() + gh() * th - th * 4, originY() + gh() * th / 2 - th * 4}, 4);
+            }
             drawWarehouseFx(g, s, t, tw, th);
+            int hour = java.time.LocalTime.now().getHour();
+            if (hour >= 21 || hour < 6) {
+                g.setColor(new Color(10, 14, 40, 90));
+                g.fillRect(0, 0, getWidth(), getHeight());
+                g.setColor(new Color(255, 230, 150));
+                g.setFont(g.getFont().deriveFont(Font.BOLD, 12f));
+                g.drawString("NACHTSCHICHT", 10, getHeight() - 10);
+            }
             if (hover != null && !eraseMode && s.grid[hover[0]][hover[1]] == null) {
                 int cx = originX() + (hover[0] - hover[1]) * tw / 2;
                 int cy = originY() + (hover[0] + hover[1]) * th / 2;
@@ -448,6 +461,18 @@ public class MicroPanel extends JPanel {
                     g.fillRoundRect(cx - w / 2 + (int) (p * w) - 3, cy - lift - 3, 6, 6, 2, 2);
                     break;
                 }
+                case DIVERT: {
+                    double p = (t / 400.0 + cx) % 1.0;
+                    g.setColor(new Color(255, 180, 60));
+                    int ax = cx - w / 2 + (int) (p * w);
+                    g.fillPolygon(new int[]{ax + 4, ax, ax + 2}, new int[]{cy - lift - 3, cy - lift - 3, cy - lift + 3}, 3);
+                    break;
+                }
+                case MEZZANINE: {
+                    g.setColor(new Color(220, 225, 235, 160));
+                    g.fillRect(cx - w / 2, cy - lift - h / 2, w, 3);
+                    break;
+                }
                 case ASRS_CRANE: {
                     double arm = Math.sin(t / 600.0 + cx) * w / 4;
                     g.setColor(new Color(255, 255, 255));
@@ -469,6 +494,8 @@ public class MicroPanel extends JPanel {
                 case STRAPPER: return new Color(220, 120, 220);
                 case RACK: return new Color(160, 120, 70);
                 case DOCK: return new Color(80, 220, 220);
+                case MEZZANINE: return new Color(200, 200, 210);
+                case DIVERT: return new Color(255, 180, 60);
                 case AGV_BOT: return new Color(255, 140, 60);
                 case RFID_TUNNEL: return new Color(160, 120, 255);
                 case POD_STATION: return new Color(255, 220, 90);

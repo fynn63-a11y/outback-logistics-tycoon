@@ -264,6 +264,7 @@ public class Simulation implements java.io.Serializable {
         g.histCash.add(g.cash);
         g.histRevenue.add(revenue);
         g.histRivalShare.add(g.totalRivalShare());
+        if (g.ipoDone) g.histShare.add(g.sharePrice);
         if (g.histCash.size() > 500) {
             g.histCash.remove(0);
             g.histRevenue.remove(0);
@@ -277,7 +278,9 @@ public class Simulation implements java.io.Serializable {
         if (g.autopilotZones) g.autoAssignZones();
 
         g.researchPoints += g.developers * 2.0;
-        double moraleTarget = g.workersHousing ? 80 : 70;
+        int hour = java.time.LocalTime.now().getHour();
+        boolean night = hour >= 22 || hour < 6;
+        double moraleTarget = (g.workersHousing ? 80 : 70) - (night ? 5 : 0);
         g.morale += (moraleTarget - g.morale) * 0.01;
         sellRefurbished(g, refurbDemand);
         updateRivals(g);

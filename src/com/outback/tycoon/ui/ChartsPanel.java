@@ -48,6 +48,8 @@ public class ChartsPanel extends JPanel {
         drawChart(g, game.histCash, new Color(90, 220, 120), "Kasse (AUD)", 40, 40, getWidth() - 40, 200);
         drawChart(g, game.histRevenue, new Color(240, 170, 70), "Tagesumsatz (AUD)", 40, 260, getWidth() - 40, 120);
         drawChart(g, game.histRivalShare, new Color(220, 90, 90), "Marktanteil Konkurrenz (0-1)", 40, 400, getWidth() - 40, 80);
+        if (!game.histShare.isEmpty())
+            drawChart(g, game.histShare, new Color(140, 200, 255), "Aktienkurs ASX (AUD)", 40, 500, getWidth() - 40, 80);
     }
 
     private void drawChart(Graphics2D g, List<Double> data, Color color, String title, int x, int y, int w, int h) {

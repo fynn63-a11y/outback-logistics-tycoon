@@ -38,6 +38,7 @@ public class MacroMapPanel extends JPanel {
     private final Game game;
     private final MainWindow window;
     private BufferedImage baseCache;
+    private BufferedImage peaksCache;
     private int mouseX = -1;
     private int mouseY = -1;
     private String regionView = "Australien";
@@ -166,6 +167,15 @@ public class MacroMapPanel extends JPanel {
                 }
                 if (nearest != null) {
                     game.selectedCity = nearest.name;
+                    boolean terminal = game.hasContainerTerminal(nearest.name);
+                    long ships = game.shipments.stream().filter(sh -> sh.destCity.equals(nearest.name)).count();
+                    if (terminal || ships > 0) {
+                        JOptionPane.showMessageDialog(this,
+                                "HAFEN " + nearest.name + ":\nContainer-Terminal: " + (terminal ? "vorhanden (Stau-Schwelle erhöht)" : "nein")
+                                        + "\nAktive Seefrachten: " + ships
+                                        + "\nGesperrt (Katastrophe): " + (game.blockedCities.containsKey(nearest.name) ? "JA (" + game.blockedCities.get(nearest.name) + " Tage)" : "nein"),
+                                "Hafen-Info " + nearest.name, JOptionPane.INFORMATION_MESSAGE);
+                    }
                     window.openMeso();
                 }
             }
@@ -264,6 +274,23 @@ public class MacroMapPanel extends JPanel {
         g.setFont(g.getFont().deriveFont(Font.BOLD, 30f));
         g.drawString("AUSTRALIEN", px(122), py(-24));
         g.dispose();
+
+        peaksCache = new BufferedImage(VW, VH, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D pg = peaksCache.createGraphics();
+        Path2D.Double au2 = continent(AUSTRALIEN);
+        int step = 4;
+        double[][] height = new double[VH / step + 2][VW / step + 2];
+        for (int y = 0; y < height.length; y++)
+            for (int x = 0; x < height[0].length; x++)
+                height[y][x] = Textures.fbm(x * 0.045, y * 0.045, 8, 37, 4);
+        for (int y = 0; y < VH; y++)
+            for (int x = 0; x < VW; x++)
+                if (au2.contains(x, y) && height[y / step][x / step] > 0.82) {
+                    int a = (int) Math.min(255, (height[y / step][x / step] - 0.82) * 2200);
+                    pg.setColor(new Color(255, 255, 255, a));
+                    pg.fillRect(x, y, 1, 1);
+                }
+        pg.dispose();
     }
 
     private void renderTerrain(Graphics2D g, Path2D.Double land, long seed) {
@@ -325,6 +352,12 @@ public class MacroMapPanel extends JPanel {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.transform(viewTransform());
         g.drawImage(baseCache, 0, 0, null);
+        if (view3D && peaksCache != null) {
+            g.translate(-14, -18);
+            g.drawImage(peaksCache, 0, 0, null);
+            g.translate(7, 9);
+            g.drawImage(peaksCache, 0, 0, null);
+        }
 
         drawTopBar(g);
 

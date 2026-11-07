@@ -33,7 +33,18 @@ public class Site implements java.io.Serializable {
     }
 
     public int palletSlots() {
-        return type.palletSlots * level;
+        double mezz = 1.0;
+        for (int x = 0; x < w; x++)
+            for (int y = 0; y < h; y++)
+                if (grid[x][y] == MachineType.MEZZANINE) { mezz = 1.5; break; }
+        return (int) (type.palletSlots * level * mezz);
+    }
+
+    public boolean hasMezzanine() {
+        for (int x = 0; x < w; x++)
+            for (int y = 0; y < h; y++)
+                if (grid[x][y] == MachineType.MEZZANINE) return true;
+        return false;
     }
 
     public int palletUsed() {
