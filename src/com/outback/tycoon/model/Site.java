@@ -60,8 +60,38 @@ public class Site {
         return eff;
     }
 
+    public int stageScore(MachineType.Stage st) {
+        int s = 0;
+        for (int x = 0; x < GRID; x++)
+            for (int y = 0; y < GRID; y++)
+                if (grid[x][y] != null && grid[x][y].stage == st) s += grid[x][y].score;
+        return s;
+    }
+
+    public boolean chainComplete() {
+        return stageScore(MachineType.Stage.INBOUND) > 0
+                && stageScore(MachineType.Stage.STORAGE) > 0
+                && stageScore(MachineType.Stage.PICK) > 0
+                && stageScore(MachineType.Stage.PACK) > 0
+                && stageScore(MachineType.Stage.SHIP) > 0;
+    }
+
+    public double automationPercent() {
+        int auto = 0;
+        int manual = 0;
+        for (int x = 0; x < GRID; x++)
+            for (int y = 0; y < GRID; y++) {
+                MachineType m = grid[x][y];
+                if (m == null) continue;
+                if (m.isAutomated()) auto += m.score; else manual += m.score;
+            }
+        int total = auto + manual;
+        return total == 0 ? 0 : auto * 100.0 / total;
+    }
+
     public double throughput(Game g) {
-        double t = type.baseThroughput * level * stars * (0.4 + 0.6 * gridEfficiency(g));
+        double t = type.baseThroughput * level * stars * (0.3 + 0.7 * gridEfficiency(g));
+        if (chainComplete()) t *= 1.5;
         if (g.researched.contains(Tech.KIVA_ROBOTS)) t *= 1.5;
         if (g.researched.contains(Tech.HIGH_SPEED_CONVEYORS)) t *= 1.3;
         if (g.tempsDecember && g.month() == 12 && g.strikeDaysLeft <= 0) t *= 1.5;

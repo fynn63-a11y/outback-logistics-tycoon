@@ -134,10 +134,11 @@ public class MacroMapPanel extends JPanel {
         for (City c : game.cities) {
             int x = (int) (c.mapX * getWidth());
             int y = (int) (c.mapY * getHeight());
-            int r = 6 + (int) (c.popMillions());
+            int r = (int) Math.max(3, Math.min(12, 3 + c.popMillions() * 1.5));
             boolean unlocked = game.isUnlocked(c);
             boolean selected = c.name.equals(game.selectedCity);
             boolean blocked = game.blockedCities.containsKey(c.name);
+            java.util.List<com.outback.tycoon.model.Site> citySites = game.sitesIn(c.name);
             g.setColor(unlocked ? regionColor(c) : new Color(90, 90, 100));
             if (selected) {
                 g.setColor(Color.YELLOW);
@@ -152,12 +153,19 @@ public class MacroMapPanel extends JPanel {
                 g.setFont(g.getFont().deriveFont(Font.BOLD, 14f));
                 g.drawString("!", x - 3, y + 5);
             }
-            g.setFont(g.getFont().deriveFont(10f));
-            g.setColor(Color.WHITE);
-            String label = c.name + (unlocked ? "" : " (gesperrt)");
-            g.drawString(label, x + r + 4, y - 2);
-            int sites = game.sitesIn(c.name).size();
-            g.drawString(String.format("%,d Einw. | Prime %.0f%% | Standorte: %d", c.population, c.primeQuote * 100, sites), x + r + 4, y + 11);
+            for (int i = 0; i < citySites.size(); i++) {
+                int sz = 3 + citySites.get(i).level;
+                g.setColor(new Color(80, 220, 130));
+                g.fillRect(x - r - 2 - (sz + 2) * i - sz, y + r + 3, sz, sz);
+            }
+            if (c.popMillions() >= 1.0 || selected || !citySites.isEmpty()) {
+                g.setFont(g.getFont().deriveFont(10f));
+                g.setColor(Color.WHITE);
+                String label = c.name + (unlocked ? "" : " (gesperrt)");
+                g.drawString(label, x + r + 4, y - 2);
+                g.drawString(String.format("%,d Einw. | Prime %.0f%% | Standorte: %d",
+                        c.population, c.primeQuote * 100, citySites.size()), x + r + 4, y + 11);
+            }
         }
 
         if (game.isPrimeDay()) {

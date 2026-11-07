@@ -66,11 +66,18 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
 
 1. **Makro (Karte):** Interaktive Karte Australiens mit Sydney, Melbourne, Brisbane, Perth und
    Adelaide (Einwohnerzahlen, Prime-Quote, Saisonfaktor). Klick wählt die Stadt.
-2. **Meso (Stadt & Bau):** Baue Lager, FC-Hubs, Zwischenlager und AWS-Rechenzentren. Größere
+2. **Meso (Stadt & Bau):** Baue modular Lager, FC-Hubs, Zwischenlager, Verteilzentren,
+   Umschlagzentren, Container-Terminals (senken Hafen-Stau) und AWS-Rechenzentren. Größere
    Ausbaustufen kosten mehr, fassen mehr Paletten. Jeder Standort hat 1–5 Automatisierungs-Sterne.
-3. **Mikro (20x20-Grid):** Isometrisches 2.5D-Raster pro Standort für Spawner, Rollbahnen,
-   Kartonaufrichter, Pick-Stationen, Sealer, Strapper, Regale und Export-Rampen. Die Grid-Effizienz
-   bestimmt den Durchsatz des Standorts.
+3. **Mikro (20x20-Grid):** Isometrischer 2.5D-Baukasten pro Standort mit kategorisiertem Packbau
+   (Wareneingang, Transport, Lagerung, Kommissionierung, Verpackung, Sortierung, Versand):
+   Spawner, Förderbänder, Rollwagen, Regale, Pick-Stationen, Kiva-Roboter, Packtische,
+   Kartonaufrichter, Sealer, Wickelmaschine, Strapper, Paketstapler, Paketsortierer,
+   Sortierzentrum, Lade-/Export-Rampen. Tech-gated Maschinen (Roboter, Sortierer, Stapler,
+   Wickler) schalten sich über den Technologiebaum frei. **Prozesskette:** Eingang → Lagerung →
+   Kommissionierung → Verpackung → Versand; eine komplette Kette gibt x1.5 Durchsatz.
+4. **Dashboard:** Übersicht über Kasse, Umsatz/Kosten, Durchsatz, Automatisierungsgrad
+   (Roboter vs. Menschen in %), Ketten-Status und Lagerbestand pro Standort.
 
 ### Systeme
 
@@ -94,9 +101,10 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
 - **Konkurrenz:** Bis zu 5 KI-Konkurrenten (Tab "Konkurrenz") teilen sich das Nachfrage-Volumen
   mit dir, starten Preiskämpfe und erscheinen im Laufe der Jahre neu. Gute eigene Performance
   drängt ihren Marktanteil zurück; mit genug Kapital kannst du sie einzeln übernehmen.
-- **Weltregionen:** Australien ist ab Start offen. Europa (London, Berlin, Rotterdam) schaltest du
-  mit dem IPO frei, Nordamerika (Los Angeles, New York, Toronto, Vancouver) ab 200 Mio. AUD
-  Marktkapitalisierung. Gesperrte Städte sind auf der Weltkarte grau markiert.
+- **Weltregionen:** ~300 Städte als Datenfile (Top 50 Australien, Top 100 Europa, Top 100 USA,
+  Top 50 Kanada; `model/CityData.java`). Australien ist ab Start offen, Europa schaltest du mit
+  dem IPO frei, Nordamerika (USA/Kanada) ab 200 Mio. AUD Marktkapitalisierung. Gesperrte Städte
+  sind auf der Weltkarte grau markiert, Millionenstädte sind beschriftet.
 - **Katastrophen & Wetter:** Buschfeuer, Zyklone und Hochwasser sperren Städte für mehrere Tage
   (rote "!"-Markierung auf der Karte) und verzögern Seefracht. Optionale Versicherung zahlt
   Schadenersatz.

@@ -17,6 +17,7 @@ public class MainWindow extends JFrame {
     private final TechPanel tech;
     private final HrPanel hr;
     private final RivalsPanel rivalsPanel;
+    private final DashboardPanel dashboard;
     private final JTabbedPane tabs = new JTabbedPane();
     private boolean gameOverShown = false;
 
@@ -35,8 +36,10 @@ public class MainWindow extends JFrame {
         tech = new TechPanel(game);
         hr = new HrPanel(game);
         rivalsPanel = new RivalsPanel(game);
+        dashboard = new DashboardPanel(game);
         hud = new HudPanel(game, music);
 
+        tabs.addTab("Dashboard", dashboard);
         tabs.addTab("Karte (Makro)", macro);
         tabs.addTab("Stadt & Bau (Meso)", meso);
         tabs.addTab("Lager-Grid (Mikro)", micro);
@@ -55,7 +58,19 @@ public class MainWindow extends JFrame {
     }
 
     public void openMeso() {
-        tabs.setSelectedIndex(1);
+        setTabByTitle("Stadt & Bau (Meso)");
+    }
+
+    public void openMicro() {
+        setTabByTitle("Lager-Grid (Mikro)");
+    }
+
+    private void setTabByTitle(String title) {
+        for (int i = 0; i < tabs.getTabCount(); i++)
+            if (tabs.getTitleAt(i).equals(title)) {
+                tabs.setSelectedIndex(i);
+                return;
+            }
     }
 
     public JTabbedPane tabs() {
@@ -64,6 +79,7 @@ public class MainWindow extends JFrame {
 
     public void refresh() {
         hud.refresh();
+        dashboard.refresh();
         macro.repaint();
         meso.refresh();
         micro.repaint();

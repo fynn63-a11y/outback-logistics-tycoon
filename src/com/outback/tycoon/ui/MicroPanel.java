@@ -13,6 +13,7 @@ import java.awt.event.ActionListener;
 public class MicroPanel extends JPanel {
     private final Game game;
     private final GridCanvas canvas = new GridCanvas();
+    private final JPanel palette = new JPanel();
     private final JLabel status = new JLabel();
     private MachineType selectedMachine = MachineType.CONVEYOR;
     private boolean eraseMode = false;
@@ -22,23 +23,18 @@ public class MicroPanel extends JPanel {
         this.game = game;
         setLayout(new BorderLayout());
 
-        JPanel palette = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
-        for (MachineType m : MachineType.values()) {
-            JButton b = new JButton(m.label + " (" + String.format("%,.0f", m.cost) + ")");
-            b.addActionListener(e -> {
-                selectedMachine = m;
-                eraseMode = false;
-                refreshStatus();
-            });
-            palette.add(b);
-        }
-        JButton erase = new JButton("Loeschen-Modus");
-        erase.addActionListener(e -> {
-            eraseMode = true;
-            refreshStatus();
-        });
-        palette.add(erase);
-        add(palette, BorderLayout.NORTH);
+        JPanel north = new JPanel(new BorderLayout());
+        String[] cats = {"Alle", "Wareneingang", "Transport", "Lagerung", "Kommissionierung", "Verpackung", "Sortierung", "Versand"};
+        JComboBox<String> catBox = new JComboBox<>(cats);
+        catBox.addActionListener(e -> rebuildPalette(palette, (String) catBox.getSelectedItem()));
+        JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        filterRow.add(new JLabel("Packbau-Kategorie:"));
+        filterRow.add(catBox);
+        north.add(filterRow, BorderLayout.NORTH);
+        palette.setLayout(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        rebuildPalette(palette, "Alle");
+        north.add(palette, BorderLayout.CENTER);
+        add(north, BorderLayout.NORTH);
 
         canvas.setPreferredSize(new Dimension(760, 560));
         canvas.setBackground(new Color(24, 28, 38));
@@ -60,6 +56,10 @@ public class MicroPanel extends JPanel {
                 if (eraseMode) {
                     if (s.grid[gx][gy] != null) s.grid[gx][gy] = null;
                 } else {
+                    if (selectedMachine.requiredTech != null && !game.researched.contains(selectedMachine.requiredTech)) {
+                        game.alert(selectedMachine.label + " erfordert Tech: " + selectedMachine.requiredTech.label + ".");
+                        return;
+                    }
                     if (!game.charge(selectedMachine.cost)) {
                         game.alert("Nicht genug Kapital fuer " + selectedMachine.label + ".");
                         return;
@@ -73,6 +73,31 @@ public class MicroPanel extends JPanel {
 
         animTimer = new Timer(90, e -> canvas.repaint());
         animTimer.start();
+    }
+
+    private void rebuildPalette(JPanel palette, String category) {
+        palette.removeAll();
+        for (MachineType m : MachineType.values()) {
+            if (!category.equals("Alle") && !m.stage.label.equals(category)) continue;
+            boolean unlocked = m.requiredTech == null || game.researched.contains(m.requiredTech);
+            JButton b = new JButton(m.label + " (" + String.format("%,.0f", m.cost) + ")"
+                    + (unlocked ? "" : " [Tech: " + m.requiredTech.label + "]"));
+            b.setEnabled(unlocked);
+            b.addActionListener(e -> {
+                selectedMachine = m;
+                eraseMode = false;
+                refreshStatus();
+            });
+            palette.add(b);
+        }
+        JButton erase = new JButton("Loeschen-Modus");
+        erase.addActionListener(e -> {
+            eraseMode = true;
+            refreshStatus();
+        });
+        palette.add(erase);
+        palette.revalidate();
+        palette.repaint();
     }
 
     private void refreshStatus() {

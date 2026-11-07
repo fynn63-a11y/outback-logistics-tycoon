@@ -84,7 +84,7 @@ public class MesoPanel extends JPanel {
         JButton gridBtn = new JButton("Mikro-Grid oeffnen");
         gridBtn.addActionListener(e -> {
             game.selectedSite = s;
-            window.tabs().setSelectedIndex(2);
+            window.openMicro();
         });
         JButton upgrade = new JButton(String.format("Ausbau (%,.0f)", s.upgradeCost()));
         upgrade.addActionListener(e -> {

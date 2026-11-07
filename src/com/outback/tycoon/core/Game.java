@@ -84,6 +84,11 @@ public class Game {
         cities.add(new City("Toronto", "Ontario", "Nordamerika", 3_000_000, 0.33, 0.279, 0.257));
         cities.add(new City("Vancouver", "British Columbia", "Nordamerika", 700_000, 0.35, 0.158, 0.226));
 
+        addDataCities("Australien", CityData.AUSTRALIEN, 0.875, 0.700, 0.100, 0.090);
+        addDataCities("Europa", CityData.EUROPA, 0.525, 0.215, 0.055, 0.055);
+        addDataCities("Nordamerika", CityData.USA, 0.220, 0.295, 0.130, 0.065);
+        addDataCities("Nordamerika", CityData.KANADA, 0.260, 0.245, 0.080, 0.030);
+
         carriers.add(new Carrier("Outback Freight Co.", 4_000));
         carriers.add(new Carrier("Southern Cross Logistics", 6_500));
         carriers.add(new Carrier("Pacific Parcel Express", 9_000));
@@ -105,6 +110,23 @@ public class Game {
         catalog.add(new SKU("fm-2", "Shampoo 300ml", Category.FMCG, 1.8, null));
         catalog.add(new SKU("bu-1", "Loungesessel", Category.BULKY, 140, apexHome));
         catalog.add(new SKU("bu-2", "Billy Regal", Category.BULKY, 60, null));
+    }
+
+    private void addDataCities(String region, String[] data, double cx, double cy, double w, double h) {
+        for (int i = 0; i < data.length; i++) {
+            String[] parts = data[i].split("\\|");
+            String name = parts[0];
+            double popM = Double.parseDouble(parts[1]);
+            boolean exists = false;
+            for (City c : cities) if (c.name.equals(name)) { exists = true; break; }
+            if (exists) continue;
+            double ang = i * 2.399963;
+            double rad = Math.sqrt((i + 0.5) / data.length);
+            double x = Math.max(0.02, Math.min(0.98, cx + Math.cos(ang) * rad * w));
+            double y = Math.max(0.02, Math.min(0.98, cy + Math.sin(ang) * rad * h));
+            double prime = Math.max(0.15, Math.min(0.45, 0.15 + popM * 0.05));
+            cities.add(new City(name, region, region, (long) (popM * 1_000_000), prime, x, y));
+        }
     }
 
     public LocalDate date() {
@@ -226,9 +248,17 @@ public class Game {
         alert(s.describe() + " jetzt " + s.stars + " Sterne.");
     }
 
+    public boolean hasContainerTerminal(String cityName) {
+        for (Site s : sitesIn(cityName))
+            if (s.type == SiteType.CONTAINER_TERMINAL) return true;
+        return false;
+    }
+
     public Shipment orderContainer(String destCity, java.util.Map<String, Integer> goods, double cost) {
         long active = shipments.stream().filter(s -> s.destCity.equals(destCity)).count();
-        int congestion = (int) Math.max(0, active - 4) * 2;
+        int limit = hasContainerTerminal(destCity) ? 7 : 4;
+        int congestion = (int) Math.max(0, active - limit) * 2;
+        if (hasContainerTerminal(destCity)) congestion = Math.max(0, congestion - 2);
         if (blockedCities.containsKey(destCity)) congestion += 3;
         if (congestion > 0) alert("Hafen-Stau (Port Congestion) in " + destCity + ": +" + congestion + " Tage Seefracht.");
         if (!charge(cost)) return null;
