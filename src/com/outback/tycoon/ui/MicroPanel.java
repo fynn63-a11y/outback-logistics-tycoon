@@ -173,6 +173,16 @@ public class MicroPanel extends JPanel {
     }
 
     private class GridCanvas extends JPanel {
+        int gw() {
+            Site s = game.selectedSite;
+            return s == null ? Site.MAX_GRID : s.w;
+        }
+
+        int gh() {
+            Site s = game.selectedSite;
+            return s == null ? Site.MAX_GRID : s.h;
+        }
+
         private int tileW() {
             return Math.max(6, Math.min(getWidth() / gw(), (getHeight() * 2) / gh()));
         }
