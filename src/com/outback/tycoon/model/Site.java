@@ -18,6 +18,7 @@ public class Site implements java.io.Serializable {
     public int buildDaysLeft = 0;
     public int blockedDays = 0;
     public String blockedReason = "";
+    public ServiceLevel serviceLevel = ServiceLevel.STANDARD;
     public final Map<String, Integer> stock = new HashMap<>();
     public final MachineType[][] grid = new MachineType[GRID][GRID];
 
@@ -47,6 +48,10 @@ public class Site implements java.io.Serializable {
 
     public double starUpgradeCost() {
         return 50_000.0 * stars * level;
+    }
+
+    public double serviceUpgradeCost() {
+        return 100_000.0 * (serviceLevel.ordinal() + 1);
     }
 
     public int machineScore() {

@@ -148,3 +148,13 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
 - **Bedienung:** Start im **Vollbild** (Einstellungen änderbar), eigener **Firmenname** (Dialog beim Start),
   **Tastenkürzel**: 1–8 Tabs, Leer = Pause, +/- Tempo, M = Musik.
 - **Warenabhängige Fracht:** Sperrgut/Bulky und Gefahrgut kosten deutlich mehr als ein T-Shirt.
+- **Lieferzonen & Service-Level (Railroad-Empire-Mechanik):** Jede freigeschaltete Stadt wird im Tab
+  "Lieferzonen" manuell oder per Autopilot einem betriebsbereiten Zentrum zugewiesen. Eine echte
+  Distanz-Metrik (Karte -> km) erhoeht die Frachtkosten mit der Entfernung - entfernte Zonen haben dadurch
+  NICHT weniger Kunden, sie kosten nur mehr. Das Service-Level des Zentrums (Standard x1.0 / Next-Day x1.15
+  / **Same-Day x1.35 Nachfrage**, +3 AUD Aufpreis pro Paket) bestimmt den Nachfrage-Boost der Zone.
+  Gleiche Stadt = Same-Day moeglich. Autopilot: Schalter "Autonome Lieferzonen" im HUD oder Button im Zonen-Tab.
+- **Nachfrage & Angebot (Prinzip):** Nachfrage pro Stadt = Einwohner/Mio x Kategorie-Faktor x Prime-Quote
+  x Saison x Epoche x Reputation x Konkurrenz x Service-Level x Webshop/Last-Mile. Angebot = Durchsatz
+  der zugewiesenen Standorte (Stufe x Sterne x Grid-Effizienz x Prozesskette x Tech x Skills x Flotte).
+  Ungedeckte Nachfrage = verlorene Verkaeufe; Frachtkosten = Gewichtsklasse x Distanz x Service x Rabatte.

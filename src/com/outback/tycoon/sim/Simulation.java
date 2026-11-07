@@ -196,6 +196,7 @@ public class Simulation implements java.io.Serializable {
         if (g.autopilotSourcing) autopilotSourcing(g);
         if (g.autopilotRebalance) autopilotRebalance(g);
         if (g.autopilotPricing) autopilotPricing(g);
+        if (g.autopilotZones) g.autoAssignZones();
 
         g.researchPoints += g.developers * 2.0;
         g.morale += (70 - g.morale) * 0.01;
@@ -234,8 +235,10 @@ public class Simulation implements java.io.Serializable {
         double webFactor = g.researched.contains(Tech.AWS_CLOUD) ? 1.15 : 1.0;
         double lastMileFactor = g.ownLastMile ? 1.10 : 1.0;
         double vanFactor = 1.0 + 0.03 * g.vans.getOrDefault(c.name, 0);
+        Site server = g.servingSite(c.name);
+        double serviceFactor = server != null ? server.serviceLevel.demandFactor : 0.4;
         return base * primeBoost * season * primeDay * repFactor * brandFactor * rivalFactor
-                * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor;
+                * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor;
     }
 
     private void updateRivals(Game g) {
@@ -261,8 +264,17 @@ public class Simulation implements java.io.Serializable {
     }
 
     private int fulfill(Game g, City c, SKU sku, double demand) {
-        List<Site> sites = g.sitesIn(c.name);
+        List<Site> sites = new java.util.ArrayList<>(g.sitesIn(c.name));
+        Site server = g.servingSite(c.name);
+        if (server != null && sites.contains(server)) {
+            sites.remove(server);
+            sites.add(0, server);
+        }
         sites.sort((a, b) -> Double.compare(g.siteThroughput(b), g.siteThroughput(a)));
+        if (server != null && sites.contains(server) && !sites.get(0).equals(server)) {
+            sites.remove(server);
+            sites.add(0, server);
+        }
         double remaining = demand;
         int fulfilled = 0;
         for (Site s : sites) {
@@ -287,6 +299,11 @@ public class Simulation implements java.io.Serializable {
         double blended = g.isPrimeDay() ? 0.7 * normal + 0.3 * express : normal;
         double truckDiscount = Math.min(0.30, 0.05 * g.trucks.getOrDefault(c.name, 0));
         blended *= (1.0 - truckDiscount);
+        Site server = g.servingSite(c.name);
+        double dist = server != null ? g.distanceKm(g.cityByName(server.city), c) : 1_500;
+        blended *= 1.0 + dist / 5_000.0;
+        if (server != null && server.serviceLevel == com.outback.tycoon.model.ServiceLevel.SAME_DAY)
+            blended += com.outback.tycoon.model.ServiceLevel.SAME_DAY.surchargePerParcel;
         blended *= 1.0 + 0.2 * sku.category.spaceFactor;
         if (sku.category.hazardous) blended += 0.5;
         if (g.ownLastMile) blended *= 1.25;

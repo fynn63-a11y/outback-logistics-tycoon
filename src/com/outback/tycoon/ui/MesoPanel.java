@@ -99,10 +99,19 @@ public class MesoPanel extends JPanel {
             game.upgradeStars(s);
             refresh();
         });
+        JButton service = new JButton(s.serviceLevel == com.outback.tycoon.model.ServiceLevel.SAME_DAY
+                ? "Same-Day aktiv"
+                : String.format("Service -> %s (%,.0f)", com.outback.tycoon.model.ServiceLevel.values()[s.serviceLevel.ordinal() + 1].label, s.serviceUpgradeCost()));
+        service.setEnabled(s.serviceLevel != com.outback.tycoon.model.ServiceLevel.SAME_DAY);
+        service.addActionListener(e -> {
+            game.upgradeService(s);
+            refresh();
+        });
         row.add(select);
         row.add(gridBtn);
         row.add(upgrade);
         row.add(star);
+        row.add(service);
         return row;
     }
 }

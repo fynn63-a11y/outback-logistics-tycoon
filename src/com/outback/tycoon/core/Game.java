@@ -60,6 +60,8 @@ public class Game implements Serializable {
     public boolean autopilotRebalance = false;
     public boolean autopilotPricing = false;
     public boolean autopilotSourcing = false;
+    public boolean autopilotZones = false;
+    public final Map<String, Integer> zoneAssignment = new HashMap<>();
 
     public boolean sandboxMode = false;
 
@@ -328,6 +330,52 @@ public class Game implements Serializable {
         alert(s.describe() + " auf Stufe " + s.level + " ausgebaut.");
     }
 
+    public void upgradeService(Site s) {
+        if (s.serviceLevel == ServiceLevel.SAME_DAY) return;
+        if (!charge(s.serviceUpgradeCost())) {
+            alert("Nicht genug Kapital fuer Service-Upgrade.");
+            return;
+        }
+        s.serviceLevel = ServiceLevel.values()[s.serviceLevel.ordinal() + 1];
+        alert(s.describe() + " bietet jetzt " + s.serviceLevel.label + " (Nachfrage x" + s.serviceLevel.demandFactor + ").");
+    }
+
+    public double distanceKm(City a, City b) {
+        return Math.hypot(a.mapX - b.mapX, a.mapY - b.mapY) * 25_000;
+    }
+
+    public Site servingSite(String cityName) {
+        Integer id = zoneAssignment.get(cityName);
+        if (id != null)
+            for (Site s : sites)
+                if (s.id == id && s.isOperational()) return s;
+        for (Site s : sitesIn(cityName))
+            if (s.isOperational()) return s;
+        return null;
+    }
+
+    public void assignZone(String cityName, int siteId) {
+        zoneAssignment.put(cityName, siteId);
+    }
+
+    public void autoAssignZones() {
+        for (City c : cities) {
+            if (!isUnlocked(c)) continue;
+            Site best = null;
+            double bestScore = -1e18;
+            for (Site s : sites) {
+                if (!s.isOperational() || s.type == SiteType.DATA_CENTER) continue;
+                double d = distanceKm(c, cityByName(s.city));
+                double score = s.throughput(this) - d / 10.0 + (s.city.equals(c.name) ? 500 : 0);
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = s;
+                }
+            }
+            if (best != null) zoneAssignment.put(c.name, best.id);
+        }
+    }
+
     public void upgradeStars(Site s) {
         if (s.stars >= 5) return;
         if (!charge(s.starUpgradeCost())) {
@@ -583,6 +631,8 @@ public class Game implements Serializable {
         autopilotRebalance = o.autopilotRebalance;
         autopilotPricing = o.autopilotPricing;
         autopilotSourcing = o.autopilotSourcing;
+        autopilotZones = o.autopilotZones;
+        zoneAssignment.clear(); zoneAssignment.putAll(o.zoneAssignment);
         sandboxMode = o.sandboxMode;
         ipoDone = o.ipoDone;
         sharePrice = o.sharePrice;

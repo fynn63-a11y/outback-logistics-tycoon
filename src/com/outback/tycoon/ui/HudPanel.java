@@ -18,6 +18,7 @@ public class HudPanel extends JPanel {
     private final JCheckBox chkRebalance = new JCheckBox("Autonomes Rebalancing");
     private final JCheckBox chkPricing = new JCheckBox("Autonomes Pricing & Sourcing");
     private final JCheckBox chkSourcing = new JCheckBox("China-Import (Sourcing)");
+    private final JCheckBox chkZones = new JCheckBox("Autonome Lieferzonen");
     private final JList<String> alertList;
     private final DefaultListModel<String> alertModel = new DefaultListModel<>();
     private final JButton musicBtn = new JButton();
@@ -67,9 +68,11 @@ public class HudPanel extends JPanel {
         chkRebalance.addActionListener(e -> game.autopilotRebalance = chkRebalance.isSelected());
         chkPricing.addActionListener(e -> game.autopilotPricing = chkPricing.isSelected());
         chkSourcing.addActionListener(e -> game.autopilotSourcing = chkSourcing.isSelected());
+        chkZones.addActionListener(e -> game.autopilotZones = chkZones.isSelected());
         add(chkRebalance);
         add(chkPricing);
         add(chkSourcing);
+        add(chkZones);
         add(Box.createVerticalStrut(8));
 
         add(section("Musik & Sound"));

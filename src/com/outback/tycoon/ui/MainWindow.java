@@ -22,6 +22,7 @@ public class MainWindow extends JFrame {
     private final DashboardPanel dashboard;
     private final ChartsPanel charts;
     private final SupplyChainPanel supplyChain;
+    private final ZonesPanel zones;
     private final JTabbedPane tabs = new JTabbedPane();
     private boolean gameOverShown = false;
     private boolean wonShown = false;
@@ -44,6 +45,7 @@ public class MainWindow extends JFrame {
         dashboard = new DashboardPanel(game);
         charts = new ChartsPanel(game);
         supplyChain = new SupplyChainPanel(game);
+        zones = new ZonesPanel(game);
         hud = new HudPanel(game, music);
         hud.setWindow(this);
 
@@ -54,6 +56,7 @@ public class MainWindow extends JFrame {
         tabs.addTab("Dashboard", dashboard);
         tabs.addTab("Statistik", charts);
         tabs.addTab("Lieferkette", supplyChain);
+        tabs.addTab("Lieferzonen", zones);
         tabs.addTab("Karte (Makro)", macro);
         tabs.addTab("Stadt & Bau (Meso)", meso);
         tabs.addTab("Lager-Grid (Mikro)", micro);
@@ -188,6 +191,7 @@ public class MainWindow extends JFrame {
         dashboard.refresh();
         charts.repaint();
         supplyChain.repaint();
+        zones.refresh();
         macro.repaint();
         meso.refresh();
         micro.repaint();
