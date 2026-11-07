@@ -369,6 +369,7 @@ public class MacroMapPanel extends JPanel {
     protected void paintComponent(Graphics g0) {
         super.paintComponent(g0);
         Graphics2D g = (Graphics2D) g0;
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         if (baseCache == null) {
             if (getWidth() > 50 && getHeight() > 50) renderBase();
             else {
@@ -377,7 +378,7 @@ public class MacroMapPanel extends JPanel {
                 return;
             }
         }
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g.transform(viewTransform());
         g.drawImage(baseCache, 0, 0, null);
         if (view3D && mapStyle == 0 && peaksCache != null) {
@@ -386,75 +387,76 @@ public class MacroMapPanel extends JPanel {
             g.translate(7, 9);
             g.drawImage(peaksCache, 0, 0, null);
         }
+        g.setTransform(new java.awt.geom.AffineTransform());
 
+        int[] o = viewOffset();
+        double s = viewScale();
         drawTopBar(g);
 
         for (Shipment sh : game.shipments) {
             City c = game.cityByName(sh.destCity);
             double frac = Math.max(0, Math.min(1, 1.0 - sh.daysLeft / (double) Shipment.TRANSIT_DAYS));
-            int sx = (int) (SHENZHEN_X * VW);
-            int sy = (int) (SHENZHEN_Y * VH);
-            int x = (int) (sx + (c.mapX * VW - sx) * frac);
-            int y = (int) (sy + (c.mapY * VH - sy) * frac);
+            int sx = (int) (o[0] + SHENZHEN_X * VW * s);
+            int sy = (int) (o[1] + SHENZHEN_Y * VH * s);
+            int x = (int) (sx + ((o[0] + c.mapX * VW * s) - sx) * frac);
+            int y = (int) (sy + ((o[1] + c.mapY * VH * s) - sy) * frac);
             g.setColor(new Color(255, 220, 120, 90));
             g.drawLine(sx, sy, x, y);
             g.setColor(new Color(255, 210, 80));
-            g.fillOval(x - 6, y - 6, 12, 12);
+            g.fillOval(x - 4, y - 4, 8, 8);
             g.setColor(Color.WHITE);
-            g.drawOval(x - 6, y - 6, 12, 12);
+            g.drawOval(x - 4, y - 4, 8, 8);
         }
 
         for (RivalCompany r : game.rivals) {
             for (int i = 0; i < r.siteCities.size(); i++) {
                 City rc = game.cityByName(r.siteCities.get(i));
-                drawBuilding(g, (int) (rc.mapX * VW) - 14 - (i % 5) * 10, (int) (rc.mapY * VH) - 12 - (i % 5) * 6, 12, r.color, r.color.darker());
+                drawBuilding(g, (int) (o[0] + rc.mapX * VW * s) - 7 - (i % 5) * 8, (int) (o[1] + rc.mapY * VH * s) - 6 - (i % 5) * 5, 10, r.color, r.color.darker());
             }
         }
 
         for (City c : game.cities) {
-            int x = (int) (c.mapX * VW);
-            int y = (int) (c.mapY * VH);
-            int r = (int) Math.max(6, Math.min(22, 7 + c.popMillions() * 2.5));
+            int x = (int) (o[0] + c.mapX * VW * s);
+            int y = (int) (o[1] + c.mapY * VH * s);
+            int r = (int) Math.max(4, Math.min(11, 4 + c.popMillions() * 1.2));
             boolean unlocked = game.isUnlocked(c);
             boolean selected = c.name.equals(game.selectedCity);
             boolean blocked = game.blockedCities.containsKey(c.name);
             List<Site> citySites = game.sitesIn(c.name);
             if (selected) {
                 g.setColor(new Color(255, 235, 120));
-                g.setStroke(new BasicStroke(4f));
-                g.drawOval(x - r - 6, y - r - 6, (r + 6) * 2, (r + 6) * 2);
+                g.setStroke(new BasicStroke(2.5f));
+                g.drawOval(x - r - 4, y - r - 4, (r + 4) * 2, (r + 4) * 2);
             }
             g.setColor(unlocked ? regionColor(c) : new Color(110, 110, 120));
             g.fillOval(x - r, y - r, r * 2, r * 2);
             g.setColor(Color.WHITE);
-            g.setStroke(new BasicStroke(2f));
+            g.setStroke(new BasicStroke(1.2f));
             g.drawOval(x - r, y - r, r * 2, r * 2);
             if (isCapital(c.name)) {
                 g.setColor(new Color(255, 240, 150));
-                drawStar(g, x, y, r + 9, 5);
+                drawStar(g, x, y, r + 5, 5);
             }
             if (blocked) {
                 g.setColor(new Color(255, 70, 30));
-                g.setFont(g.getFont().deriveFont(Font.BOLD, 26f));
-                g.drawString("!", x - 7, y + 10);
+                g.setFont(g.getFont().deriveFont(Font.BOLD, 15f));
+                g.drawString("!", x - 4, y + 6);
             }
             for (int i = 0; i < citySites.size(); i++) {
-                int sz = 10 + citySites.get(i).level * 3;
-                int bx = x - r - 6 - (sz + 4) * i - sz;
-                int by = y + r + 8;
-                drawBuilding(g, bx, by, sz);
+                int sz = 8 + citySites.get(i).level * 2;
+                drawBuilding(g, x - r - 4 - (sz + 3) * i - sz, y + r + 5, sz);
             }
             if (c.popMillions() >= 1.0 || selected || !citySites.isEmpty()) {
                 String label = c.name + (unlocked ? "" : " (gesperrt)");
-                g.setFont(g.getFont().deriveFont(Font.BOLD, 22f));
+                g.setFont(g.getFont().deriveFont(Font.BOLD, 11f));
                 int tw = g.getFontMetrics().stringWidth(label);
                 g.setColor(new Color(10, 14, 22, 210));
-                g.fillRoundRect(x + r + 6, y - 28, tw + 18, 46, 10, 10);
+                g.fillRoundRect(x + r + 4, y - 15, tw + 10, 24, 6, 6);
                 g.setColor(Color.WHITE);
-                g.drawString(label, x + r + 15, y - 12);
-                g.setFont(g.getFont().deriveFont(18f));
+                g.drawString(label, x + r + 9, y - 7);
+                g.setFont(g.getFont().deriveFont(10f));
                 g.setColor(new Color(200, 210, 225));
-                g.drawString(String.format("%,d Einw. | Standorte: %d", c.population, citySites.size()), x + r + 15, y + 10);
+                g.drawString(String.format("%,d Einw. | Standorte: %d", c.population, citySites.size()), x + r + 9, y + 6);
             }
         }
 
@@ -463,49 +465,48 @@ public class MacroMapPanel extends JPanel {
             Site server = game.servingSite(hc.name);
             String info = String.format("%s | %,d Einw. | Primo %.0f%% | Bewertung %.1f/5 | Standorte: %d%s",
                     hc.name, hc.population, hc.primeQuote * 100, game.cityRating(hc.name), game.sitesIn(hc.name).size(),
-                    server != null ? String.format(" | Distanz zum Zentrum: %,.0f km", game.distanceKm(game.cityByName(server.city), hc)) : "");
-            g.setFont(g.getFont().deriveFont(Font.BOLD, 20f));
+                    server != null ? String.format(" | Distanz: %,.0f km", game.distanceKm(game.cityByName(server.city), hc)) : "");
+            g.setFont(g.getFont().deriveFont(Font.BOLD, 12f));
             int tw = g.getFontMetrics().stringWidth(info);
-            int hx = (int) (hc.mapX * VW);
-            int hy = (int) (hc.mapY * VH);
+            int hx = (int) (o[0] + hc.mapX * VW * s);
+            int hy = (int) (o[1] + hc.mapY * VH * s);
             g.setColor(new Color(12, 16, 26, 235));
-            g.fillRoundRect(hx + 24, hy - 60, tw + 20, 34, 8, 8);
+            g.fillRoundRect(hx + 14, hy - 34, tw + 14, 24, 8, 8);
             g.setColor(new Color(255, 235, 150));
-            g.drawString(info, hx + 34, hy - 37);
+            g.drawString(info, hx + 21, hy - 18);
         }
 
         if (game.pendingBuildType != null && mouseX >= 0) {
-            int[] v = toVirtual(mouseX, mouseY);
-            g.setColor(new Color(120, 255, 150, 130));
-            g.fillRect(v[0] - 14, v[1] - 14, 28, 28);
+            g.setColor(new Color(120, 255, 150, 120));
+            g.fillRect(mouseX - 8, mouseY - 8, 16, 16);
             g.setColor(Color.WHITE);
-            g.drawRect(v[0] - 14, v[1] - 14, 28, 28);
-            g.setFont(g.getFont().deriveFont(Font.BOLD, 20f));
-            g.drawString("Platzieren: " + game.pendingBuildType.label + " (klicken)", v[0] + 20, v[1] - 16);
+            g.drawRect(mouseX - 8, mouseY - 8, 16, 16);
+            g.setFont(g.getFont().deriveFont(Font.BOLD, 11f));
+            g.drawString("Platzieren: " + game.pendingBuildType.label + " (klicken)", mouseX + 12, mouseY - 10);
         }
 
-        drawAnimations(g);
+        drawAnimations(g, o, s);
 
         if (game.isPrimoDay()) {
             g.setColor(new Color(255, 60, 40));
-            g.setFont(g.getFont().deriveFont(Font.BOLD, 44f));
-            g.drawString("PRIMO DAY! Traffic x3.5", VW / 2 - 260, 110);
+            g.setFont(g.getFont().deriveFont(Font.BOLD, 22f));
+            g.drawString("PRIMO DAY! Traffic x3.5", getWidth() / 2 - 120, 80);
         }
     }
 
     private void drawTopBar(Graphics2D g) {
         g.setColor(new Color(12, 16, 26, 225));
-        g.fillRect(0, 0, VW, 64);
+        g.fillRect(0, 0, getWidth(), 34);
         g.setColor(new Color(70, 90, 130));
-        g.drawLine(0, 64, VW, 64);
+        g.drawLine(0, 34, getWidth(), 34);
         g.setColor(Color.WHITE);
-        g.setFont(g.getFont().deriveFont(Font.BOLD, 26f));
+        g.setFont(g.getFont().deriveFont(Font.BOLD, 13f));
         g.drawString(game.companyName + "  |  " + game.date() + " (Tag " + game.dayIndex + ")  |  "
-                + String.format("Kasse: %,.0f AUD", game.cash) + "  |  " + game.eraName() + "  |  Ansicht: " + regionView, 26, 42);
-        g.setFont(g.getFont().deriveFont(20f));
+                + String.format("Kasse: %,.0f AUD", game.cash) + "  |  " + game.eraName() + "  |  " + regionView, 14, 22);
+        g.setFont(g.getFont().deriveFont(11f));
         g.setColor(new Color(255, 200, 90));
         g.drawString(game.isPrimoDay() ? "PRIMO DAY aktiv!" : "Naechster Primo Day in " + game.primeDayIn + " Tagen",
-                VW - 640, 42);
+                getWidth() - 320, 22);
     }
 
     private void drawBuilding(Graphics2D g, int bx, int by, int sz) {
@@ -519,11 +520,8 @@ public class MacroMapPanel extends JPanel {
         g.fillPolygon(new int[]{bx - 2, bx + sz / 2, bx + sz + 2}, new int[]{by, by - sz / 2, by}, 3);
         g.setColor(new Color(30, 70, 45));
         g.drawRect(bx, by, sz, sz);
-        g.drawLine(bx - 2, by, bx + sz / 2, by - sz / 2);
-        g.drawLine(bx + sz / 2, by - sz / 2, bx + sz + 2, by);
         g.setColor(new Color(255, 255, 180));
-        g.fillRect(bx + sz / 4, by + sz / 4, sz / 5, sz / 5);
-        g.fillRect(bx + sz * 3 / 5, by + sz / 4, sz / 5, sz / 5);
+        g.fillRect(bx + sz / 4, by + sz / 4, Math.max(1, sz / 5), Math.max(1, sz / 5));
     }
 
     private void drawStar(Graphics2D g, int cx, int cy, int r, int points) {
@@ -538,23 +536,23 @@ public class MacroMapPanel extends JPanel {
         g.fillPolygon(xs, ys, points * 2);
     }
 
-    private void drawAnimations(Graphics2D g) {
+    private void drawAnimations(Graphics2D g, int[] o, double s) {
         long t = System.currentTimeMillis();
         List<Site> ops = new ArrayList<>();
-        for (Site s : game.sites) if (s.isOperational()) ops.add(s);
+        for (Site site : game.sites) if (site.isOperational()) ops.add(site);
 
         for (int i = 0; i < ops.size(); i++) {
-            Site s = ops.get(i);
-            City c = game.cityByName(s.city);
-            int cx = (int) (c.mapX * VW);
-            int cy = (int) (c.mapY * VH);
+            Site site = ops.get(i);
+            City c = game.cityByName(site.city);
+            int cx = (int) (o[0] + c.mapX * VW * s);
+            int cy = (int) (o[1] + c.mapY * VH * s);
             double orbit = t / 700.0 + i * 2.1;
-            int dx = (int) (Math.cos(orbit) * 30);
-            int dy = (int) (Math.sin(orbit) * 15);
+            int dx = (int) (Math.cos(orbit) * 14);
+            int dy = (int) (Math.sin(orbit) * 7);
             g.setColor(new Color(245, 248, 255));
-            g.fillOval(cx + dx - 4, cy + dy - 4, 8, 8);
+            g.fillOval(cx + dx - 2, cy + dy - 2, 5, 5);
             g.setColor(new Color(120, 160, 220));
-            g.drawOval(cx + dx - 4, cy + dy - 4, 8, 8);
+            g.drawOval(cx + dx - 2, cy + dy - 2, 5, 5);
         }
 
         List<String> truckCities = new ArrayList<>();
@@ -562,37 +560,37 @@ public class MacroMapPanel extends JPanel {
             if (e.getValue() > 0 && !game.fleetDown.containsKey(e.getKey())) truckCities.add(e.getKey());
         for (int i = 0; i < Math.min(5, truckCities.size()); i++) {
             City c = game.cityByName(truckCities.get(i));
-            int cx = (int) (c.mapX * VW);
-            int cy = (int) (c.mapY * VH);
+            int cx = (int) (o[0] + c.mapX * VW * s);
+            int cy = (int) (o[1] + c.mapY * VH * s);
             double p = ((t / 1100.0) + i * 0.37) % 1.0;
-            int tx = cx + (int) (Math.sin(p * Math.PI * 2 + i) * 50);
-            int ty = cy + 30 + (int) (Math.cos(p * Math.PI * 2 + i) * 13);
+            int tx = cx + (int) (Math.sin(p * Math.PI * 2 + i) * 26);
+            int ty = cy + 16 + (int) (Math.cos(p * Math.PI * 2 + i) * 7);
             g.setColor(new Color(255, 215, 80));
-            g.fillRect(tx - 11, ty - 6, 22, 13);
+            g.fillRect(tx - 6, ty - 3, 12, 7);
             g.setColor(new Color(60, 40, 10));
-            g.fillRect(tx + 8, ty - 6, 5, 13);
+            g.fillRect(tx + 4, ty - 3, 3, 7);
             g.setColor(Color.BLACK);
-            g.fillOval(tx - 8, ty + 7, 6, 6);
-            g.fillOval(tx + 6, ty + 7, 6, 6);
+            g.fillOval(tx - 4, ty + 4, 3, 3);
+            g.fillOval(tx + 3, ty + 4, 3, 3);
         }
 
-        drawPlane(g, game.cityByName("Sydney"), game.cityByName("Perth"), t, 0.0006);
-        drawPlane(g, game.cityByName("Sydney"),
+        drawPlane(g, o, s, game.cityByName("Sydney"), game.cityByName("Perth"), t, 0.0006);
+        drawPlane(g, o, s, game.cityByName("Sydney"),
                 new City("Shenzhen", "China", "Asien", 17_000_000, 0.5, SHENZHEN_X, SHENZHEN_Y), t, 0.00055);
     }
 
-    private void drawPlane(Graphics2D g, City a, City b, long t, double speed) {
+    private void drawPlane(Graphics2D g, int[] o, double s, City a, City b, long t, double speed) {
         if (b == null) return;
         double p = (t * speed) % 1.0;
-        int x1 = (int) (a.mapX * VW);
-        int y1 = (int) (a.mapY * VH);
-        int x2 = (int) (b.mapX * VW);
-        int y2 = (int) (b.mapY * VH);
+        int x1 = (int) (o[0] + a.mapX * VW * s);
+        int y1 = (int) (o[1] + a.mapY * VH * s);
+        int x2 = (int) (o[0] + b.mapX * VW * s);
+        int y2 = (int) (o[1] + b.mapY * VH * s);
         int px = (int) (x1 + (x2 - x1) * p);
-        int py = (int) (y1 + (y2 - y1) * p - Math.sin(p * Math.PI) * 80);
+        int py = (int) (y1 + (y2 - y1) * p - Math.sin(p * Math.PI) * 40);
         double ang = Math.atan2(y2 - y1, x2 - x1);
         g.setColor(new Color(235, 240, 250));
-        g.fillPolygon(new int[]{px + (int) (18 * Math.cos(ang)), px + (int) (16 * Math.cos(ang + 2.5)), px + (int) (16 * Math.cos(ang - 2.5))},
-                new int[]{py + (int) (18 * Math.sin(ang)), py + (int) (16 * Math.sin(ang + 2.5)), py + (int) (16 * Math.sin(ang - 2.5))}, 3);
+        g.fillPolygon(new int[]{px + (int) (10 * Math.cos(ang)), px + (int) (9 * Math.cos(ang + 2.5)), px + (int) (9 * Math.cos(ang - 2.5))},
+                new int[]{py + (int) (10 * Math.sin(ang)), py + (int) (9 * Math.sin(ang + 2.5)), py + (int) (9 * Math.sin(ang - 2.5))}, 3);
     }
 }
