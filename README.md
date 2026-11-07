@@ -166,6 +166,10 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
   Nachfrage; Blitzangebote (20k, 3 Tage: −20% Preis, ×1.6 Nachfrage); Tochterfirmen (+3.000 AUD/Tag);
   9 Achievements im Dashboard; **Schwierigkeitsgrade** (Leicht/Normal/Schwer: Startkapital, Katastrophen-,
   Konkurrenz-Härte).
+- **Gebrauchtwaren-Markt (Refurbished):** Retouren landen im Refurb-Pool (max. 5.000/SKU) und werden
+  automatisch als Gebrauchtware zu 60% des Neupreises verkauft (eigene Nachfrage-Quelle). Pool-Anzeige im Dashboard.
+- **Aktive KI-Konkurrenten:** Rivals eröffnen alle ~30 Tage sichtbare eigene Standorte auf der Karte
+  (farbige Kästchen in Rivalen-Farbe, zuletzt in welcher Stadt), jeder Standort pusht ihren Marktanteil.
 - **Animationen auf der Karte:** umkreisende Drohnen an Standorten, fahrende LKWs in Flotten-Städten,
   Flugzeuge auf Langstrecken (Sydney→London, Sydney→LA, Sydney→Shenzhen).
 - **Nachfrage & Angebot (Prinzip):** Nachfrage pro Stadt = Einwohner/Mio x Kategorie-Faktor x Prime-Quote

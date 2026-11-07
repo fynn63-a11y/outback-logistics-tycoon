@@ -39,7 +39,7 @@ public class RivalsPanel extends JPanel {
             share.setStringPainted(true);
             share.setString("Marktanteil " + (int) (r.marketShare * 100) + "%");
             share.setPreferredSize(new Dimension(220, 18));
-            row.add(new JLabel(r.name));
+            row.add(new JLabel(r.name + (r.sites > 0 ? " | eigene Standorte: " + r.sites + (r.lastCity.isEmpty() ? "" : " (zuletzt: " + r.lastCity + ")") : "")));
             row.add(share);
             double value = game.rivalValue(r);
             JButton buy = new JButton(String.format("Uebernehmen (%,.0f AUD)", value));

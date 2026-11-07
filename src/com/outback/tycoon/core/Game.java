@@ -70,6 +70,7 @@ public class Game implements Serializable {
     public final List<String> subsidiaries = new ArrayList<>();
     public final java.util.Set<String> achievements = new java.util.HashSet<>();
     public double lastFillRate = 1.0;
+    public final Map<String, Integer> refurbStock = new HashMap<>();
 
     public boolean sandboxMode = false;
 
@@ -248,6 +249,12 @@ public class Game implements Serializable {
             dayIndex++;
             sim.dailyTick(this);
         }
+    }
+
+    public int refurbTotal() {
+        int t = 0;
+        for (int v : refurbStock.values()) t += v;
+        return t;
     }
 
     public void alert(String msg) {
@@ -711,5 +718,6 @@ public class Game implements Serializable {
         subsidiaries.clear(); subsidiaries.addAll(o.subsidiaries);
         achievements.clear(); achievements.addAll(o.achievements);
         lastFillRate = o.lastFillRate;
+        refurbStock.clear(); refurbStock.putAll(o.refurbStock);
     }
 }

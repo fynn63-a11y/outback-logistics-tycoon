@@ -42,6 +42,7 @@ public class Simulation implements java.io.Serializable {
 
         double demandSum = 0;
         double fulfilledSum = 0;
+        double refurbDemand = 0;
         double totalDemand = 0;
         for (City c : g.cities)
             for (SKU sku : g.catalog) totalDemand += demand(g, c, sku);
@@ -68,6 +69,13 @@ public class Simulation implements java.io.Serializable {
                 double returns = fulfilled * sku.category.returnRate;
                 g.lastDailyReturns += (int) returns;
                 costs += returns * sku.baseCost * 0.3;
+                if ((int) returns > 0) {
+                    int pool = g.refurbStock.getOrDefault(sku.id, 0);
+                    int add = (int) returns;
+                    if (pool + add > 5_000) add = Math.max(0, 5_000 - pool);
+                    if (add > 0) g.refurbStock.merge(sku.id, add, Integer::sum);
+                    refurbDemand += demand * 0.15;
+                }
                 if (sku.category.coldChain) costs += fulfilled * 0.8;
                 if (sku.category.hazardous) costs += fulfilled * 0.5;
             }
@@ -222,6 +230,7 @@ public class Simulation implements java.io.Serializable {
 
         g.researchPoints += g.developers * 2.0;
         g.morale += (70 - g.morale) * 0.01;
+        sellRefurbished(g, refurbDemand);
         updateRivals(g);
         randomEvents(g);
         disasters(g);
@@ -269,6 +278,22 @@ public class Simulation implements java.io.Serializable {
                 * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor * ratingFactor * flashFactor;
     }
 
+    private void sellRefurbished(Game g, double refurbDemand) {
+        if (refurbDemand <= 0 || g.refurbStock.isEmpty()) return;
+        for (SKU sku : g.catalog) {
+            int pool = g.refurbStock.getOrDefault(sku.id, 0);
+            if (pool <= 0) continue;
+            double share = refurbDemand / Math.max(1, g.catalog.size());
+            int sold = (int) Math.min(pool, share);
+            if (sold > 0) {
+                g.refurbStock.put(sku.id, pool - sold);
+                double earn = sold * sku.price * 0.6;
+                g.cash += earn;
+                g.lastDailyRevenue += earn;
+            }
+        }
+    }
+
     private void updateRivals(Game g) {
         if (g.rivals.size() < 5 && g.dayIndex > 0 && g.dayIndex % 730 == 0) {
             String[] names = {"Kimberley Cargo", "Red Centre Express", "Tasman Logistics"};
@@ -279,9 +304,19 @@ public class Simulation implements java.io.Serializable {
         }
         double playerMomentum = Math.min(0.02, g.lastDailyRevenue / 500_000.0);
         for (RivalCompany r : g.rivals) {
-            r.marketShare += ((rnd.nextDouble() - 0.45) * 0.002 + 0.0005) * g.difficulty.rivalMult;
+            r.marketShare += ((rnd.nextDouble() - 0.45) * 0.002 + 0.0005 + r.sites * 0.0004) * g.difficulty.rivalMult;
             r.marketShare -= playerMomentum;
             r.marketShare = Math.max(0.02, Math.min(0.35, r.marketShare));
+        }
+        if (g.dayIndex % 30 == 0) {
+            for (RivalCompany r : g.rivals) {
+                if (r.marketShare > 0.05 && rnd.nextDouble() < 0.6) {
+                    r.sites++;
+                    City c = g.cities.get(rnd.nextInt(g.cities.size()));
+                    r.lastCity = c.name;
+                    g.alert("KI-KONKURRENT " + r.name + " eroeffnet Standort #" + r.sites + " in " + c.name + " (sichtbar auf der Karte, Farbe = Rivale).");
+                }
+            }
         }
         double top = 0;
         RivalCompany leader = null;

@@ -174,6 +174,17 @@ public class MacroMapPanel extends JPanel {
             g.drawString("PRIME DAY! Traffic x3.5", getWidth() / 2 - 120, 30);
         }
 
+        for (com.outback.tycoon.model.RivalCompany r : game.rivals) {
+            if (r.sites == 0 || r.lastCity.isEmpty()) continue;
+            City rc = game.cityByName(r.lastCity);
+            int rx = (int) (rc.mapX * getWidth());
+            int ry = (int) (rc.mapY * getHeight());
+            for (int i = 0; i < r.sites; i++) {
+                g.setColor(r.color);
+                g.fillRect(rx - 10 - i * 5, ry - 10 - i * 3, 4, 4);
+            }
+        }
+
         drawAnimations(g);
     }
 
