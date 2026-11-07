@@ -93,21 +93,25 @@ public class Site implements java.io.Serializable {
     }
 
     public int machineScore() {
-        double s = 0;
-        for (int x = 0; x < w; x++)
-            for (int y = 0; y < h; y++)
-                if (grid[x][y] != null) s += grid[x][y].score * (1 + upgrades[x][y] / 2) * cellFactor(x, y);
-                if (level2 && grid2[x][y] != null) s += grid2[x][y].score * (1 + upgrades2[x][y] / 2);
-        return (int) s;
+        double sum = 0;
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                if (grid[x][y] != null) sum += grid[x][y].score * (1 + upgrades[x][y] / 2.0) * cellFactor(x, y);
+                if (level2 && grid2[x][y] != null) sum += grid2[x][y].score * (1 + upgrades2[x][y] / 2.0);
+            }
+        }
+        return (int) sum;
     }
 
     public int stageScore(MachineType.Stage st) {
-        double s = 0;
-        for (int x = 0; x < w; x++)
-            for (int y = 0; y < h; y++)
-                if (grid[x][y] != null && grid[x][y].stage == st) s += grid[x][y].score * (1 + upgrades[x][y] / 2) * cellFactor(x, y);
-                if (level2 && grid2[x][y] != null && grid2[x][y].stage == st) s += grid2[x][y].score * (1 + upgrades2[x][y] / 2);
-        return (int) s;
+        double sum = 0;
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                if (grid[x][y] != null && grid[x][y].stage == st) sum += grid[x][y].score * (1 + upgrades[x][y] / 2.0) * cellFactor(x, y);
+                if (level2 && grid2[x][y] != null && grid2[x][y].stage == st) sum += grid2[x][y].score * (1 + upgrades2[x][y] / 2.0);
+            }
+        }
+        return (int) sum;
     }
 
     public boolean hasEstop() {
