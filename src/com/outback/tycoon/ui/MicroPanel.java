@@ -18,6 +18,7 @@ public class MicroPanel extends JPanel {
     private MachineType selectedMachine = MachineType.CONVEYOR;
     private boolean eraseMode = false;
     private int[] hover = null;
+    private boolean roofOn = true;
     private Timer animTimer;
 
     public MicroPanel(Game game) {
@@ -98,6 +99,12 @@ public class MicroPanel extends JPanel {
             });
             palette.add(b);
         }
+        JButton roof = new JButton("Dach an/aus");
+        roof.addActionListener(e -> {
+            roofOn = !roofOn;
+            canvas.repaint();
+        });
+        palette.add(roof);
         JButton erase = new JButton("Loeschen-Modus");
         erase.addActionListener(e -> {
             eraseMode = true;
@@ -200,6 +207,7 @@ public class MicroPanel extends JPanel {
                     }
                 }
             }
+            drawWallsAndRoof(g, s, tw, th);
             drawWarehouseFx(g, s, t, tw, th);
             if (hover != null && !eraseMode && s.grid[hover[0]][hover[1]] == null) {
                 int cx = originX() + (hover[0] - hover[1]) * tw / 2;
@@ -210,6 +218,29 @@ public class MicroPanel extends JPanel {
                 g.setColor(new Color(255, 255, 255, 160));
                 g.drawPolygon(new int[]{cx, cx + tw / 3, cx, cx - tw / 3},
                         new int[]{cy - th - th / 3, cy - th, cy - th + th / 3, cy - th}, 4);
+            }
+        }
+
+        private void drawWallsAndRoof(Graphics2D g, Site s, int tw, int th) {
+            int wallH = th * 8;
+            int c00x = originX();
+            int c00y = originY();
+            int c10x = originX() + Site.GRID * tw / 2;
+            int c10y = originY() + Site.GRID * th / 2;
+            int c01x = originX() - Site.GRID * tw / 2;
+            int c01y = originY() + Site.GRID * th / 2;
+            int c11x = originX();
+            int c11y = originY() + Site.GRID * th;
+            g.setColor(new Color(105, 92, 78));
+            g.fillPolygon(new int[]{c00x, c01x, c01x, c00x}, new int[]{c00y, c01y, c01y - wallH, c00y - wallH}, 4);
+            g.setColor(new Color(88, 76, 62));
+            g.fillPolygon(new int[]{c00x, c10x, c10x, c00x}, new int[]{c00y, c10y, c10y - wallH, c00y - wallH}, 4);
+            g.setColor(new Color(50, 42, 34));
+            g.drawPolygon(new int[]{c00x, c01x, c01x, c00x}, new int[]{c00y, c01y, c01y - wallH, c00y - wallH}, 4);
+            g.drawPolygon(new int[]{c00x, c10x, c10x, c00x}, new int[]{c00y, c10y, c10y - wallH, c00y - wallH}, 4);
+            if (s.level >= 3 && roofOn) {
+                g.setColor(new Color(150, 60, 50, 90));
+                g.fillPolygon(new int[]{c00x, c10x, c11x, c01x}, new int[]{c00y - wallH, c10y - wallH, c11y - wallH, c01y - wallH}, 4);
             }
         }
 
@@ -282,6 +313,31 @@ public class MicroPanel extends JPanel {
                     double blink = 0.3 + 0.7 * Math.abs(Math.sin(t / 300.0 + cx));
                     g.setColor(new Color(120, 255, 140, (int) (blink * 255)));
                     g.fillOval(cx + w / 4 - 2, cy - lift - h / 2 + 2, 4, 4);
+                    break;
+                }
+                case PICK: {
+                    g.setColor(new Color(60, 170, 90));
+                    g.fillRect(cx - w / 2, cy - lift - h / 2, w, h);
+                    g.setColor(new Color(120, 230, 255));
+                    g.fillRect(cx - w / 4, cy - lift - h / 2 + 3, w / 2, h / 3);
+                    g.setColor(Color.BLACK);
+                    g.drawRect(cx - w / 2, cy - lift - h / 2, w, h);
+                    break;
+                }
+                case DOCK: {
+                    g.setColor(new Color(90, 60, 30));
+                    g.fillRect(cx - w / 2, cy - lift - h / 2, w, h);
+                    g.setColor(new Color(40, 28, 14));
+                    g.fillRect(cx - w / 4, cy - lift - h / 4, w / 2, h / 2 + 2);
+                    g.setColor(new Color(255, 220, 80));
+                    g.drawRect(cx - w / 2, cy - lift - h / 2, w, h);
+                    break;
+                }
+                case SPAWNER: {
+                    g.setColor(new Color(60, 110, 200));
+                    g.fillRect(cx - w / 2, cy - lift - h, w, h * 2);
+                    g.setColor(new Color(20, 40, 90));
+                    g.fillRect(cx - w / 4, cy - lift - h / 2, w / 2, h);
                     break;
                 }
                 default: {
