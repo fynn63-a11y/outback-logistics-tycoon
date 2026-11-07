@@ -415,7 +415,7 @@ public class Game implements Serializable {
     }
 
     public void applyBlueprint(String name, Site target) {
-        int[][] bp = blueprints.get(name);
+        int[][][] bp = blueprints.get(name);
         if (bp == null) return;
         double cost = 0;
         for (int x = 0; x < Site.GRID; x++)
@@ -961,8 +961,8 @@ public class Game implements Serializable {
         eventFlags.clear(); eventFlags.addAll(o.eventFlags);
         sabotageCooldown = o.sabotageCooldown;
         blueprints.clear();
-        for (java.util.Map.Entry<String, int[][]> e : o.blueprints.entrySet()) {
-            int[][] copy = new int[2][Site.GRID][Site.GRID];
+        for (java.util.Map.Entry<String, int[][][]> e : o.blueprints.entrySet()) {
+            int[][][] copy = new int[2][Site.GRID][Site.GRID];
             for (int x = 0; x < Site.GRID; x++) {
                 System.arraycopy(e.getValue()[0][x], 0, copy[0][x], 0, Site.GRID);
                 System.arraycopy(e.getValue()[1][x], 0, copy[1][x], 0, Site.GRID);
