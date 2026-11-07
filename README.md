@@ -7,8 +7,10 @@ der ASX. Inspiriert von Hearts of Iron 4 (Makro-Karte), GeoPolitik 5 und Product
 
 ## CI
 
+[![build](https://github.com/fynn63-a11y/outback-logistics-tycoon/actions/workflows/build.yml/badge.svg)](https://github.com/fynn63-a11y/outback-logistics-tycoon/actions/workflows/build.yml)
+
 GitHub Actions (`.github/workflows/build.yml`) kompiliert bei jedem Push/PR mit JDK 17
-(`./build.sh`) und testet den Textur-Export (`./generate-textures.sh`).
+(`./build.sh`) und testet den Textur-Export (`./generate-textures.sh`). Badge oben: grün = Build OK, rot = fehlgeschlagen.
 
 ## Start
 
