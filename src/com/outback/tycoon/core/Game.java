@@ -414,7 +414,7 @@ public class Game implements Serializable {
 
     public double powerUsed() {
         double u = 0;
-        foreach (Site s : sites) u += s.machineScore() * 2;
+        for (Site s : sites) u += s.machineScore() * 2;
         return u;
     }
 
