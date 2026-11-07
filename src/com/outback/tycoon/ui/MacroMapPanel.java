@@ -44,6 +44,11 @@ public class MacroMapPanel extends JPanel {
     private boolean view3D = false;
     private double zoom = 1.0;
     private City hoverCity = null;
+    private double panX = 0;
+    private double panY = 0;
+    private int dragStartX = 0;
+    private int dragStartY = 0;
+    private boolean panning = false;
     private final JComboBox<String> regionBox;
 
     public MacroMapPanel(Game game, MainWindow window) {
@@ -96,7 +101,38 @@ public class MacroMapPanel extends JPanel {
         });
         addMouseListener(new MouseAdapter() {
             @Override
+            public void mousePressed(MouseEvent e) {
+                dragStartX = e.getX();
+                dragStartY = e.getY();
+                panning = false;
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (Math.hypot(e.getX() - dragStartX, e.getY() - dragStartY) > 6) panning = true;
+                if (panning) {
+                    panX += e.getX() - mouseX;
+                    panY += e.getY() - mouseY;
+                    mouseX = e.getX();
+                    mouseY = e.getY();
+                    repaint();
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (panning) return;
+                mouseClicked(e);
+            }
+
+            @Override
             public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    panX = 0;
+                    panY = 0;
+                    zoom = 1.0;
+                    repaint();
+                }
                 int[] v = toVirtual(e.getX(), e.getY());
                 City nearest = null;
                 double best = 42 * viewScale();
@@ -160,8 +196,8 @@ public class MacroMapPanel extends JPanel {
 
     private int[] viewOffset() {
         double s = viewScale();
-        int oy = (int) ((getHeight() - VH * s) / 2);
-        int ox = (int) ((getWidth() - (px(156) - px(110)) * s) / 2 - px(110) * s);
+        int oy = (int) ((getHeight() - VH * s) / 2) + (int) panY;
+        int ox = (int) ((getWidth() - (px(156) - px(110)) * s) / 2 - px(110) * s) + (int) panX;
         return new int[]{ox, oy};
     }
 
