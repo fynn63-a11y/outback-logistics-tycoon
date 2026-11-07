@@ -41,6 +41,8 @@ public class MacroMapPanel extends JPanel {
 
     private final Game game;
     private final MainWindow window;
+    private int mouseX = -1;
+    private int mouseY = -1;
     private BufferedImage baseCache;
     private int baseW = -1;
     private int baseH = -1;
@@ -49,6 +51,13 @@ public class MacroMapPanel extends JPanel {
         this.game = game;
         this.window = window;
         setBackground(new Color(8, 24, 48));
+        addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                mouseX = e.getX();
+                mouseY = e.getY();
+            }
+        });
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -297,6 +306,15 @@ public class MacroMapPanel extends JPanel {
                 g.setColor(new Color(200, 210, 225));
                 g.drawString(String.format("%,d Einw. | Standorte: %d", c.population, citySites.size()), x + r + 8, y + 4);
             }
+        }
+
+        if (game.pendingBuildType != null && mouseX >= 0) {
+            g.setColor(new Color(120, 255, 150, 120));
+            g.fillRect(mouseX - 8, mouseY - 8, 16, 16);
+            g.setColor(Color.WHITE);
+            g.drawRect(mouseX - 8, mouseY - 8, 16, 16);
+            g.setFont(g.getFont().deriveFont(Font.BOLD, 11f));
+            g.drawString("Platzieren: " + game.pendingBuildType.label + " (klicken)", mouseX + 12, mouseY - 10);
         }
 
         drawAnimations(g);

@@ -190,21 +190,7 @@ public class MicroPanel extends JPanel {
                     g.drawPolygon(new int[]{cx, cx + tw / 2, cx, cx - tw / 2}, new int[]{cy - th / 2, cy, cy + th / 2, cy}, 4);
 
                     MachineType m = s.grid[x][y];
-                    if (m != null) {
-                        int lift = th;
-                        Color c = machineColor(m);
-                        diamond(g, cx, cy - lift, tw * 2 / 3, th * 2 / 3, c);
-                        g.setColor(Color.WHITE);
-                        g.drawPolygon(new int[]{cx - tw / 3, cx, cx + tw / 3, cx},
-                                new int[]{cy - lift - th / 3, cy - lift, cy - lift + th / 3, cy - lift}, 4);
-                        g.setColor(c.darker());
-                        g.fillPolygon(new int[]{cx - tw / 3, cx, cx, cx - tw / 3 + 0},
-                                new int[]{cy - lift, cy - lift + th / 3, cy + th / 3, cy}, 4);
-                        g.fillPolygon(new int[]{cx + tw / 3, cx, cx, cx + tw / 3},
-                                new int[]{cy - lift, cy - lift + th / 3, cy + th / 3, cy}, 4);
-                        g.setColor(Color.BLACK);
-                        g.drawString(m.name().substring(0, 1), cx - 3, cy - lift + 4);
-                    }
+                    if (m != null) drawMachine(g, m, cx, cy, tw, th, t);
                     if (m == MachineType.CONVEYOR || m == MachineType.SPAWNER) {
                         double phase = ((t / 120.0) + x * 3 + y * 5) % 1.0;
                         int px = cx + (int) ((phase - 0.5) * tw * 0.6);
@@ -253,6 +239,61 @@ public class MicroPanel extends JPanel {
                     double blink = 0.25 + 0.75 * Math.abs(Math.sin(t / 350.0 + x * 1.7 + y * 2.3));
                     g.setColor(new Color(120, 255, 140, (int) (blink * 220)));
                     g.fillOval(cx + tw / 4 - 2, cy - 3, 4, 4);
+                }
+            }
+        }
+
+        private void drawMachine(Graphics2D g, MachineType m, int cx, int cy, int tw, int th, long t) {
+            int lift = th;
+            int w = tw * 2 / 3;
+            int h = th * 2 / 3;
+            Color c = machineColor(m);
+            switch (m) {
+                case CONVEYOR: {
+                    g.setColor(new Color(70, 74, 86));
+                    g.fillRoundRect(cx - w / 2, cy - lift - h / 2, w, h, 4, 4);
+                    g.setColor(new Color(170, 176, 192));
+                    double off = (t / 90.0) % 6;
+                    for (int i = -w / 2; i < w / 2; i += 6) {
+                        int lx = cx + i + (int) off;
+                        g.drawLine(lx, cy - lift - h / 2 + 2, lx, cy - lift + h / 2 - 2);
+                    }
+                    g.setColor(Color.BLACK);
+                    g.drawRoundRect(cx - w / 2, cy - lift - h / 2, w, h, 4, 4);
+                    break;
+                }
+                case RACK: {
+                    g.setColor(new Color(150, 110, 60));
+                    g.fillRect(cx - w / 2, cy - lift - h / 2, w, h);
+                    g.setColor(new Color(90, 64, 34));
+                    for (int i = 1; i <= 3; i++)
+                        g.drawLine(cx - w / 2, cy - lift - h / 2 + i * h / 4, cx + w / 2, cy - lift - h / 2 + i * h / 4);
+                    g.setColor(Color.BLACK);
+                    g.drawRect(cx - w / 2, cy - lift - h / 2, w, h);
+                    break;
+                }
+                case ROBOT: {
+                    g.setColor(new Color(255, 150, 40));
+                    g.fillRoundRect(cx - w / 2, cy - lift - h / 2, w, h, 5, 5);
+                    g.setColor(new Color(60, 40, 20));
+                    g.drawRoundRect(cx - w / 2, cy - lift - h / 2, w, h, 5, 5);
+                    g.setColor(Color.WHITE);
+                    g.fillOval(cx - 3, cy - lift - 2, 6, 4);
+                    double blink = 0.3 + 0.7 * Math.abs(Math.sin(t / 300.0 + cx));
+                    g.setColor(new Color(120, 255, 140, (int) (blink * 255)));
+                    g.fillOval(cx + w / 4 - 2, cy - lift - h / 2 + 2, 4, 4);
+                    break;
+                }
+                default: {
+                    diamond(g, cx, cy - lift, w, h, c);
+                    g.setColor(Color.WHITE);
+                    g.drawPolygon(new int[]{cx - w / 2, cx, cx + w / 2, cx},
+                            new int[]{cy - lift - h / 2, cy - lift, cy - lift + h / 2, cy - lift}, 4);
+                    g.setColor(c.darker());
+                    g.fillPolygon(new int[]{cx - w / 2, cx, cx, cx - w / 2},
+                            new int[]{cy - lift, cy - lift + h / 2, cy + h / 2, cy}, 4);
+                    g.fillPolygon(new int[]{cx + w / 2, cx, cx, cx + w / 2},
+                            new int[]{cy - lift, cy - lift + h / 2, cy + h / 2, cy}, 4);
                 }
             }
         }
