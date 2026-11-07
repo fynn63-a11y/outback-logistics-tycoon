@@ -168,7 +168,12 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
   Konkurrenz-Härte).
 - **Gebrauchtwaren-Markt (Refurbished):** Retouren landen im Refurb-Pool (max. 5.000/SKU) und werden
   automatisch als Gebrauchtware zu 60% des Neupreises verkauft (eigene Nachfrage-Quelle). Pool-Anzeige im Dashboard.
-- **Aktive KI-Konkurrenten:** Rivals eröffnen alle ~30 Tage sichtbare eigene Standorte auf der Karte
+- **Prime-Ökosystem:** Werbekampagnen steigern Prime-Abonnenten (9,99 AUD/Monat Einkommen, globale
+  Prime-Quote pusht die Nachfrage); freischaltbar: Prime Video, Prime Music, Prime Fresh (Lebensmittel,
+  +20% FMCG/Kühlkette); eigener Standort-Typ **Amazon-Go-Store** (kassenloser Laden, Direktverkauf).
+- **Aktive KI-Konkurrenten mit Aggressivität & Fokus:** jeder Rivale hat eine Aggressivität (x0.8–x1.6,
+  bestimmt Bautempo) und expandiert in **Artikelgruppen** — jede besetzte Gruppe drückt deine Nachfrage
+  in dieser Kategorie um 6%. Rivals eröffnen alle ~30 Tage sichtbare eigene Standorte auf der Karte
   (farbige Kästchen in Rivalen-Farbe, zuletzt in welcher Stadt), jeder Standort pusht ihren Marktanteil.
 - **Animationen auf der Karte:** umkreisende Drohnen an Standorten, fahrende LKWs in Flotten-Städten,
   Flugzeuge auf Langstrecken (Sydney→London, Sydney→LA, Sydney→Shenzhen).

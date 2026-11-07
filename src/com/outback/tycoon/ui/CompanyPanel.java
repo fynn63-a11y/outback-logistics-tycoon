@@ -104,6 +104,40 @@ public class CompanyPanel extends JPanel {
         }
         root.add(Box.createVerticalStrut(10));
 
+        root.add(section("Ökosystem: Prime & Co. (Kundenbindung)"));
+        root.add(label(String.format("Prime-Abonnenten: %,d | Prime-Quote global: %.0f%% (wirkt auf Nachfrage aller Städte)",
+                game.primeSubscribers, game.primeShare() * 100)));
+        JPanel ecoRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton prime = new JButton("Prime-Werbekampagne (100.000 AUD, +Abonnenten)");
+        prime.addActionListener(e -> {
+            game.campaignPrime();
+            refresh();
+        });
+        JButton video = new JButton(game.primeVideo ? "Prime Video: aktiv" : "Prime Video freischalten (200.000 AUD)");
+        video.setEnabled(!game.primeVideo);
+        video.addActionListener(e -> {
+            game.unlockEcosystem(true, false, false);
+            refresh();
+        });
+        JButton music = new JButton(game.primeMusic ? "Prime Music: aktiv" : "Prime Music freischalten (200.000 AUD)");
+        music.setEnabled(!game.primeMusic);
+        music.addActionListener(e -> {
+            game.unlockEcosystem(false, true, false);
+            refresh();
+        });
+        JButton fresh = new JButton(game.primeFresh ? "Prime Fresh (Lebensmittel): aktiv" : "Prime Fresh freischalten (150.000 AUD, +20% FMCG/Kühlkette)");
+        fresh.setEnabled(!game.primeFresh);
+        fresh.addActionListener(e -> {
+            game.unlockEcosystem(false, false, true);
+            refresh();
+        });
+        ecoRow.add(prime);
+        ecoRow.add(video);
+        ecoRow.add(music);
+        ecoRow.add(fresh);
+        root.add(ecoRow);
+        root.add(Box.createVerticalStrut(10));
+
         root.add(section("Blitzangebote & Tochterfirmen"));
         JPanel promoRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton flashAll = new JButton("Blitzangebot ALLE Kategorien (20.000 AUD, 3 Tage: -20% Preis, x1.6 Nachfrage)");

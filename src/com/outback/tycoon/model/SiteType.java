@@ -7,7 +7,8 @@ public enum SiteType {
     VERTEILZENTRUM("Verteilzentrum", 1_200_000, 800, 400, 25),
     UMSCHLAGZENTRUM("Umschlagzentrum", 400_000, 250, 150, 12),
     CONTAINER_TERMINAL("Container-Terminal", 1_500_000, 600, 300, 30),
-    DATA_CENTER("Rechenzentrum (AWS)", 900_000, 0, 0, 18);
+    DATA_CENTER("Rechenzentrum (AWS)", 900_000, 0, 0, 18),
+    AMAZON_GO("Amazon-Go-Store (Kassenlos)", 300_000, 0, 60, 8);
 
     public final String label;
     public final double baseCost;

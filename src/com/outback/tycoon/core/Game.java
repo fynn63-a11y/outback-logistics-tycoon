@@ -73,6 +73,36 @@ public class Game implements Serializable {
     public final Map<String, Integer> refurbStock = new HashMap<>();
     public final Map<String, Double> revBy = new java.util.LinkedHashMap<>();
     public final Map<String, Double> costBy = new java.util.LinkedHashMap<>();
+    public long primeSubscribers = 0;
+    public boolean primeVideo = false;
+    public boolean primeMusic = false;
+    public boolean primeFresh = false;
+
+    public double primeShare() {
+        return Math.min(0.45, primeSubscribers / 5_000_000.0);
+    }
+
+    public void campaignPrime() {
+        if (!charge(100_000)) {
+            alert("Prime-Werbekampagne kostet 100.000 AUD.");
+            return;
+        }
+        long newSubs = 20_000 + (long) (reputation * 500) + (long) networkThroughput();
+        primeSubscribers += newSubs;
+        alert("PRIME-KAMPAGNE: +" + newSubs + " Abonnenten (gesamt " + primeSubscribers + ").");
+    }
+
+    public void unlockEcosystem(boolean video, boolean music, boolean fresh) {
+        double cost = (video && !primeVideo ? 200_000 : 0) + (music && !primeMusic ? 200_000 : 0) + (fresh && !primeFresh ? 150_000 : 0);
+        if (cost > 0 && !charge(cost)) {
+            alert("Ökosystem-Dienste kosten " + String.format("%,.0f", cost) + " AUD.");
+            return;
+        }
+        primeVideo = primeVideo || video;
+        primeMusic = primeMusic || music;
+        primeFresh = primeFresh || fresh;
+        alert("Ökosystem erweitert: " + (video ? "Prime Video " : "") + (music ? "Prime Music " : "") + (fresh ? "Prime Fresh (Lebensmittel)" : ""));
+    }
 
     public void addRev(String key, double v) {
         revBy.merge(key, v, Double::sum);
@@ -183,12 +213,18 @@ public class Game implements Serializable {
         apex.sites = 2;
         apex.siteCities.add("Melbourne");
         apex.siteCities.add("London");
+        apex.aggression = 1.6;
+        apex.categories.add(Category.ELECTRONICS);
         RivalCompany southern = new RivalCompany("Southern Star Freight", 0.09, new java.awt.Color(230, 160, 60));
         southern.sites = 1;
         southern.siteCities.add("Sydney");
+        southern.aggression = 0.8;
+        southern.categories.add(Category.FMCG);
         RivalCompany pacific = new RivalCompany("Pacific Rim Fulfilment", 0.07, new java.awt.Color(120, 140, 230));
         pacific.sites = 1;
         pacific.siteCities.add("New York");
+        pacific.aggression = 1.2;
+        pacific.categories.add(Category.BULKY);
         rivals.add(apex);
         rivals.add(southern);
         rivals.add(pacific);
@@ -741,5 +777,9 @@ public class Game implements Serializable {
         refurbStock.clear(); refurbStock.putAll(o.refurbStock);
         revBy.clear(); revBy.putAll(o.revBy);
         costBy.clear(); costBy.putAll(o.costBy);
+        primeSubscribers = o.primeSubscribers;
+        primeVideo = o.primeVideo;
+        primeMusic = o.primeMusic;
+        primeFresh = o.primeFresh;
     }
 }

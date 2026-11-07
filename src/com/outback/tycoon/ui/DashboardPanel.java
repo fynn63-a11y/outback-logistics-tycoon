@@ -54,6 +54,8 @@ public class DashboardPanel extends JPanel {
                 assets, game.loanTaken, assets - game.loanTaken, 90 - game.quarterDay)));
         root.add(row(String.format("Forschungspunkte: %.0f | Entwickler: %d | Moral: %d/100 | Streik: %s",
                 game.researchPoints, game.developers, (int) game.morale, game.strikeDaysLeft > 0 ? game.strikeDaysLeft + " Tage" : "nein")));
+        root.add(row(String.format("Prime-Abonnenten: %,d (Ökosystem: Video %s, Music %s, Fresh %s)",
+                game.primeSubscribers, game.primeVideo ? "an" : "aus", game.primeMusic ? "an" : "aus", game.primeFresh ? "an" : "aus")));
 
         double auto = globalAutomation();
         root.add(section("Automatisierung (Menschen vs. Roboter)"));

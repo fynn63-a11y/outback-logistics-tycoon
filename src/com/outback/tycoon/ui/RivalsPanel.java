@@ -39,7 +39,14 @@ public class RivalsPanel extends JPanel {
             share.setStringPainted(true);
             share.setString("Marktanteil " + (int) (r.marketShare * 100) + "%");
             share.setPreferredSize(new Dimension(220, 18));
-            row.add(new JLabel(r.name + (r.sites > 0 ? " | eigene Standorte: " + r.sites + " in " + String.join(", ", r.siteCities) : "")));
+            StringBuilder cats = new StringBuilder();
+            for (com.outback.tycoon.model.Category cat : r.categories) {
+                if (cats.length() > 0) cats.append(", ");
+                cats.append(cat.label.split(" ")[0]);
+            }
+            row.add(new JLabel(r.name + " | Aggressivität x" + r.aggression
+                    + (r.sites > 0 ? " | Standorte: " + r.sites + " in " + String.join(", ", r.siteCities) : "")
+                    + (cats.length() > 0 ? " | Artikelgruppen: " + cats : "")));
             row.add(share);
             double value = game.rivalValue(r);
             JButton buy = new JButton(String.format("Uebernehmen (%,.0f AUD)", value));

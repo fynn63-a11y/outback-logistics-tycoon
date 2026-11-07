@@ -129,6 +129,22 @@ public class Simulation implements java.io.Serializable {
         revenue += b2b;
         g.addRev("B2B-Lagerhotel", b2b);
 
+        if (g.primeSubscribers > 0) {
+            double primeFee = g.primeSubscribers * 9.99 / 30.0;
+            revenue += primeFee;
+            g.addRev("Prime-Abos (9,99 AUD/Monat)", primeFee);
+            if (g.primeVideo) { revenue += g.primeSubscribers * 0.06; g.addRev("Prime Video", g.primeSubscribers * 0.06); }
+            if (g.primeMusic) { revenue += g.primeSubscribers * 0.05; g.addRev("Prime Music", g.primeSubscribers * 0.05); }
+        }
+        g.primeSubscribers += (long) (g.reputation / 100.0 * g.sites.size() * 3);
+        for (Site s : g.sites) {
+            if (s.type == SiteType.AMAZON_GO && s.isOperational()) {
+                double go = g.siteThroughput(s) * 15.0;
+                revenue += go;
+                g.addRev("Amazon-Go-Stores", go);
+            }
+        }
+
         for (DealerContract ct : new java.util.ArrayList<>(g.contracts)) {
             int stock = 0;
             for (Site s : g.sites)
@@ -282,7 +298,8 @@ public class Simulation implements java.io.Serializable {
     public double demand(Game g, City c, SKU sku) {
         if (!sku.availableIn(g.month())) return 0;
         double base = DEMAND_PER_MILLION[sku.category.ordinal()] * c.popMillions();
-        double primeBoost = 1.0 + c.primeQuote * 0.5;
+        double effPrime = Math.max(c.primeQuote, g.primeShare());
+        double primeBoost = 1.0 + effPrime * 0.5;
         double season = g.seasonality();
         double primeDay = g.isPrimeDay() ? 3.5 : 1.0;
         double repFactor = 0.5 + g.reputation / 100.0;
@@ -299,8 +316,13 @@ public class Simulation implements java.io.Serializable {
         double ratingFactor = rating >= 4.5 ? 1.10 : rating < 3.0 ? 0.90 : 1.0;
         boolean flash = g.flashSaleDays > 0 && (g.flashSaleCategory == null || g.flashSaleCategory == sku.category);
         double flashFactor = flash ? 1.6 : 1.0;
+        double catRivalFactor = 1.0;
+        for (RivalCompany r : g.rivals)
+            if (r.categories.contains(sku.category)) catRivalFactor *= 0.94;
+        catRivalFactor = Math.max(0.6, catRivalFactor);
+        double freshFactor = (g.primeFresh && (sku.category == Category.FMCG || sku.category == Category.COLD_CHAIN)) ? 1.2 : 1.0;
         return base * primeBoost * season * primeDay * repFactor * brandFactor * rivalFactor
-                * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor * ratingFactor * flashFactor;
+                * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor * ratingFactor * flashFactor * catRivalFactor * freshFactor;
     }
 
     private void sellRefurbished(Game g, double refurbDemand) {
@@ -336,11 +358,15 @@ public class Simulation implements java.io.Serializable {
         }
         if (g.dayIndex % 30 == 0) {
             for (RivalCompany r : g.rivals) {
-                if (r.marketShare > 0.05 && rnd.nextDouble() < 0.6) {
+                if (r.marketShare > 0.05 && rnd.nextDouble() < 0.25 * r.aggression) {
                     r.sites++;
                     City c = g.cities.get(rnd.nextInt(g.cities.size()));
                     r.siteCities.add(c.name);
-                    g.alert("KI-KONKURRENT " + r.name + " eroeffnet Standort #" + r.sites + " in " + c.name + " (" + c.region + ") - sichtbar auf der Karte in Rivalen-Farbe.");
+                    Category[] cats = Category.values();
+                    Category cat = cats[rnd.nextInt(cats.length)];
+                    boolean newCat = r.categories.add(cat);
+                    g.alert("KI-KONKURRENT " + r.name + " (Aggressivitaet x" + r.aggression + ") eroeffnet Standort #" + r.sites + " in " + c.name
+                            + (newCat ? " und expandiert in Artikelgruppe: " + cat.label : "") + ".");
                 }
             }
         }
