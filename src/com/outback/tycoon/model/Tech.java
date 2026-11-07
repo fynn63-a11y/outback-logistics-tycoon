@@ -107,7 +107,8 @@ public enum Tech {
     IO_ML("ML-Nachfrageprognose", 160, "+5% Nachfrage (Prognose)", 3, Bonus.DEMAND, 0.05),
     IO_WFM("Workforce-Management (Schichtplanung)", 100, "+3% Durchsatz", 2, Bonus.THROUGHPUT, 0.03),
     IO_DARK("Dark Stores (Same-Day-Mikro-Lager)", 150, "+3% Same-Day-Nachfrage", 3, Bonus.DEMAND, 0.03),
-    IO_TOWER("Autonomous Supply Chain Control Tower", 200, "+6% Gesamtdurchsatz", 3, Bonus.THROUGHPUT, 0.06);
+    IO_TOWER("Autonomous Supply Chain Control Tower", 200, "+6% Gesamtdurchsatz", 3, Bonus.THROUGHPUT, 0.06),
+    IO_BUILDROBOT("Bau-Roboter (Auto-Platzierung nach Blaupause, -20% Baukosten)", 150, "Blaupausen automatisch zu 80% Preis anwenden", 3, Bonus.THROUGHPUT, 0.03);
 
     public enum Bonus { THROUGHPUT, COST, DEMAND, SERVER, SECURITY }
 

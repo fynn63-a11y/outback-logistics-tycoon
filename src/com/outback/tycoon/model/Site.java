@@ -55,20 +55,69 @@ public class Site implements java.io.Serializable {
         return 100_000.0 * (serviceLevel.ordinal() + 1);
     }
 
+    public double wear = 0;
+
+    private double cellFactor(int x, int y) {
+        MachineType m = grid[x][y];
+        if (m == null) return 0;
+        double f = 1.0;
+        if (m == MachineType.CONVEYOR) {
+            boolean linked = false;
+            int[][] nb = {{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}};
+            for (int[] n : nb)
+                if (n[0] >= 0 && n[0] < GRID && n[1] >= 0 && n[1] < GRID && grid[n[0]][n[1]] == MachineType.CONVEYOR) linked = true;
+            if (!linked) f *= 0.5;
+        } else {
+            int[][] nb = {{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}};
+            for (int[] n : nb)
+                if (n[0] >= 0 && n[0] < GRID && n[1] >= 0 && n[1] < GRID && grid[n[0]][n[1]] == m) { f *= 1.2; break; }
+        }
+        return f;
+    }
+
     public int machineScore() {
-        int s = 0;
+        double s = 0;
         for (int x = 0; x < GRID; x++)
             for (int y = 0; y < GRID; y++)
-                if (grid[x][y] != null) s += grid[x][y].score * (1 + upgrades[x][y] / 2);
-        return s;
+                if (grid[x][y] != null) s += grid[x][y].score * (1 + upgrades[x][y] / 2) * cellFactor(x, y);
+        return (int) s;
     }
 
     public int stageScore(MachineType.Stage st) {
-        int s = 0;
+        double s = 0;
         for (int x = 0; x < GRID; x++)
             for (int y = 0; y < GRID; y++)
-                if (grid[x][y] != null && grid[x][y].stage == st) s += grid[x][y].score * (1 + upgrades[x][y] / 2);
-        return s;
+                if (grid[x][y] != null && grid[x][y].stage == st) s += grid[x][y].score * (1 + upgrades[x][y] / 2) * cellFactor(x, y);
+        return (int) s;
+    }
+
+    public boolean hasEstop() {
+        for (int x = 0; x < GRID; x++)
+            for (int y = 0; y < GRID; y++)
+                if (grid[x][y] == MachineType.ESTOP) return true;
+        return false;
+    }
+
+    public double flowPenalty() {
+        java.util.Map<MachineType.Stage, Double> avgX = new java.util.HashMap<>();
+        java.util.Map<MachineType.Stage, Integer> cnt = new java.util.HashMap<>();
+        for (int x = 0; x < GRID; x++)
+            for (int y = 0; y < GRID; y++)
+                if (grid[x][y] != null) {
+                    avgX.merge(grid[x][y].stage, (double) x, Double::sum);
+                    cnt.merge(grid[x][y].stage, 1, Integer::sum);
+                }
+        java.util.List<MachineType.Stage> order = java.util.Arrays.asList(CHAIN);
+        int inversions = 0;
+        for (int i = 0; i < order.size(); i++) {
+            for (int j = i + 1; j < order.size(); j++) {
+                MachineType.Stage a = order.get(i);
+                MachineType.Stage b = order.get(j);
+                if (avgX.containsKey(a) && avgX.containsKey(b)
+                        && avgX.get(a) / cnt.get(a) > avgX.get(b) / cnt.get(b)) inversions++;
+            }
+        }
+        return 1.0 - Math.min(0.5, inversions * 0.1);
     }
 
     public double gridEfficiency(Game g) {
@@ -134,6 +183,8 @@ public class Site implements java.io.Serializable {
             t *= 1.5;
             t *= 0.6 + 0.4 * chainBottleneck(stars);
         }
+        t *= flowPenalty();
+        t *= 1.0 - 0.3 * wear;
         if (g.researched.contains(Tech.KIVA_ROBOTS)) t *= 1.5;
         if (g.researched.contains(Tech.HIGH_SPEED_CONVEYORS)) t *= 1.3;
         if (g.tempsDecember && g.month() == 12 && g.strikeDaysLeft <= 0) t *= 1.5;

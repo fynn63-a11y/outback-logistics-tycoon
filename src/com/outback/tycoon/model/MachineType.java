@@ -26,7 +26,8 @@ public enum MachineType {
     PEGASUS("Pegasus-Sortierroboter", 55_000, 8, Tech.SO_PEGASUS, Stage.SORT),
     LOAD_DOCK("Verladetor (LKW)", 6_000, 4, null, Stage.LOAD),
     PALLETIZER("Paketstapler (Palette/Container)", 8_000, 4, Tech.PALLETIZING, Stage.LOAD),
-    DRONE_PAD("Lieferdrohnen-Landeplatz (Versand)", 45_000, 7, Tech.LM_DRONE, Stage.SHIP);
+    DRONE_PAD("Lieferdrohnen-Landeplatz (Versand)", 45_000, 7, Tech.LM_DRONE, Stage.SHIP),
+    ESTOP("E-Stop-Sicherheitszone", 1_000, 1, null, Stage.MOVE);
 
     public enum Stage {
         DELIVERY("Anlieferung"), UNLOAD("Entladen"), BOOKING("Buchen (ASN)"), INBOUND("Wareneingang"),

@@ -401,6 +401,49 @@ public class Game implements Serializable {
     public final java.util.Set<Integer> missionsDone = new java.util.HashSet<>();
     public final java.util.Set<String> eventFlags = new java.util.HashSet<>();
     public int sabotageCooldown = 0;
+    public final Map<String, int[][]> blueprints = new HashMap<>();
+
+    public void saveBlueprint(String name, Site s) {
+        int[][] bp = new int[2][Site.GRID][Site.GRID];
+        for (int x = 0; x < Site.GRID; x++)
+            for (int y = 0; y < Site.GRID; y++) {
+                bp[0][x][y] = s.grid[x][y] == null ? -1 : s.grid[x][y].ordinal();
+                bp[1][x][y] = s.upgrades[x][y];
+            }
+        blueprints.put(name, bp);
+        alert("Blaupause '" + name + "' gespeichert (" + s.machineScore() + " Score).");
+    }
+
+    public void applyBlueprint(String name, Site target) {
+        int[][] bp = blueprints.get(name);
+        if (bp == null) return;
+        double cost = 0;
+        for (int x = 0; x < Site.GRID; x++)
+            for (int y = 0; y < Site.GRID; y++)
+                if (bp[0][x][y] >= 0) cost += com.outback.tycoon.model.MachineType.values()[bp[0][x][y]].cost * (1 + bp[1][x][y] * 0.5);
+        boolean auto = researched.contains(Tech.IO_BUILDROBOT);
+        if (auto) cost *= 0.8;
+        if (!charge(cost)) {
+            alert("Blaupause anwenden kostet " + String.format("%,.0f", cost) + " AUD.");
+            return;
+        }
+        for (int x = 0; x < Site.GRID; x++)
+            for (int y = 0; y < Site.GRID; y++) {
+                target.grid[x][y] = bp[0][x][y] < 0 ? null : com.outback.tycoon.model.MachineType.values()[bp[0][x][y]];
+                target.upgrades[x][y] = bp[1][x][y];
+            }
+        alert("Blaupause '" + name + "' auf " + target.describe() + " angewendet" + (auto ? " (Bau-Roboter: -20%)" : "") + ".");
+    }
+
+    public void maintainSite(Site s) {
+        double cost = 5_000.0 * s.level;
+        if (!charge(cost)) {
+            alert("Wartung kostet " + String.format("%,.0f", cost) + " AUD.");
+            return;
+        }
+        s.wear = 0.1;
+        alert("Wartung bei " + s.describe() + ": Verschleiss zurueckgesetzt.");
+    }
 
     public double serverCapacity() {
         double cap = techBonus(Tech.Bonus.SERVER);
@@ -917,6 +960,15 @@ public class Game implements Serializable {
         missionsDone.clear(); missionsDone.addAll(o.missionsDone);
         eventFlags.clear(); eventFlags.addAll(o.eventFlags);
         sabotageCooldown = o.sabotageCooldown;
+        blueprints.clear();
+        for (java.util.Map.Entry<String, int[][]> e : o.blueprints.entrySet()) {
+            int[][] copy = new int[2][Site.GRID][Site.GRID];
+            for (int x = 0; x < Site.GRID; x++) {
+                System.arraycopy(e.getValue()[0][x], 0, copy[0][x], 0, Site.GRID);
+                System.arraycopy(e.getValue()[1][x], 0, copy[1][x], 0, Site.GRID);
+            }
+            blueprints.put(e.getKey(), copy);
+        }
         difficulty = o.difficulty;
         fleetDown.clear(); fleetDown.putAll(o.fleetDown);
         cityRating.clear(); cityRating.putAll(o.cityRating);

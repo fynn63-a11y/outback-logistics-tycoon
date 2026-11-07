@@ -130,6 +130,11 @@ public class MesoPanel extends JPanel {
             game.upgradeStars(s);
             refresh();
         });
+        JButton maint = new JButton(String.format("Wartung (%,.0f, Verschleiss %.0f%%)", 5_000.0 * s.level, s.wear * 100));
+        maint.addActionListener(e -> {
+            game.maintainSite(s);
+            refresh();
+        });
         JButton service = new JButton(s.serviceLevel == com.outback.tycoon.model.ServiceLevel.SAME_DAY
                 ? "Same-Day aktiv"
                 : String.format("Service -> %s (%,.0f)", com.outback.tycoon.model.ServiceLevel.values()[s.serviceLevel.ordinal() + 1].label, s.serviceUpgradeCost()));
@@ -143,6 +148,7 @@ public class MesoPanel extends JPanel {
         row.add(upgrade);
         row.add(star);
         row.add(service);
+        row.add(maint);
         return row;
     }
 }

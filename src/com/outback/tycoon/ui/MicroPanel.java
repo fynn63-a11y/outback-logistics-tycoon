@@ -115,6 +115,22 @@ public class MicroPanel extends JPanel {
             });
             palette.add(b);
         }
+        JButton bpSave = new JButton("Als Blaupause speichern");
+        bpSave.addActionListener(e -> {
+            if (game.selectedSite == null) return;
+            String name = JOptionPane.showInputDialog(this, "Name der Blaupause:", "Blaupause speichern", JOptionPane.QUESTION_MESSAGE);
+            if (name != null && !name.trim().isEmpty()) game.saveBlueprint(name.trim(), game.selectedSite);
+        });
+        JButton bpApply = new JButton("Blaupause anwenden...");
+        bpApply.addActionListener(e -> {
+            if (game.selectedSite == null || game.blueprints.isEmpty()) return;
+            String[] names = game.blueprints.keySet().toArray(new String[0]);
+            Object sel = JOptionPane.showInputDialog(this, "Blaupause wählen:", "Blaupause anwenden", JOptionPane.QUESTION_MESSAGE, null, names, names[0]);
+            if (sel != null) game.applyBlueprint((String) sel, game.selectedSite);
+            repaint();
+        });
+        palette.add(bpSave);
+        palette.add(bpApply);
         JButton roof = new JButton("Dach an/aus");
         roof.addActionListener(e -> {
             roofOn = !roofOn;

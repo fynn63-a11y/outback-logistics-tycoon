@@ -194,6 +194,10 @@ public class Simulation implements java.io.Serializable {
         }
 
         for (Site s : g.sites) {
+            if (s.isOperational() && s.throughput(g) > 0) {
+                double wearRate = g.researched.contains(Tech.ST_PREDICT) ? 0.001 : 0.002;
+                s.wear = Math.min(1.0, s.wear + wearRate);
+            }
             if (s.buildDaysLeft > 0) {
                 s.buildDaysLeft--;
                 if (s.buildDaysLeft == 0) g.alert(s.describe() + " fertiggestellt und betriebsbereit!");
@@ -599,6 +603,7 @@ public class Simulation implements java.io.Serializable {
         for (Site s : g.sites) if (s.isOperational() && s.machineScore() > 0) candidates.add(s);
         if (candidates.isEmpty()) return;
         Site s = candidates.get(rnd.nextInt(candidates.size()));
+        if (s.hasEstop() && rnd.nextDouble() < 0.7) return;
         s.blockedDays = 2 + rnd.nextInt(4);
         String type = rnd.nextBoolean() ? "LAGERBRAND" : (rnd.nextBoolean() ? "DIEBSTAHL" : "IT-AUSFALL");
         s.blockedReason = type;
