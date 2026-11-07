@@ -115,7 +115,8 @@ public class Game implements Serializable {
     public boolean sandboxMode = false;
 
     public String companyName = "Outback Logistics";
-    public String webServiceName = "OWS";
+    public String webServiceName = "";
+    public boolean webServiceNamed = false;
     public double fxCny = 0.21;
     public double fxUsd = 0.65;
     public final List<DealerContract> offers = new ArrayList<>();
@@ -910,6 +911,7 @@ public class Game implements Serializable {
         lastEra = o.lastEra;
         companyName = o.companyName;
         webServiceName = o.webServiceName;
+        webServiceNamed = o.webServiceNamed;
         fxCny = o.fxCny;
         fxUsd = o.fxUsd;
         offers.clear(); offers.addAll(o.offers);

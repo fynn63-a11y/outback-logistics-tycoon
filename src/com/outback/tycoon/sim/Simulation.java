@@ -99,7 +99,7 @@ public class Simulation implements java.io.Serializable {
             if (s.type == SiteType.DATA_CENTER && s.isOperational()) dcIncome += 800.0 * s.level;
         if (g.researched.contains(Tech.OWS_CLOUD)) dcIncome += 5_000 * (1 + g.networkThroughput() / 10_000.0);
         revenue += dcIncome;
-        g.addRev(g.webServiceName + " WebServices (eigene Rechenzentren)", dcIncome);
+        g.addRev((g.webServiceName.isEmpty() ? "OWS" : g.webServiceName) + " WebServices (eigene Rechenzentren)", dcIncome);
         if (!g.subsidiaries.isEmpty() && !g.sandboxMode) {
             revenue += g.subsidiaries.size() * 3_000;
             g.addRev("Tochterfirmen", g.subsidiaries.size() * 3_000);

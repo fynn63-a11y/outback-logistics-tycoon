@@ -51,7 +51,6 @@ public class MainWindow extends JFrame {
         chooseScenario();
         chooseDifficulty();
         chooseCompanyName();
-        chooseWebServiceName();
         installShortcuts();
 
         tabs.addTab("Dashboard", dashboard);
@@ -101,11 +100,21 @@ public class MainWindow extends JFrame {
         setTitle(game.companyName + " - Outback Logistics Tycoon");
     }
 
-    private void chooseWebServiceName() {
+    private boolean wsPromptShown = false;
+
+    private void maybeAskWebServiceName() {
+        if (wsPromptShown || game.webServiceNamed) return;
+        boolean hasDC = false;
+        for (com.outback.tycoon.model.Site s : game.sites)
+            if (s.type == com.outback.tycoon.model.SiteType.DATA_CENTER) hasDC = true;
+        if (!hasDC && !game.researched.contains(com.outback.tycoon.model.Tech.OWS_CLOUD)) return;
+        wsPromptShown = true;
+        game.webServiceNamed = true;
         String name = JOptionPane.showInputDialog(this,
-                "Wie sollen deine Web-Services heißen? (z. B. OWS, CloudX, …)",
-                "Web-Service-Name", JOptionPane.QUESTION_MESSAGE);
-        if (name != null && !name.trim().isEmpty()) game.webServiceName = name.trim();
+                "Du eröffnest jetzt deine Web-Services! Wie sollen sie heißen? (z. B. CloudX, SkyNet, …)",
+                "Web-Services eröffnen", JOptionPane.QUESTION_MESSAGE);
+        game.webServiceName = (name == null || name.trim().isEmpty()) ? "OWS" : name.trim();
+        game.alert("Web-Services '" + game.webServiceName + "' eroeffnet! Rechenzentren bringen jetzt Einnahmen.");
     }
 
     private void installShortcuts() {
@@ -269,6 +278,7 @@ public class MainWindow extends JFrame {
     }
 
     public void refresh() {
+        maybeAskWebServiceName();
         hud.refresh();
         dashboard.refresh();
         charts.repaint();
