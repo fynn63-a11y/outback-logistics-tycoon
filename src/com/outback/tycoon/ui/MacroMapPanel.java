@@ -352,6 +352,7 @@ public class MacroMapPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g0) {
         super.paintComponent(g0);
+        Graphics2D g = (Graphics2D) g0;
         if (baseCache == null) {
             if (getWidth() > 50 && getHeight() > 50) renderBase();
             else {
@@ -360,7 +361,6 @@ public class MacroMapPanel extends JPanel {
                 return;
             }
         }
-        Graphics2D g = (Graphics2D) g0;
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.transform(viewTransform());
         g.drawImage(baseCache, 0, 0, null);
