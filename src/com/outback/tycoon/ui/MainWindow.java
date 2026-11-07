@@ -53,11 +53,11 @@ public class MainWindow extends JFrame {
         chooseCompanyName();
         installShortcuts();
 
+        tabs.addTab("Karte (Makro)", macro);
         tabs.addTab("Dashboard", dashboard);
         tabs.addTab("Statistik", charts);
         tabs.addTab("Lieferkette", supplyChain);
         tabs.addTab("Lieferzonen", zones);
-        tabs.addTab("Karte (Makro)", macro);
         tabs.addTab("Stadt & Bau (Meso)", meso);
         tabs.addTab("Lager-Grid (Mikro)", micro);
         tabs.addTab("Firma & Finanzen", company);

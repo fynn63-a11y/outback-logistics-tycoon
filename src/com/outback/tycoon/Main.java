@@ -11,7 +11,9 @@ public class Main {
             com.outback.tycoon.ui.Theme.apply();
             Game game = new Game();
             game.start();
-            new MainWindow(game).setVisible(true);
+            MainWindow w = new MainWindow(game);
+            w.setVisible(true);
+            SwingUtilities.invokeLater(w::applyFullscreen);
         });
     }
 }

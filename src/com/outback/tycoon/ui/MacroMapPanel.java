@@ -202,13 +202,17 @@ public class MacroMapPanel extends JPanel {
     }
 
     private double viewScale() {
-        return (double) getWidth() / (px(156) - px(110)) * zoom;
+        double bw = px(156) - px(108);
+        double bh = py(-8) - py(-44);
+        return Math.min(getWidth() / bw, getHeight() / bh) * 0.96 * zoom;
     }
 
     private int[] viewOffset() {
         double s = viewScale();
-        int oy = (int) ((getHeight() - VH * s) / 2) + (int) panY;
-        int ox = (int) ((getWidth() - (px(156) - px(110)) * s) / 2 - px(110) * s) + (int) panX;
+        double bw = (px(156) - px(108)) * s;
+        double bh = (py(-8) - py(-44)) * s;
+        int ox = (int) ((getWidth() - bw) / 2 - px(108) * s) + (int) panX;
+        int oy = (int) ((getHeight() - bh) / 2 - py(-44) * s) + (int) panY;
         return new int[]{ox, oy};
     }
 
@@ -348,7 +352,14 @@ public class MacroMapPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g0) {
         super.paintComponent(g0);
-        if (baseCache == null) renderBase();
+        if (baseCache == null) {
+            if (getWidth() > 50 && getHeight() > 50) renderBase();
+            else {
+                g.setColor(Color.WHITE);
+                g.drawString("Karte wird geladen...", 40, 60);
+                return;
+            }
+        }
         Graphics2D g = (Graphics2D) g0;
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.transform(viewTransform());
