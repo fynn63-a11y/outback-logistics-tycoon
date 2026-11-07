@@ -401,7 +401,7 @@ public class Game implements Serializable {
     public final java.util.Set<Integer> missionsDone = new java.util.HashSet<>();
     public final java.util.Set<String> eventFlags = new java.util.HashSet<>();
     public int sabotageCooldown = 0;
-    public final Map<String, int[][]> blueprints = new HashMap<>();
+    public final Map<String, int[][][]> blueprints = new HashMap<>();
 
     public void saveBlueprint(String name, Site s) {
         int[][] bp = new int[2][Site.GRID][Site.GRID];
