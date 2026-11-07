@@ -21,10 +21,20 @@ public class MesoPanel extends JPanel {
         add(new JScrollPane(siteList), BorderLayout.CENTER);
 
         JPanel buildBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        buildBar.add(new JLabel("Hallengroesse:"));
+        JComboBox<String> sizeBox = new JComboBox<>(new String[]{"15x15 (klein)", "25x25 (mittel)", "35x35 (gross)", "40x40 (XL)"});
+        sizeBox.setSelectedIndex(1);
+        sizeBox.addActionListener(e -> {
+            int i = sizeBox.getSelectedIndex();
+            int[] sizes = {15, 25, 35, 40};
+            game.buildW = sizes[i];
+            game.buildH = sizes[i];
+        });
+        buildBar.add(sizeBox);
         buildBar.setBackground(new Color(24, 28, 38));
         buildBar.setBorder(BorderFactory.createTitledBorder("BAUMENÜ - bauen (danach Klick auf die Karte platziert den nächsten Standort)"));
         for (SiteType t : SiteType.values()) {
-            JButton b = new JButton(t.label + "  |  " + String.format("%,.0f", t.baseCost) + " AUD  |  Bauzeit " + t.buildDays + "d");
+            JButton b = new JButton(t.label + "  |  ~" + String.format("%,.0f", t.baseCost * (game.buildW * game.buildH) / 625.0) + " AUD (bei " + game.buildW + "x" + game.buildH + ")  |  Bauzeit " + t.buildDays + "d");
             b.setBackground(typeColor(t));
             b.setForeground(Color.WHITE);
             b.setOpaque(true);

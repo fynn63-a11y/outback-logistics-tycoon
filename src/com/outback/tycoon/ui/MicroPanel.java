@@ -156,8 +156,8 @@ public class MicroPanel extends JPanel {
             int units = 0;
             for (int v : s.stock.values()) units += v;
             status.setText(String.format(
-                    "%s | Modus: %s | Score %d | Grid-Effizienz %.0f%% | Kette %s | Engpass: %s | Durchsatz %.0f/Tag | Lager: %d Einheiten, Paletten %d/%d (max. Kapazitaet)",
-                    s.describe(), eraseMode ? "Loeschen" : selectedMachine.label,
+                    "%s (%dx%d) | Modus: %s | Score %d | Grid-Effizienz %.0f%% | Kette %s | Engpass: %s | Durchsatz %.0f/Tag | Lager: %d Einheiten, Paletten %d/%d (max. Kapazitaet)",
+                    s.describe(), s.w, s.h, eraseMode ? "Loeschen" : selectedMachine.label,
                     s.machineScore(), s.gridEfficiency(game) * 100,
                     s.chainComplete() ? "komplett (x1.5)" : "unvollstaendig",
                     s.chainComplete() ? s.weakestStage().label : "-",
@@ -174,7 +174,7 @@ public class MicroPanel extends JPanel {
 
     private class GridCanvas extends JPanel {
         private int tileW() {
-            return Math.max(14, Math.min(getWidth() / Site.GRID, (getHeight() * 2) / Site.GRID));
+            return Math.max(6, Math.min(getWidth() / gw(), (getHeight() * 2) / gh()));
         }
 
         private int tileH() {
@@ -182,16 +182,16 @@ public class MicroPanel extends JPanel {
         }
 
         private int originX() {
-            return (getWidth() - Site.GRID * tileW()) / 2 + Site.GRID * tileW() / 2;
+            return (getWidth() - gw() * tileW()) / 2 + gw() * tileW() / 2;
         }
 
         private int originY() {
-            return (getHeight() - Site.GRID * tileH()) / 2 + 10;
+            return (getHeight() - gh() * tileH()) / 2 + 10;
         }
 
         int[] cellAt(int mx, int my) {
-            for (int x = 0; x < Site.GRID; x++) {
-                for (int y = 0; y < Site.GRID; y++) {
+            for (int x = 0; x < gw(); x++) {
+                for (int y = 0; y < gh(); y++) {
                     int sx = originX() + (x - y) * tileW() / 2;
                     int sy = originY() + (x + y) * tileH() / 2;
                     if (mx >= sx - tileW() / 2 && mx <= sx + tileW() / 2 && my >= sy - tileH() / 2 && my <= sy + tileH() / 2)
@@ -222,8 +222,8 @@ public class MicroPanel extends JPanel {
             int tw = tileW();
             int th = tileH();
             long t = System.currentTimeMillis();
-            for (int x = 0; x < Site.GRID; x++) {
-                for (int y = 0; y < Site.GRID; y++) {
+            for (int x = 0; x < gw(); x++) {
+                for (int y = 0; y < gh(); y++) {
                     int cx = originX() + (x - y) * tw / 2;
                     int cy = originY() + (x + y) * th / 2;
                     Paint tilePaint = ((x + y) % 2 == 0) ? Textures.paint("fA", Textures.generate(64, new Color(78, 88, 108), new Color(64, 73, 92), 8, 3, 21)) : Textures.paint("fB", Textures.generate(64, new Color(68, 77, 96), new Color(56, 64, 82), 8, 3, 33));
@@ -260,12 +260,12 @@ public class MicroPanel extends JPanel {
             int wallH = th * 8;
             int c00x = originX();
             int c00y = originY();
-            int c10x = originX() + Site.GRID * tw / 2;
-            int c10y = originY() + Site.GRID * th / 2;
-            int c01x = originX() - Site.GRID * tw / 2;
-            int c01y = originY() + Site.GRID * th / 2;
+            int c10x = originX() + gw() * tw / 2;
+            int c10y = originY() + gh() * th / 2;
+            int c01x = originX() - gh() * tw / 2;
+            int c01y = originY() + gh() * th / 2;
             int c11x = originX();
-            int c11y = originY() + Site.GRID * th;
+            int c11y = originY() + gh() * th;
             g.setColor(new Color(105, 92, 78));
             g.fillPolygon(new int[]{c00x, c01x, c01x, c00x}, new int[]{c00y, c01y, c01y - wallH, c00y - wallH}, 4);
             g.setColor(new Color(88, 76, 62));
@@ -281,14 +281,14 @@ public class MicroPanel extends JPanel {
 
         private void drawWarehouseFx(Graphics2D g, Site s, long t, int tw, int th) {
             int robots = 0;
-            for (int x = 0; x < Site.GRID; x++)
-                for (int y = 0; y < Site.GRID; y++)
+            for (int x = 0; x < s.w; x++)
+                for (int y = 0; y < s.h; y++)
                     if (s.grid[x][y] == MachineType.ROBOT) robots++;
             for (int i = 0; i < Math.min(3, robots); i++) {
-                int row = 4 + i * 6;
+                int row = Math.min(4 + i * 6, s.h - 1);
                 double p = ((t / 1600.0) + i * 0.37) % 2.0;
                 if (p > 1.0) p = 2.0 - p;
-                int bx = originX() + (int) ((p - 0.5) * 2 * Site.GRID * tw / 2);
+                int bx = originX() + (int) ((p - 0.5) * 2 * s.w * tw / 2);
                 int by = originY() + (row + row) * th / 2;
                 g.setColor(new Color(255, 150, 40));
                 g.fillRoundRect(bx - 5, by - 4, 10, 8, 3, 3);
@@ -297,8 +297,8 @@ public class MicroPanel extends JPanel {
                 g.setColor(new Color(255, 255, 255));
                 g.fillRect(bx - 2, by - 2, 4, 3);
             }
-            for (int x = 0; x < Site.GRID; x++) {
-                for (int y = 0; y < Site.GRID; y++) {
+            for (int x = 0; x < gw(); x++) {
+                for (int y = 0; y < gh(); y++) {
                     if (s.grid[x][y] == null) continue;
                     int cx = originX() + (x - y) * tw / 2;
                     int cy = originY() + (x + y) * th / 2 - th;

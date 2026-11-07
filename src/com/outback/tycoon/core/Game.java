@@ -404,12 +404,14 @@ public class Game implements Serializable {
     public final Map<String, int[][][]> blueprints = new HashMap<>();
 
     public void saveBlueprint(String name, Site s) {
-        int[][][] bp = new int[2][Site.GRID][Site.GRID];
-        for (int x = 0; x < Site.GRID; x++)
-            for (int y = 0; y < Site.GRID; y++) {
+        int[][][] bp = new int[3][Site.MAX_GRID][Site.MAX_GRID];
+        for (int x = 0; x < Site.MAX_GRID; x++)
+            for (int y = 0; y < Site.MAX_GRID; y++) {
                 bp[0][x][y] = s.grid[x][y] == null ? -1 : s.grid[x][y].ordinal();
                 bp[1][x][y] = s.upgrades[x][y];
+                bp[2][x][y] = 0;
             }
+        bp[2][0][0] = s.w; bp[2][1][0] = s.h;
         blueprints.put(name, bp);
         alert("Blaupause '" + name + "' gespeichert (" + s.machineScore() + " Score).");
     }
@@ -418,8 +420,8 @@ public class Game implements Serializable {
         int[][][] bp = blueprints.get(name);
         if (bp == null) return;
         double cost = 0;
-        for (int x = 0; x < Site.GRID; x++)
-            for (int y = 0; y < Site.GRID; y++)
+        for (int x = 0; x < Site.MAX_GRID; x++)
+            for (int y = 0; y < Site.MAX_GRID; y++)
                 if (bp[0][x][y] >= 0) cost += com.outback.tycoon.model.MachineType.values()[bp[0][x][y]].cost * (1 + bp[1][x][y] * 0.5);
         boolean auto = researched.contains(Tech.IO_BUILDROBOT);
         if (auto) cost *= 0.8;
@@ -427,8 +429,8 @@ public class Game implements Serializable {
             alert("Blaupause anwenden kostet " + String.format("%,.0f", cost) + " AUD.");
             return;
         }
-        for (int x = 0; x < Site.GRID; x++)
-            for (int y = 0; y < Site.GRID; y++) {
+        for (int x = 0; x < Site.MAX_GRID; x++)
+            for (int y = 0; y < Site.MAX_GRID; y++) {
                 target.grid[x][y] = bp[0][x][y] < 0 ? null : com.outback.tycoon.model.MachineType.values()[bp[0][x][y]];
                 target.upgrades[x][y] = bp[1][x][y];
             }
@@ -529,7 +531,14 @@ public class Game implements Serializable {
         return true;
     }
 
+    public int buildW = 25;
+    public int buildH = 25;
+
     public Site buildSite(SiteType type) {
+        return buildSite(type, buildW, buildH);
+    }
+
+    public Site buildSite(SiteType type, int w, int h) {
         if (type == SiteType.HAZ_STORAGE && !researched.contains(Tech.PA_HAZMAT)) {
             alert("Gefahrgut-Lager braucht die Lizenz-Technologie 'Hazmat-Routing beim Packen'.");
             return null;
@@ -539,11 +548,14 @@ public class Game implements Serializable {
             alert(c.name + " ist noch gesperrt. " + unlockHint(c));
             return null;
         }
-        if (!charge(type.baseCost)) {
-            alert("Nicht genug Kapital fuer " + type.label + " in " + selectedCity + ".");
+        double areaCost = type.baseCost * (w * h) / (25.0 * 25.0);
+        if (!charge(areaCost)) {
+            alert("Nicht genug Kapital fuer " + type.label + " (" + w + "x" + h + ", " + String.format("%,.0f", areaCost) + " AUD) in " + selectedCity + ".");
             return null;
         }
         Site s = new Site(nextSiteId++, type, selectedCity);
+        s.w = w;
+        s.h = h;
         s.buildDaysLeft = type.buildDays;
         sites.add(s);
         alert(type.label + " in " + selectedCity + " gebaut - Baustelle, Bauzeit " + type.buildDays + " Tage.");
@@ -962,10 +974,11 @@ public class Game implements Serializable {
         sabotageCooldown = o.sabotageCooldown;
         blueprints.clear();
         for (java.util.Map.Entry<String, int[][][]> e : o.blueprints.entrySet()) {
-            int[][][] copy = new int[2][Site.GRID][Site.GRID];
-            for (int x = 0; x < Site.GRID; x++) {
-                System.arraycopy(e.getValue()[0][x], 0, copy[0][x], 0, Site.GRID);
-                System.arraycopy(e.getValue()[1][x], 0, copy[1][x], 0, Site.GRID);
+            int[][][] copy = new int[3][Site.MAX_GRID][Site.MAX_GRID];
+            for (int x = 0; x < Site.MAX_GRID; x++) {
+                System.arraycopy(e.getValue()[0][x], 0, copy[0][x], 0, Site.MAX_GRID);
+                System.arraycopy(e.getValue()[1][x], 0, copy[1][x], 0, Site.MAX_GRID);
+                System.arraycopy(e.getValue()[2][x], 0, copy[2][x], 0, Site.MAX_GRID);
             }
             blueprints.put(e.getKey(), copy);
         }

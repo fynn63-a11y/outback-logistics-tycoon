@@ -7,7 +7,10 @@ import java.util.Map;
 
 public class Site implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
-    public static final int GRID = 30;
+    public static final int MAX_GRID = 40;
+    public static final int GRID = MAX_GRID;
+    public int w = 25;
+    public int h = 25;
     private static final int UNITS_PER_PALLET = 100;
 
     public final int id;
@@ -20,8 +23,8 @@ public class Site implements java.io.Serializable {
     public String blockedReason = "";
     public ServiceLevel serviceLevel = ServiceLevel.STANDARD;
     public final Map<String, Integer> stock = new HashMap<>();
-    public final MachineType[][] grid = new MachineType[GRID][GRID];
-    public final int[][] upgrades = new int[GRID][GRID];
+    public final MachineType[][] grid = new MachineType[MAX_GRID][MAX_GRID];
+    public final int[][] upgrades = new int[MAX_GRID][MAX_GRID];
 
     public Site(int id, SiteType type, String city) {
         this.id = id;
@@ -65,35 +68,35 @@ public class Site implements java.io.Serializable {
             boolean linked = false;
             int[][] nb = {{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}};
             for (int[] n : nb)
-                if (n[0] >= 0 && n[0] < GRID && n[1] >= 0 && n[1] < GRID && grid[n[0]][n[1]] == MachineType.CONVEYOR) linked = true;
+                if (n[0] >= 0 && n[0] < w && n[1] >= 0 && n[1] < h && grid[n[0]][n[1]] == MachineType.CONVEYOR) linked = true;
             if (!linked) f *= 0.5;
         } else {
             int[][] nb = {{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}};
             for (int[] n : nb)
-                if (n[0] >= 0 && n[0] < GRID && n[1] >= 0 && n[1] < GRID && grid[n[0]][n[1]] == m) { f *= 1.2; break; }
+                if (n[0] >= 0 && n[0] < w && n[1] >= 0 && n[1] < h && grid[n[0]][n[1]] == m) { f *= 1.2; break; }
         }
         return f;
     }
 
     public int machineScore() {
         double s = 0;
-        for (int x = 0; x < GRID; x++)
-            for (int y = 0; y < GRID; y++)
+        for (int x = 0; x < w; x++)
+            for (int y = 0; y < h; y++)
                 if (grid[x][y] != null) s += grid[x][y].score * (1 + upgrades[x][y] / 2) * cellFactor(x, y);
         return (int) s;
     }
 
     public int stageScore(MachineType.Stage st) {
         double s = 0;
-        for (int x = 0; x < GRID; x++)
-            for (int y = 0; y < GRID; y++)
+        for (int x = 0; x < w; x++)
+            for (int y = 0; y < h; y++)
                 if (grid[x][y] != null && grid[x][y].stage == st) s += grid[x][y].score * (1 + upgrades[x][y] / 2) * cellFactor(x, y);
         return (int) s;
     }
 
     public boolean hasEstop() {
-        for (int x = 0; x < GRID; x++)
-            for (int y = 0; y < GRID; y++)
+        for (int x = 0; x < w; x++)
+            for (int y = 0; y < h; y++)
                 if (grid[x][y] == MachineType.ESTOP) return true;
         return false;
     }
@@ -101,8 +104,8 @@ public class Site implements java.io.Serializable {
     public double flowPenalty() {
         java.util.Map<MachineType.Stage, Double> avgX = new java.util.HashMap<>();
         java.util.Map<MachineType.Stage, Integer> cnt = new java.util.HashMap<>();
-        for (int x = 0; x < GRID; x++)
-            for (int y = 0; y < GRID; y++)
+        for (int x = 0; x < w; x++)
+            for (int y = 0; y < h; y++)
                 if (grid[x][y] != null) {
                     avgX.merge(grid[x][y].stage, (double) x, Double::sum);
                     cnt.merge(grid[x][y].stage, 1, Integer::sum);
@@ -162,8 +165,8 @@ public class Site implements java.io.Serializable {
     public double automationPercent() {
         int auto = 0;
         int manual = 0;
-        for (int x = 0; x < GRID; x++)
-            for (int y = 0; y < GRID; y++) {
+        for (int x = 0; x < w; x++)
+            for (int y = 0; y < h; y++) {
                 MachineType m = grid[x][y];
                 if (m == null) continue;
                 if (m.isAutomated()) auto += m.score; else manual += m.score;

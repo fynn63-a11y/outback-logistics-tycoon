@@ -290,8 +290,7 @@ public class MacroMapPanel extends JPanel {
         for (RivalCompany r : game.rivals) {
             for (int i = 0; i < r.siteCities.size(); i++) {
                 City rc = game.cityByName(r.siteCities.get(i));
-                g.setColor(r.color);
-                g.fillRect((int) (rc.mapX * VW) - 12 - (i % 5) * 8, (int) (rc.mapY * VH) - 12 - (i % 5) * 5, 8, 8);
+                drawBuilding(g, (int) (rc.mapX * VW) - 14 - (i % 5) * 10, (int) (rc.mapY * VH) - 12 - (i % 5) * 6, 12, r.color, r.color.darker());
             }
         }
 
@@ -377,9 +376,13 @@ public class MacroMapPanel extends JPanel {
     }
 
     private void drawBuilding(Graphics2D g, int bx, int by, int sz) {
-        g.setColor(new Color(90, 220, 140));
+        drawBuilding(g, bx, by, sz, new Color(90, 220, 140), new Color(150, 50, 40));
+    }
+
+    private void drawBuilding(Graphics2D g, int bx, int by, int sz, Color body, Color roof) {
+        g.setColor(body);
         g.fillRect(bx, by, sz, sz);
-        g.setColor(new Color(150, 50, 40));
+        g.setColor(roof);
         g.fillPolygon(new int[]{bx - 2, bx + sz / 2, bx + sz + 2}, new int[]{by, by - sz / 2, by}, 3);
         g.setColor(new Color(30, 70, 45));
         g.drawRect(bx, by, sz, sz);
