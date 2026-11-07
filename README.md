@@ -161,6 +161,13 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
   NICHT weniger Kunden, sie kosten nur mehr. Das Service-Level des Zentrums (Standard x1.0 / Next-Day x1.15
   / **Same-Day x1.35 Nachfrage**, +3 AUD Aufpreis pro Paket) bestimmt den Nachfrage-Boost der Zone.
   Gleiche Stadt = Same-Day moeglich. Autopilot: Schalter "Autonome Lieferzonen" im HUD oder Button im Zonen-Tab.
+- **Flotte, Bewertungen & Co.:** Flotten-Unfälle legen Fahrzeuge tageweise lahm (Reparatur 5.000 AUD,
+  Versicherung zahlt); Kundenbewertungen pro Stadt (1–5, aus Service-Level + Lieferquote) wirken auf die
+  Nachfrage; Blitzangebote (20k, 3 Tage: −20% Preis, ×1.6 Nachfrage); Tochterfirmen (+3.000 AUD/Tag);
+  9 Achievements im Dashboard; **Schwierigkeitsgrade** (Leicht/Normal/Schwer: Startkapital, Katastrophen-,
+  Konkurrenz-Härte).
+- **Animationen auf der Karte:** umkreisende Drohnen an Standorten, fahrende LKWs in Flotten-Städten,
+  Flugzeuge auf Langstrecken (Sydney→London, Sydney→LA, Sydney→Shenzhen).
 - **Nachfrage & Angebot (Prinzip):** Nachfrage pro Stadt = Einwohner/Mio x Kategorie-Faktor x Prime-Quote
   x Saison x Epoche x Reputation x Konkurrenz x Service-Level x Webshop/Last-Mile. Angebot = Durchsatz
   der zugewiesenen Standorte (Stufe x Sterne x Grid-Effizienz x Prozesskette x Tech x Skills x Flotte).

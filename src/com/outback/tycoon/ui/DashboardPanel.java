@@ -68,6 +68,10 @@ public class DashboardPanel extends JPanel {
         root.add(autoBar);
         root.add(row("Vollständige Prozesskette (Eingang→Lager→Pick→Pack→Versand) im Grid: x1.5 Durchsatz"));
 
+        root.add(section("Achievements (" + game.achievements.size() + "/9)"));
+        String[] ach = {"first_site", "ten_sites", "prime_survived", "ipo", "monopoly", "revenue_1m", "cash_1m", "full_chain", "tech_5"};
+        for (String a : ach) root.add(row((game.achievements.contains(a) ? "[x] " : "[ ] ") + a.replace('_', ' ')));
+
         root.add(section("Standorte im Detail"));
         if (game.sites.isEmpty()) {
             root.add(row("Noch keine Standorte gebaut."));

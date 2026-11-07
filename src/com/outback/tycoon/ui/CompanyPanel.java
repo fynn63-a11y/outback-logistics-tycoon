@@ -104,6 +104,25 @@ public class CompanyPanel extends JPanel {
         }
         root.add(Box.createVerticalStrut(10));
 
+        root.add(section("Blitzangebote & Tochterfirmen"));
+        JPanel promoRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton flashAll = new JButton("Blitzangebot ALLE Kategorien (20.000 AUD, 3 Tage: -20% Preis, x1.6 Nachfrage)");
+        flashAll.addActionListener(e -> {
+            game.startFlashSale(null);
+            refresh();
+        });
+        promoRow.add(flashAll);
+        if (game.flashSaleDays > 0) root.add(label("BLITZANGEBOT AKTIV noch " + game.flashSaleDays + " Tage!"));
+        JButton sub = new JButton("Tochterfirma gruenden (500.000 AUD, +3.000 AUD/Tag)");
+        sub.addActionListener(e -> {
+            game.foundSubsidiary("Tochter " + (game.subsidiaries.size() + 1));
+            refresh();
+        });
+        promoRow.add(sub);
+        root.add(promoRow);
+        for (String s : game.subsidiaries) root.add(label("Tochterfirma: " + s));
+        root.add(Box.createVerticalStrut(10));
+
         root.add(section("Marken-Inkubator (Private Labeling)"));
         JPanel brandRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JTextField nameField = new JTextField("Outback Gear", 14);

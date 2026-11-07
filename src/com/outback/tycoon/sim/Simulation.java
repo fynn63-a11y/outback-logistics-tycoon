@@ -40,6 +40,8 @@ public class Simulation implements java.io.Serializable {
         boolean strike = g.strikeDaysLeft > 0;
         if (strike) g.strikeDaysLeft--;
 
+        double demandSum = 0;
+        double fulfilledSum = 0;
         double totalDemand = 0;
         for (City c : g.cities)
             for (SKU sku : g.catalog) totalDemand += demand(g, c, sku);
@@ -58,7 +60,10 @@ public class Simulation implements java.io.Serializable {
                 if (strike) demand *= 0.10;
 
                 int fulfilled = fulfill(g, c, sku, demand);
-                revenue += fulfilled * sku.price;
+                demandSum += demand;
+                fulfilledSum += fulfilled;
+                boolean flash = g.flashSaleDays > 0 && (g.flashSaleCategory == null || g.flashSaleCategory == sku.category);
+                revenue += fulfilled * sku.price * (flash ? 0.8 : 1.0);
                 costs += fulfilled * (shippingCost(g, sku, c) + FULFILL_COST_PER_UNIT);
                 double returns = fulfilled * sku.category.returnRate;
                 g.lastDailyReturns += (int) returns;
@@ -76,6 +81,23 @@ public class Simulation implements java.io.Serializable {
             double web = 5_000 * (1 + g.networkThroughput() / 10_000.0);
             revenue += web;
         }
+        if (!g.subsidiaries.isEmpty() && !g.sandboxMode) revenue += g.subsidiaries.size() * 3_000;
+        if (g.flashSaleDays > 0) g.flashSaleDays--;
+        g.lastFillRate = demandSum > 0 ? fulfilledSum / demandSum : 1.0;
+
+        for (java.util.Map.Entry<String, Integer> e : new java.util.ArrayList<>(g.fleetDown.entrySet())) {
+            int left = e.getValue() - 1;
+            if (left <= 0) g.fleetDown.remove(e.getKey()); else e.setValue(left);
+        }
+        for (City c : g.cities) {
+            if (!g.isUnlocked(c)) continue;
+            Site server = g.servingSite(c.name);
+            double target = 1.0 + (server != null ? server.serviceLevel.ordinal() * 1.2 : 0) + g.lastFillRate * 2.2;
+            target = Math.max(1.0, Math.min(5.0, target));
+            double cur = g.cityRating(c.name);
+            g.cityRating.put(c.name, cur + (target - cur) * 0.05);
+        }
+        checkAchievements(g);
 
         double b2b = 0;
         for (Site s : g.sites) {
@@ -205,6 +227,7 @@ public class Simulation implements java.io.Serializable {
         disasters(g);
         harborStrike(g);
         siteCrises(g);
+        fleetAccident(g);
         tenderEvents(g);
         tutorialCheck(g);
         java.util.Iterator<java.util.Map.Entry<String, Integer>> bit = g.blockedCities.entrySet().iterator();
@@ -235,11 +258,15 @@ public class Simulation implements java.io.Serializable {
         double eraFactor = g.eraDemandMultiplier();
         double webFactor = g.researched.contains(Tech.AWS_CLOUD) ? 1.15 : 1.0;
         double lastMileFactor = g.ownLastMile ? 1.10 : 1.0;
-        double vanFactor = 1.0 + 0.03 * g.vans.getOrDefault(c.name, 0);
+        double vanFactor = 1.0 + 0.03 * g.effectiveVans(c.name);
         Site server = g.servingSite(c.name);
         double serviceFactor = server != null ? server.serviceLevel.demandFactor : 0.4;
+        double rating = g.cityRating(c.name);
+        double ratingFactor = rating >= 4.5 ? 1.10 : rating < 3.0 ? 0.90 : 1.0;
+        boolean flash = g.flashSaleDays > 0 && (g.flashSaleCategory == null || g.flashSaleCategory == sku.category);
+        double flashFactor = flash ? 1.6 : 1.0;
         return base * primeBoost * season * primeDay * repFactor * brandFactor * rivalFactor
-                * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor;
+                * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor * ratingFactor * flashFactor;
     }
 
     private void updateRivals(Game g) {
@@ -252,7 +279,7 @@ public class Simulation implements java.io.Serializable {
         }
         double playerMomentum = Math.min(0.02, g.lastDailyRevenue / 500_000.0);
         for (RivalCompany r : g.rivals) {
-            r.marketShare += (rnd.nextDouble() - 0.45) * 0.002 + 0.0005;
+            r.marketShare += ((rnd.nextDouble() - 0.45) * 0.002 + 0.0005) * g.difficulty.rivalMult;
             r.marketShare -= playerMomentum;
             r.marketShare = Math.max(0.02, Math.min(0.35, r.marketShare));
         }
@@ -298,7 +325,7 @@ public class Simulation implements java.io.Serializable {
         double normal = main.rate(sku.category.weightClass);
         double express = main.rate(WeightClass.EXPRESS);
         double blended = g.isPrimeDay() ? 0.7 * normal + 0.3 * express : normal;
-        double truckDiscount = Math.min(0.30, 0.05 * g.trucks.getOrDefault(c.name, 0));
+        double truckDiscount = Math.min(0.30, 0.05 * g.effectiveTrucks(c.name));
         blended *= (1.0 - truckDiscount);
         Site server = g.servingSite(c.name);
         double dist = server != null ? g.distanceKm(g.cityByName(server.city), c) : 1_500;
@@ -397,8 +424,44 @@ public class Simulation implements java.io.Serializable {
         }
     }
 
+    private void fleetAccident(Game g) {
+        java.util.List<String> withFleet = new java.util.ArrayList<>();
+        for (String city : g.trucks.keySet()) if (g.trucks.get(city) > 0 && !g.fleetDown.containsKey(city)) withFleet.add(city);
+        for (String city : g.vans.keySet()) if (g.vans.getOrDefault(city, 0) > 0 && !g.fleetDown.containsKey(city) && !withFleet.contains(city)) withFleet.add(city);
+        if (withFleet.isEmpty() || rnd.nextDouble() > 0.006 * g.difficulty.rivalMult) return;
+        String city = withFleet.get(rnd.nextInt(withFleet.size()));
+        int days = 2 + rnd.nextInt(3);
+        g.fleetDown.put(city, days);
+        g.alert("FLOTTEN-UNFALL in " + city + "! Fahrzeuge " + days + " Tage ausgefallen (kein LKW-/Transporter-Bonus). Reparatur kostet 5.000 AUD.");
+        if (g.insured && !g.sandboxMode) {
+            g.alert("Versicherung uebernimmt die Reparatur in " + city + ".");
+        } else if (!g.sandboxMode) {
+            g.cash -= 5_000;
+        }
+    }
+
+    private void checkAchievements(Game g) {
+        java.util.Map<String, Boolean> defs = new java.util.LinkedHashMap<>();
+        defs.put("first_site", !g.sites.isEmpty());
+        defs.put("ten_sites", g.sites.size() >= 10);
+        defs.put("prime_survived", g.primeDaySurvived);
+        defs.put("ipo", g.ipoDone);
+        defs.put("monopoly", g.rivals.isEmpty() && g.dayIndex > 30);
+        defs.put("revenue_1m", g.lastDailyRevenue >= 1_000_000);
+        defs.put("cash_1m", g.cash >= 1_000_000);
+        defs.put("full_chain", g.sites.stream().anyMatch(Site::chainComplete));
+        defs.put("tech_5", g.researched.size() >= 5);
+        for (java.util.Map.Entry<String, Boolean> e : defs.entrySet()) {
+            if (e.getValue() && !g.achievements.contains(e.getKey())) {
+                g.achievements.add(e.getKey());
+                com.outback.tycoon.audio.Sfx.coin();
+                g.alert("ACHIEVEMENT freigeschaltet: " + e.getKey().replace('_', ' ').toUpperCase() + "!");
+            }
+        }
+    }
+
     private void harborStrike(Game g) {
-        if (rnd.nextDouble() > 0.005) return;
+        if (rnd.nextDouble() > 0.005 * g.difficulty.disasterMult) return;
         String port = rnd.nextBoolean() ? "Sydney" : "Melbourne";
         int days = 3 + rnd.nextInt(3);
         g.blockedCities.put(port, days);
@@ -455,7 +518,7 @@ public class Simulation implements java.io.Serializable {
     }
 
     private void disasters(Game g) {
-        if (rnd.nextDouble() > 0.012) return;
+        if (rnd.nextDouble() > 0.012 * g.difficulty.disasterMult) return;
         List<City> open = new java.util.ArrayList<>();
         for (City c : g.cities) if (g.isUnlocked(c) && !g.blockedCities.containsKey(c.name)) open.add(c);
         if (open.isEmpty()) return;

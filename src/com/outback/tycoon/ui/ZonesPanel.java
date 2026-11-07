@@ -47,8 +47,8 @@ public class ZonesPanel extends JPanel {
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
             Site server = game.servingSite(c.name);
             String distText = server != null
-                    ? String.format("Distanz %,.0f km | Service %s (x%.2f Nachfrage)", game.distanceKm(game.cityByName(server.city), c), server.serviceLevel.label, server.serviceLevel.demandFactor)
-                    : "kein Zentrum zugewiesen (Nachfrage x0.4)";
+                    ? String.format("Distanz %,.0f km | Service %s (x%.2f) | Bewertung %.1f/5", game.distanceKm(game.cityByName(server.city), c), server.serviceLevel.label, server.serviceLevel.demandFactor, game.cityRating(c.name))
+                    : String.format("kein Zentrum zugewiesen (Nachfrage x0.4) | Bewertung %.1f/5", game.cityRating(c.name));
             row.add(new JLabel(c.name + ": " + distText));
 
             java.util.List<String> options = new java.util.ArrayList<>();

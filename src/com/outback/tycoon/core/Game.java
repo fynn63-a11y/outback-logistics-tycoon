@@ -62,6 +62,14 @@ public class Game implements Serializable {
     public boolean autopilotSourcing = false;
     public boolean autopilotZones = false;
     public final Map<String, Integer> zoneAssignment = new HashMap<>();
+    public Difficulty difficulty = Difficulty.NORMAL;
+    public final Map<String, Integer> fleetDown = new HashMap<>();
+    public final Map<String, Double> cityRating = new HashMap<>();
+    public int flashSaleDays = 0;
+    public Category flashSaleCategory = null;
+    public final List<String> subsidiaries = new ArrayList<>();
+    public final java.util.Set<String> achievements = new java.util.HashSet<>();
+    public double lastFillRate = 1.0;
 
     public boolean sandboxMode = false;
 
@@ -256,8 +264,40 @@ public class Game implements Serializable {
         return cap;
     }
 
+    public int effectiveTrucks(String city) {
+        return fleetDown.containsKey(city) ? 0 : trucks.getOrDefault(city, 0);
+    }
+
+    public int effectiveVans(String city) {
+        return fleetDown.containsKey(city) ? 0 : vans.getOrDefault(city, 0);
+    }
+
+    public double cityRating(String cityName) {
+        return cityRating.getOrDefault(cityName, 3.0);
+    }
+
+    public void startFlashSale(Category cat) {
+        if (!charge(20_000)) {
+            alert("Blitzangebot kostet 20.000 AUD Marketing.");
+            return;
+        }
+        flashSaleDays = 3;
+        flashSaleCategory = cat;
+        alert("BLITZANGEBOT gestartet! 3 Tage lang -20% Preis, x1.6 Nachfrage"
+                + (cat != null ? " fuer " + cat.label : " fuer ALLES") + ".");
+    }
+
+    public void foundSubsidiary(String name) {
+        if (!charge(500_000)) {
+            alert("Tochterfirma kostet 500.000 AUD.");
+            return;
+        }
+        subsidiaries.add(name);
+        alert("Tochterfirma '" + name + "' gegruendet (+3.000 AUD/Tag passiv).");
+    }
+
     public double siteThroughput(Site s) {
-        double bonus = 1.0 + 0.05 * trucks.getOrDefault(s.city, 0) + 0.02 * vans.getOrDefault(s.city, 0);
+        double bonus = 1.0 + 0.05 * effectiveTrucks(s.city) + 0.02 * effectiveVans(s.city);
         return s.throughput(this) * bonus;
     }
 
@@ -663,5 +703,13 @@ public class Game implements Serializable {
         tutorialOn = o.tutorialOn;
         tutorialStep = o.tutorialStep;
         settingFullscreen = o.settingFullscreen;
+        difficulty = o.difficulty;
+        fleetDown.clear(); fleetDown.putAll(o.fleetDown);
+        cityRating.clear(); cityRating.putAll(o.cityRating);
+        flashSaleDays = o.flashSaleDays;
+        flashSaleCategory = o.flashSaleCategory;
+        subsidiaries.clear(); subsidiaries.addAll(o.subsidiaries);
+        achievements.clear(); achievements.addAll(o.achievements);
+        lastFillRate = o.lastFillRate;
     }
 }

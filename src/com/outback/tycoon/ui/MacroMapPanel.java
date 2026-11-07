@@ -173,5 +173,63 @@ public class MacroMapPanel extends JPanel {
             g.setFont(g.getFont().deriveFont(Font.BOLD, 22f));
             g.drawString("PRIME DAY! Traffic x3.5", getWidth() / 2 - 120, 30);
         }
+
+        drawAnimations(g);
+    }
+
+    private void drawAnimations(Graphics2D g) {
+        long t = System.currentTimeMillis();
+        java.util.List<com.outback.tycoon.model.Site> ops = new java.util.ArrayList<>();
+        for (com.outback.tycoon.model.Site s : game.sites) if (s.isOperational()) ops.add(s);
+
+        for (int i = 0; i < ops.size(); i++) {
+            com.outback.tycoon.model.Site s = ops.get(i);
+            City c = game.cityByName(s.city);
+            int cx = (int) (c.mapX * getWidth());
+            int cy = (int) (c.mapY * getHeight());
+            double orbit = t / 900.0 + i * 2.1;
+            int dx = (int) (Math.cos(orbit) * 14);
+            int dy = (int) (Math.sin(orbit) * 7);
+            g.setColor(new Color(240, 240, 250));
+            g.fillOval(cx + dx - 2, cy + dy - 2, 4, 4);
+            g.setColor(new Color(200, 200, 220));
+            g.drawOval(cx + dx - 2, cy + dy - 2, 4, 4);
+        }
+
+        java.util.List<String> truckCities = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<String, Integer> e : game.trucks.entrySet())
+            if (e.getValue() > 0 && !game.fleetDown.containsKey(e.getKey())) truckCities.add(e.getKey());
+        for (int i = 0; i < Math.min(4, truckCities.size()); i++) {
+            City c = game.cityByName(truckCities.get(i));
+            int cx = (int) (c.mapX * getWidth());
+            int cy = (int) (c.mapY * getHeight());
+            double p = ((t / 1400.0) + i * 0.33) % 1.0;
+            int tx = cx + (int) (Math.sin(p * Math.PI * 2 + i) * 22);
+            int ty = cy + 14 + (int) (Math.cos(p * Math.PI * 2 + i) * 6);
+            g.setColor(new Color(255, 220, 90));
+            g.fillRect(tx - 4, ty - 2, 8, 5);
+            g.setColor(Color.BLACK);
+            g.fillRect(tx + 2, ty - 2, 2, 5);
+        }
+
+        drawPlane(g, game.cityByName("Sydney"), game.cityByName("London"), t, 0.0009);
+        drawPlane(g, game.cityByName("Sydney"), game.cityByName("Los Angeles"), t, 0.0007);
+        drawPlane(g, game.cityByName("Sydney"),
+                new City("Shenzhen", "China", "Asien", 17_000_000, 0.5, SHENZHEN_X, SHENZHEN_Y), t, 0.0011);
+    }
+
+    private void drawPlane(Graphics2D g, City a, City b, long t, double speed) {
+        if (b == null) return;
+        double p = (t * speed) % 1.0;
+        int x1 = (int) (a.mapX * getWidth());
+        int y1 = (int) (a.mapY * getHeight());
+        int x2 = (int) (b.mapX * getWidth());
+        int y2 = (int) (b.mapY * getHeight());
+        int px = (int) (x1 + (x2 - x1) * p);
+        int py = (int) (y1 + (y2 - y1) * p - Math.sin(p * Math.PI) * 30);
+        double ang = Math.atan2(y2 - y1, x2 - x1);
+        g.setColor(new Color(230, 235, 245));
+        g.fillPolygon(new int[]{px + (int) (8 * Math.cos(ang)), px + (int) (7 * Math.cos(ang + 2.5)), px + (int) (7 * Math.cos(ang - 2.5))},
+                new int[]{py + (int) (8 * Math.sin(ang)), py + (int) (7 * Math.sin(ang + 2.5)), py + (int) (7 * Math.sin(ang - 2.5))}, 3);
     }
 }

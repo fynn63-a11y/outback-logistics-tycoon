@@ -49,6 +49,7 @@ public class MainWindow extends JFrame {
         hud.setWindow(this);
 
         chooseScenario();
+        chooseDifficulty();
         chooseCompanyName();
         installShortcuts();
 
@@ -75,6 +76,20 @@ public class MainWindow extends JFrame {
         if (game.settingFullscreen) {
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
             if (gd.isFullScreenSupported()) gd.setFullScreenWindow(this);
+        }
+    }
+
+    private void chooseDifficulty() {
+        String[] options = new String[com.outback.tycoon.model.Difficulty.values().length];
+        for (int i = 0; i < options.length; i++) options[i] = com.outback.tycoon.model.Difficulty.values()[i].label;
+        Object sel = JOptionPane.showInputDialog(this, "Schwierigkeitsgrad wählen:",
+                "Schwierigkeit", JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+        if (sel != null) {
+            for (com.outback.tycoon.model.Difficulty d : com.outback.tycoon.model.Difficulty.values())
+                if (d.label.equals(sel)) {
+                    game.difficulty = d;
+                    game.cash = d.startCash;
+                }
         }
     }
 
