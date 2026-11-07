@@ -175,6 +175,7 @@ public class Game implements Serializable {
         addDataCities("Europa", CityData.EUROPA, 0.525, 0.215, 0.055, 0.055);
         addDataCities("Nordamerika", CityData.USA, 0.220, 0.295, 0.130, 0.065);
         addDataCities("Nordamerika", CityData.KANADA, 0.260, 0.245, 0.080, 0.030);
+        generateMinorCities();
 
         carriers.add(new Carrier("Outback Freight Co.", 4_000));
         carriers.add(new Carrier("Southern Cross Logistics", 6_500));
@@ -209,6 +210,44 @@ public class Game implements Serializable {
         catalog.add(new SKU("se-2", "Lebkuchen 500g", Category.FMCG, 4, null, new Integer[]{12}));
         catalog.add(new SKU("se-3", "Sonnenbrille Summer", Category.APPAREL_LUXURY, 25, null, new Integer[]{12, 1, 2}));
         catalog.add(new SKU("se-4", "Sonnencreme LSF50", Category.FMCG, 6, null, new Integer[]{12, 1, 2}));
+        catalog.add(new SKU("el-5", "Tablet 10 Zoll", Category.ELECTRONICS, 220, null));
+        catalog.add(new SKU("el-6", "Smartwatch", Category.ELECTRONICS, 90, null));
+        catalog.add(new SKU("el-7", "Kamera DSLR", Category.ELECTRONICS, 450, null));
+        catalog.add(new SKU("tx-5", "Hoodie", Category.APPAREL_BASIC, 12, null));
+        catalog.add(new SKU("tx-6", "Jeans", Category.APPAREL_BASIC, 18, null));
+        catalog.add(new SKU("tx-7", "Lederjacke", Category.APPAREL_LUXURY, 180, null));
+        catalog.add(new SKU("tx-8", "Seidenkrawatte", Category.APPAREL_LUXURY, 45, null));
+        catalog.add(new SKU("sn-3", "Wanderschuhe", Category.SNEAKERS, 95, null));
+        catalog.add(new SKU("sn-4", "Sandalen", Category.SNEAKERS, 30, null));
+        catalog.add(new SKU("au-3", "Reifen 205/55", Category.CAR_PARTS, 80, null));
+        catalog.add(new SKU("au-4", "Scheibenwischer-Set", Category.CAR_PARTS, 18, null));
+        catalog.add(new SKU("fm-3", "Kaffee 500g", Category.FMCG, 5.5, null));
+        catalog.add(new SKU("fm-4", "Nudeln 500g", Category.FMCG, 1.2, null));
+        catalog.add(new SKU("fm-5", "Olivenoel 750ml", Category.FMCG, 6.5, null));
+        catalog.add(new SKU("cc-3", "Joghurt 500g", Category.COLD_CHAIN, 2.8, null));
+        catalog.add(new SKU("cc-4", "Gouda 400g", Category.COLD_CHAIN, 7.5, null));
+        catalog.add(new SKU("hz-3", "Farben Spray", Category.HAZMAT, 4.5, null));
+        catalog.add(new SKU("hz-4", "Batterie Li-Ion", Category.HAZMAT, 9, null));
+        catalog.add(new SKU("bu-3", "Esstisch", Category.BULKY, 220, null));
+        catalog.add(new SKU("bu-4", "Matratze 140x200", Category.BULKY, 180, null));
+        catalog.add(new SKU("bu-5", "Schreibtisch", Category.BULKY, 150, null));
+        catalog.add(new SKU("sp-1", "Fussball", Category.FMCG, 15, null));
+        catalog.add(new SKU("sp-2", "Yogamatte", Category.SNEAKERS, 25, null));
+        catalog.add(new SKU("ty-1", "Autoradio", Category.ELECTRONICS, 120, null));
+        catalog.add(new SKU("ty-2", "Navi-Handheld", Category.ELECTRONICS, 80, null));
+        catalog.add(new SKU("ho-1", "Stehlampe", Category.BULKY, 60, null));
+        catalog.add(new SKU("ho-2", "Bettwaesche-Set", Category.APPAREL_BASIC, 25, null));
+        catalog.add(new SKU("ho-3", "Handtuch 4er", Category.APPAREL_BASIC, 12, null));
+        catalog.add(new SKU("to-1", "Rucksack 30L", Category.SNEAKERS, 40, null));
+        catalog.add(new SKU("to-2", "Koffer Hartschale", Category.BULKY, 110, null));
+        catalog.add(new SKU("pe-1", "Parfum 50ml", Category.APPAREL_LUXURY, 60, null));
+        catalog.add(new SKU("pe-2", "Deo Roll-on", Category.HAZMAT, 3.5, null));
+        catalog.add(new SKU("ki-1", "Spielzeug-Roboter", Category.ELECTRONICS, 35, null));
+        catalog.add(new SKU("ki-2", "Brettspiel", Category.FMCG, 22, null));
+        catalog.add(new SKU("ga-1", "Grill", Category.BULKY, 130, null));
+        catalog.add(new SKU("ga-2", "Campingzelt", Category.BULKY, 160, null));
+        catalog.add(new SKU("of-1", "Aktenordner 10er", Category.FMCG, 8, null));
+        catalog.add(new SKU("of-2", "Druckerpapier A4", Category.FMCG, 6, null));
 
         RivalCompany apex = new RivalCompany("Apex Logistics", 0.12, new java.awt.Color(220, 90, 90));
         apex.sites = 2;
@@ -229,6 +268,40 @@ public class Game implements Serializable {
         rivals.add(apex);
         rivals.add(southern);
         rivals.add(pacific);
+    }
+
+    private void generateMinorCities() {
+        java.util.Random r = new java.util.Random(1994);
+        String[][] prefixes = {
+                {"Port ", "Mount ", "Fort ", "New ", "Lake ", "Cape ", "Gold", "River"},
+                {"San ", "Santa ", "Los ", "Las ", "El ", "New ", "Fort ", "Saint "},
+                {"Vill", "Neu", "Alt", "Ober", "Unter", "Klein", "Gross", "Bad "},
+                {"North ", "South ", "East ", "West ", "Port ", "Fort ", "New "}};
+        String[][] suffixes = {
+                {"ville", "town", "field", "hurst", "dale", "port", "shire", " Creek"},
+                {"burg", "stadt", "dorf", "hausen", "fels", "heim", " bach", "tal"},
+                {"dorf", "stadt", "burg", "berg", "feld", "heim", "hausen", "tal"},
+                {"ville", "ton", "ville", "field", " Harbour", "ville", "ton", " City"}};
+        double[][] regions = {
+                {0.875, 0.700, 0.100, 0.090, 320, 0},
+                {0.525, 0.215, 0.055, 0.055, 420, 2},
+                {0.220, 0.295, 0.130, 0.065, 520, 1},
+                {0.260, 0.245, 0.080, 0.030, 260, 3}};
+        String[] regionNames = {"Australien", "Nordamerika", "Europa", "Nordamerika"};
+        for (double[] reg : regions) {
+            int pIdx = (int) reg[5];
+            for (int i = 0; i < (int) reg[4]; i++) {
+                String name = prefixes[pIdx][r.nextInt(prefixes[pIdx].length)] + suffixes[pIdx][r.nextInt(suffixes[pIdx].length)];
+                boolean exists = false;
+                for (City c : cities) if (c.name.equals(name)) { exists = true; break; }
+                if (exists) continue;
+                double x = Math.max(0.02, Math.min(0.98, reg[0] + (r.nextDouble() - 0.5) * 2 * reg[2]));
+                double y = Math.max(0.02, Math.min(0.98, reg[1] + (r.nextDouble() - 0.5) * 2 * reg[3]));
+                long pop = 5_000 + r.nextInt(495_000);
+                double prime = 0.10 + r.nextDouble() * 0.15;
+                cities.add(new City(name, regionNames[pIdx], regionNames[pIdx], pop, prime, x, y));
+            }
+        }
     }
 
     private void addDataCities(String region, String[] data, double cx, double cy, double w, double h) {
