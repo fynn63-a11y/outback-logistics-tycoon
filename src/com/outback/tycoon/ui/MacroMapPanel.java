@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MacroMapPanel extends JPanel {
-    static final int VW = 2000;
-    static final int VH = 1000;
+    static final int VW = 3200;
+    static final int VH = 1600;
 
     private static final double[][] AUSTRALIEN = {
             {113.5, -22.0}, {115.0, -20.5}, {122.0, -17.5}, {129.5, -14.5}, {130.5, -12.3},
@@ -380,7 +380,7 @@ public class MacroMapPanel extends JPanel {
     }
 
     private void renderTerrain(Graphics2D g, Path2D.Double land, long seed) {
-        int step = 2;
+        int step = 3;
         double[][] height = new double[VH / step + 2][VW / step + 2];
         for (int y = 0; y < height.length; y++)
             for (int x = 0; x < height[0].length; x++)
