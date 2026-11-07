@@ -26,8 +26,10 @@ public class MicroPanel extends JPanel {
         setLayout(new BorderLayout());
 
         JPanel north = new JPanel(new BorderLayout());
-        String[] cats = {"Alle", "Wareneingang", "Transport", "Lagerung", "Kommissionierung", "Verpackung", "Sortierung", "Versand"};
-        JComboBox<String> catBox = new JComboBox<>(cats);
+        java.util.List<String> catList = new java.util.ArrayList<>();
+        catList.add("Alle");
+        for (MachineType.Stage st : MachineType.Stage.values()) catList.add(st.label);
+        JComboBox<String> catBox = new JComboBox<>(catList.toArray(new String[0]));
         catBox.addActionListener(e -> rebuildPalette(palette, (String) catBox.getSelectedItem()));
         JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
         filterRow.add(new JLabel("Packbau-Kategorie:"));
@@ -124,9 +126,12 @@ public class MicroPanel extends JPanel {
             int units = 0;
             for (int v : s.stock.values()) units += v;
             status.setText(String.format(
-                    "%s | Modus: %s | Score %d | Grid-Effizienz %.0f%% | Durchsatz %.0f/Tag | Lager: %d Einheiten, Paletten %d/%d (max. Kapazitaet)",
+                    "%s | Modus: %s | Score %d | Grid-Effizienz %.0f%% | Kette %s | Engpass: %s | Durchsatz %.0f/Tag | Lager: %d Einheiten, Paletten %d/%d (max. Kapazitaet)",
                     s.describe(), eraseMode ? "Loeschen" : selectedMachine.label,
-                    s.machineScore(), s.gridEfficiency(game) * 100, s.throughput(game),
+                    s.machineScore(), s.gridEfficiency(game) * 100,
+                    s.chainComplete() ? "komplett (x1.5)" : "unvollstaendig",
+                    s.chainComplete() ? s.weakestStage().label : "-",
+                    s.throughput(game),
                     units, s.palletUsed(), s.palletSlots()));
         }
     }

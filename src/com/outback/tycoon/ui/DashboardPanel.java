@@ -81,10 +81,10 @@ public class DashboardPanel extends JPanel {
         for (Site s : game.sites) {
             int units = 0;
             for (int v : s.stock.values()) units += v;
-            root.add(row(String.format("%s | %s, %s | Stufe %d, %d★ | Durchsatz %.0f/Tag | Automation %.0f%% | Kette %s | Paletten %d/%d | Bestand %d",
+            root.add(row(String.format("%s | %s, %s | Stufe %d, %d★ | Durchsatz %.0f/Tag | Automation %.0f%% | Kette %s | Engpass %s | Paletten %d/%d | Bestand %d",
                     s.type.label, s.city, s.type == com.outback.tycoon.model.SiteType.DATA_CENTER ? "-" : "",
                     s.level, s.stars, s.throughput(game), s.automationPercent(),
-                    s.chainComplete() ? "komplett" : "unvollständig", s.palletUsed(), s.palletSlots(), units)));
+                    s.chainComplete() ? "komplett" : "unvollständig", s.chainComplete() ? s.weakestStage().label : "-", s.palletUsed(), s.palletSlots(), units)));
         }
         root.revalidate();
         root.repaint();

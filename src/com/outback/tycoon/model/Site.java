@@ -77,12 +77,36 @@ public class Site implements java.io.Serializable {
         return s;
     }
 
+    private static final MachineType.Stage[] CHAIN = {
+            MachineType.Stage.DELIVERY, MachineType.Stage.UNLOAD, MachineType.Stage.BOOKING,
+            MachineType.Stage.INBOUND, MachineType.Stage.STOW, MachineType.Stage.PICK,
+            MachineType.Stage.PACK, MachineType.Stage.LOAD, MachineType.Stage.SHIP
+    };
+
     public boolean chainComplete() {
-        return stageScore(MachineType.Stage.INBOUND) > 0
-                && stageScore(MachineType.Stage.STORAGE) > 0
-                && stageScore(MachineType.Stage.PICK) > 0
-                && stageScore(MachineType.Stage.PACK) > 0
-                && stageScore(MachineType.Stage.SHIP) > 0;
+        for (MachineType.Stage st : CHAIN) if (stageScore(st) <= 0) return false;
+        return true;
+    }
+
+    public MachineType.Stage weakestStage() {
+        MachineType.Stage weakest = CHAIN[0];
+        int best = Integer.MAX_VALUE;
+        for (MachineType.Stage st : CHAIN) {
+            int sc = stageScore(st);
+            if (sc < best) {
+                best = sc;
+                weakest = st;
+            }
+        }
+        return weakest;
+    }
+
+    public double chainBottleneck(int starsRef) {
+        if (!chainComplete()) return 0.3;
+        int req = 10 * Math.max(1, starsRef);
+        int min = Integer.MAX_VALUE;
+        for (MachineType.Stage st : CHAIN) min = Math.min(min, stageScore(st));
+        return Math.min(1.0, min / (double) req);
     }
 
     public double automationPercent() {
@@ -105,7 +129,10 @@ public class Site implements java.io.Serializable {
     public double throughput(Game g) {
         if (!isOperational()) return 0;
         double t = type.baseThroughput * level * stars * (0.3 + 0.7 * gridEfficiency(g));
-        if (chainComplete()) t *= 1.5;
+        if (chainComplete()) {
+            t *= 1.5;
+            t *= 0.6 + 0.4 * chainBottleneck(stars);
+        }
         if (g.researched.contains(Tech.KIVA_ROBOTS)) t *= 1.5;
         if (g.researched.contains(Tech.HIGH_SPEED_CONVEYORS)) t *= 1.3;
         if (g.tempsDecember && g.month() == 12 && g.strikeDaysLeft <= 0) t *= 1.5;
