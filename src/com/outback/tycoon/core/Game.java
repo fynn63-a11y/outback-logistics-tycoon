@@ -172,7 +172,7 @@ public class Game implements Serializable {
         cities.add(new City("Adelaide", "South Australia", "Australien", 1_400_000, 0.20, 0.885, 0.694));
 
         addDataCities("Australien", CityData.AUSTRALIEN, 0.875, 0.700, 0.100, 0.090);
-        generateMinorCities();
+        // nur die Top-50-Staedte aus CityData
 
         carriers.add(new Carrier("Outback Freight Co.", 4_000));
         carriers.add(new Carrier("Southern Cross Logistics", 6_500));
@@ -280,7 +280,7 @@ public class Game implements Serializable {
                 {"dorf", "stadt", "burg", "berg", "feld", "heim", "hausen", "tal"},
                 {"ville", "ton", "ville", "field", " Harbour", "ville", "ton", " City"}};
         double[][] regions = {
-                {0.875, 0.700, 0.100, 0.090, 900, 0}};
+                {0.875, 0.700, 0.100, 0.090, 0, 0}};
         String[] regionNames = {"Australien"};
         for (double[] reg : regions) {
             int pIdx = (int) reg[5];
