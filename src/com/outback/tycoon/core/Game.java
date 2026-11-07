@@ -404,7 +404,7 @@ public class Game implements Serializable {
     public final Map<String, int[][][]> blueprints = new HashMap<>();
 
     public void saveBlueprint(String name, Site s) {
-        int[][] bp = new int[2][Site.GRID][Site.GRID];
+        int[][][] bp = new int[2][Site.GRID][Site.GRID];
         for (int x = 0; x < Site.GRID; x++)
             for (int y = 0; y < Site.GRID; y++) {
                 bp[0][x][y] = s.grid[x][y] == null ? -1 : s.grid[x][y].ordinal();
