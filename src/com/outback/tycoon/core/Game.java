@@ -633,7 +633,10 @@ public class Game implements Serializable {
     }
 
     public double distanceKm(City a, City b) {
-        return Math.hypot(a.mapX - b.mapX, a.mapY - b.mapY) * 25_000;
+        double meanLat = (a.mapY + b.mapY) / 2.0 * 180.0 - 90.0;
+        double dx = (a.mapX - b.mapX) * 40_030.0 * Math.cos(Math.toRadians(meanLat));
+        double dy = (a.mapY - b.mapY) * 20_015.0;
+        return Math.hypot(dx, dy);
     }
 
     public Site servingSite(String cityName) {
