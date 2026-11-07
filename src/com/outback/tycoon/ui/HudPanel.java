@@ -94,6 +94,8 @@ public class HudPanel extends JPanel {
         JButton saveBtn = new JButton("Spiel speichern...");
         saveBtn.addActionListener(e -> { if (window != null) window.saveGame(); });
         add(saveBtn);
+        JButton loadBtn = new JButton("Spiel laden...");
+        loadBtn.addActionListener(e -> { if (window != null) window.loadGame(); });
         add(loadBtn);
         add(Box.createVerticalStrut(8));
 
