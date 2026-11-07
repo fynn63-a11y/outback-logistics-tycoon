@@ -42,6 +42,8 @@ public class MacroMapPanel extends JPanel {
     private int mouseY = -1;
     private String regionView = "Australien";
     private boolean view3D = false;
+    private double zoom = 1.0;
+    private City hoverCity = null;
     private final JComboBox<String> regionBox;
 
     public MacroMapPanel(Game game, MainWindow window) {
@@ -65,6 +67,13 @@ public class MacroMapPanel extends JPanel {
             repaint();
         });
         top.add(view3dBtn);
+        JButton zoomIn = new JButton("+");
+        JButton zoomOut = new JButton("-");
+        zoomIn.addActionListener(e -> { zoom = Math.min(2.5, zoom + 0.25); repaint(); });
+        zoomOut.addActionListener(e -> { zoom = Math.max(0.5, zoom - 0.25); repaint(); });
+        top.add(new JLabel("Zoom:"));
+        top.add(zoomOut);
+        top.add(zoomIn);
         add(top, BorderLayout.NORTH);
 
         addMouseMotionListener(new MouseAdapter() {
@@ -72,6 +81,17 @@ public class MacroMapPanel extends JPanel {
             public void mouseMoved(MouseEvent e) {
                 mouseX = e.getX();
                 mouseY = e.getY();
+                int[] v = toVirtual(mouseX, mouseY);
+                hoverCity = null;
+                double best = 30 * viewScale();
+                for (City c : game.cities) {
+                    double d = Math.hypot(c.mapX * VW - v[0], c.mapY * VH - v[1]);
+                    if (d < best) {
+                        best = d;
+                        hoverCity = c;
+                    }
+                }
+                repaint();
             }
         });
         addMouseListener(new MouseAdapter() {
@@ -135,7 +155,7 @@ public class MacroMapPanel extends JPanel {
     }
 
     private double viewScale() {
-        return (double) getWidth() / (px(156) - px(110));
+        return (double) getWidth() / (px(156) - px(110)) * zoom;
     }
 
     private int[] viewOffset() {
@@ -339,6 +359,22 @@ public class MacroMapPanel extends JPanel {
                 g.setColor(new Color(200, 210, 225));
                 g.drawString(String.format("%,d Einw. | Standorte: %d", c.population, citySites.size()), x + r + 15, y + 10);
             }
+        }
+
+        if (hoverCity != null && game.pendingBuildType == null) {
+            City hc = hoverCity;
+            Site server = game.servingSite(hc.name);
+            String info = String.format("%s | %,d Einw. | Primo %.0f%% | Bewertung %.1f/5 | Standorte: %d%s",
+                    hc.name, hc.population, hc.primeQuote * 100, game.cityRating(hc.name), game.sitesIn(hc.name).size(),
+                    server != null ? String.format(" | Distanz zum Zentrum: %,.0f km", game.distanceKm(game.cityByName(server.city), hc)) : "");
+            g.setFont(g.getFont().deriveFont(Font.BOLD, 20f));
+            int tw = g.getFontMetrics().stringWidth(info);
+            int hx = (int) (hc.mapX * VW);
+            int hy = (int) (hc.mapY * VH);
+            g.setColor(new Color(12, 16, 26, 235));
+            g.fillRoundRect(hx + 24, hy - 60, tw + 20, 34, 8, 8);
+            g.setColor(new Color(255, 235, 150));
+            g.drawString(info, hx + 34, hy - 37);
         }
 
         if (game.pendingBuildType != null && mouseX >= 0) {
