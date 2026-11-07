@@ -364,6 +364,15 @@ public class MicroPanel extends JPanel {
                 case STRAPPER: return new Color(220, 120, 220);
                 case RACK: return new Color(160, 120, 70);
                 case DOCK: return new Color(80, 220, 220);
+                case AGV_BOT: return new Color(255, 140, 60);
+                case RFID_TUNNEL: return new Color(160, 120, 255);
+                case POD_STATION: return new Color(255, 220, 90);
+                case ASRS_CRANE: return new Color(120, 90, 60);
+                case SPARROW_ARM: return new Color(255, 100, 140);
+                case PACKSIZE: return new Color(100, 200, 160);
+                case PEGASUS: return new Color(90, 200, 255);
+                case DRONE_PAD: return new Color(220, 220, 230);
+                case RMS_DESK: return new Color(140, 160, 180);
                 default: return Color.WHITE;
             }
         }
