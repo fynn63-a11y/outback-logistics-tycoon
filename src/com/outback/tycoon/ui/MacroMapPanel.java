@@ -275,7 +275,7 @@ public class MacroMapPanel extends JPanel {
 
         drawAnimations(g);
 
-        if (game.isPrimeDay()) {
+        if (game.isPrimoDay()) {
             g.setColor(new Color(255, 60, 40));
             g.setFont(g.getFont().deriveFont(Font.BOLD, 24f));
             g.drawString("PRIMO DAY! Traffic x3.5", getWidth() / 2 - 130, 56);
@@ -293,7 +293,7 @@ public class MacroMapPanel extends JPanel {
                 + String.format("Kasse: %,.0f AUD", game.cash) + "  |  " + game.eraName(), 14, 22);
         g.setFont(g.getFont().deriveFont(11f));
         g.setColor(new Color(255, 200, 90));
-        g.drawString(game.isPrimeDay() ? "PRIMO DAY aktiv!" : "Naechster Primo Day in " + game.primeDayIn + " Tagen",
+        g.drawString(game.isPrimoDay() ? "PRIMO DAY aktiv!" : "Naechster Primo Day in " + game.primeDayIn + " Tagen",
                 getWidth() - 320, 22);
     }
 
