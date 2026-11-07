@@ -13,6 +13,28 @@ public class ChartsPanel extends JPanel {
         this.game = game;
         setPreferredSize(new Dimension(700, 500));
         setBackground(new Color(18, 22, 32));
+        setLayout(new BorderLayout());
+        JButton csv = new JButton("Statistik als CSV exportieren...");
+        csv.addActionListener(e -> exportCsv());
+        JPanel south = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        south.add(csv);
+        add(south, BorderLayout.SOUTH);
+    }
+
+    private void exportCsv() {
+        JFileChooser fc = new JFileChooser();
+        if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        try (java.io.PrintWriter w = new java.io.PrintWriter(fc.getSelectedFile(), "UTF-8")) {
+            w.println("tag,kasse_aud,tagesumsatz_aud,konkurrenz_marktanteil");
+            int n = game.histCash.size();
+            for (int i = 0; i < n; i++) {
+                w.printf(java.util.Locale.US, "%d,%.2f,%.2f,%.4f%n", i,
+                        game.histCash.get(i), game.histRevenue.get(i), game.histRivalShare.get(i));
+            }
+            game.alert("Statistik exportiert: " + fc.getSelectedFile().getName());
+        } catch (Exception ex) {
+            game.alert("CSV-Export fehlgeschlagen: " + ex.getMessage());
+        }
     }
 
     @Override

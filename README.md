@@ -5,6 +5,11 @@ Amazon-ähnliches Imperium in Australien auf — von der ersten Garage 1994 bis 
 der ASX. Inspiriert von Hearts of Iron 4 (Makro-Karte), GeoPolitik 5 und Production Line
 (isometrisches Intralogistik-Grid), mit leichter Chiptune-Musik.
 
+## CI
+
+GitHub Actions (`.github/workflows/build.yml`) kompiliert bei jedem Push/PR mit JDK 17
+(`./build.sh`) und testet den Textur-Export (`./generate-textures.sh`).
+
 ## Start
 
 Voraussetzung: JDK 17 oder neuer.

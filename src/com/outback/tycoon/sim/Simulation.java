@@ -203,6 +203,7 @@ public class Simulation implements java.io.Serializable {
         updateRivals(g);
         randomEvents(g);
         disasters(g);
+        harborStrike(g);
         siteCrises(g);
         tenderEvents(g);
         tutorialCheck(g);
@@ -393,6 +394,20 @@ public class Simulation implements java.io.Serializable {
             if (m < 0.15 && sku.price < sku.baseCost * 1.6) sku.price *= 1.02;
             else if (m > 0.45 && sku.price > sku.baseCost * 1.15) sku.price *= 0.995;
             sku.price = Math.round(sku.price * 100.0) / 100.0;
+        }
+    }
+
+    private void harborStrike(Game g) {
+        if (rnd.nextDouble() > 0.005) return;
+        String port = rnd.nextBoolean() ? "Sydney" : "Melbourne";
+        int days = 3 + rnd.nextInt(3);
+        g.blockedCities.put(port, days);
+        for (Shipment sh : g.shipments)
+            if (sh.destCity.equals(port)) sh.daysLeft += 5;
+        g.alert("HAFEN-STREIK in " + port + "! Stadt " + days + " Tage gesperrt, alle Seefrachten +5 Tage.");
+        if (g.insured && !g.sandboxMode) {
+            g.cash += 40_000;
+            g.alert("Versicherung zahlt 40.000 AUD Betriebsunterbrechung fuer " + port + ".");
         }
     }
 
