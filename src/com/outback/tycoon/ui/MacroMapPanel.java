@@ -253,8 +253,10 @@ public class MacroMapPanel extends JPanel {
         if (h < 0.42) return new Color(216, 196, 148);
         boolean desert = lon > 124 && lon < 141 && lat < -19 && lat > -31;
         boolean tropic = lat > -20;
-        if (h < 0.52) return tropic ? new Color(96, 168, 74) : desert ? new Color(198, 128, 66) : new Color(122, 168, 84);
-        if (h < 0.66) return desert ? new Color(186, 110, 56) : new Color(140, 152, 92);
+        boolean tasmania = lat < -40;
+        boolean coastForest = h < 0.52 && !desert;
+        if (h < 0.52) return tasmania ? new Color(96, 140, 80) : tropic ? new Color(80, 158, 70) : desert ? new Color(198, 128, 66) : coastForest ? new Color(96, 148, 78) : new Color(122, 168, 84);
+        if (h < 0.66) return desert ? new Color(186, 110, 56) : tasmania ? new Color(110, 140, 90) : new Color(140, 152, 92);
         if (h < 0.82) return new Color(134, 104, 70);
         return new Color(238, 240, 245);
     }
@@ -285,6 +287,7 @@ public class MacroMapPanel extends JPanel {
         } else {
             renderTerrain(g, au, 37);
         }
+        drawRiversAndLakes(g);
         provinces(g, au);
 
         g.setColor(new Color(200, 225, 255, 70));
@@ -345,6 +348,36 @@ public class MacroMapPanel extends JPanel {
     }
 
     private static Path2D.Double AUSTRALIEN_POLY;
+
+    private static final double[][][] RIVERS = {
+            new double[][]{{146.5,-31.5},{147.0,-32.5},{146.0,-34.0},{144.5,-35.5},{143.0,-36.5},{141.0,-37.5},{138.8,-35.1}}, // Murray
+            new double[][]{{149.0,-30.5},{148.5,-28.5},{148.0,-26.5},{147.0,-24.0}}, // Darling
+            new double[][]{{149.5,-20.0},{148.0,-19.0},{146.5,-17.5}}, // Flinders
+            new double[][]{{138.0,-26.0},{136.0,-24.0},{134.5,-22.5}}, // Georgina/Diamantina
+            new double[][]{{115.5,-26.0},{117.5,-24.5},{119.5,-23.0}}, // Gascoyne
+            new double[][]{{151.0,-33.8},{150.5,-32.0}}, // Hawkesbury
+    };
+    private static final double[][] LAKES = {
+            new double[]{135.9, -28.5}, new double[]{135.0, -30.5}, // Lake Eyre North/South
+            new double[]{141.5, -31.5}, // Lake Torrens-Region
+            new double[]{146.8, -35.1}, // Lake Alexandrina
+    };
+
+    private void drawRiversAndLakes(Graphics2D g) {
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setStroke(new BasicStroke(5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g.setColor(new Color(60, 120, 180));
+        for (double[] river : RIVERS) {
+            Path2D.Double p = new Path2D.Double();
+            p.moveTo(px(river[0][0]), py(river[0][1]));
+            for (int i = 1; i < river.length; i++) p.lineTo(px(river[i][0]), py(river[i][1]));
+            g.draw(p);
+        }
+        g.setColor(new Color(70, 135, 195));
+        for (double[] lake : LAKES) {
+            g.fillOval(px(lake[0]) - 14, py(lake[1]) - 8, 28, 16);
+        }
+    }
 
     private void renderTerrain(Graphics2D g, Path2D.Double land, long seed) {
         int step = 2;
@@ -419,9 +452,13 @@ public class MacroMapPanel extends JPanel {
         g.transform(viewTransform());
         g.drawImage(baseCache, 0, 0, null);
         if (view3D && mapStyle == 0 && peaksCache != null) {
-            g.translate(-14, -18);
+            g.setColor(new Color(90, 80, 75, 160));
+            g.translate(-16, -8);
             g.drawImage(peaksCache, 0, 0, null);
-            g.translate(7, 9);
+            g.translate(8, 14);
+            g.drawImage(peaksCache, 0, 0, null);
+            g.translate(8, 16);
+            g.setColor(new Color(255, 255, 255, 120));
             g.drawImage(peaksCache, 0, 0, null);
         }
         g.setTransform(new java.awt.geom.AffineTransform());
