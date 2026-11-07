@@ -115,6 +115,7 @@ public class Game implements Serializable {
     public boolean sandboxMode = false;
 
     public String companyName = "Outback Logistics";
+    public String webServiceName = "OWS";
     public double fxCny = 0.21;
     public double fxUsd = 0.65;
     public final List<DealerContract> offers = new ArrayList<>();
@@ -489,6 +490,12 @@ public class Game implements Serializable {
         alert(s.describe() + " jetzt " + s.stars + " Sterne.");
     }
 
+    public boolean hasAirHub(String cityName) {
+        for (Site s : sitesIn(cityName))
+            if (s.type == SiteType.AIR_HUB && s.isOperational()) return true;
+        return false;
+    }
+
     public boolean hasContainerTerminal(String cityName) {
         for (Site s : sitesIn(cityName))
             if (s.type == SiteType.CONTAINER_TERMINAL) return true;
@@ -755,6 +762,7 @@ public class Game implements Serializable {
         nextShipmentId = o.nextShipmentId;
         lastEra = o.lastEra;
         companyName = o.companyName;
+        webServiceName = o.webServiceName;
         fxCny = o.fxCny;
         fxUsd = o.fxUsd;
         offers.clear(); offers.addAll(o.offers);

@@ -51,6 +51,7 @@ public class MainWindow extends JFrame {
         chooseScenario();
         chooseDifficulty();
         chooseCompanyName();
+        chooseWebServiceName();
         installShortcuts();
 
         tabs.addTab("Dashboard", dashboard);
@@ -100,6 +101,13 @@ public class MainWindow extends JFrame {
         setTitle(game.companyName + " - Outback Logistics Tycoon");
     }
 
+    private void chooseWebServiceName() {
+        String name = JOptionPane.showInputDialog(this,
+                "Wie sollen deine Web-Services heißen? (z. B. OWS, CloudX, …)",
+                "Web-Service-Name", JOptionPane.QUESTION_MESSAGE);
+        if (name != null && !name.trim().isEmpty()) game.webServiceName = name.trim();
+    }
+
     private void installShortcuts() {
         JRootPane rp = getRootPane();
         rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(' '), "pause");
@@ -143,12 +151,15 @@ public class MainWindow extends JFrame {
         JCheckBox mus = new JCheckBox("Musik", music.isEnabled());
         JCheckBox sfx = new JCheckBox("Soundeffekte", com.outback.tycoon.audio.Sfx.isEnabled());
         JTextField name = new JTextField(game.companyName, 16);
+        JTextField wsName = new JTextField(game.webServiceName, 16);
         p.add(new JLabel("Einstellungen (Tasten: 1-8 Tabs, Leer = Pause, +/- Tempo, M Musik)"));
         p.add(fs);
         p.add(mus);
         p.add(sfx);
         p.add(new JLabel("Firmenname:"));
         p.add(name);
+        p.add(new JLabel("Web-Service-Name:"));
+        p.add(wsName);
         int r = JOptionPane.showConfirmDialog(this, p, "Einstellungen", JOptionPane.OK_CANCEL_OPTION);
         if (r == JOptionPane.OK_OPTION) {
             game.settingFullscreen = fs.isSelected();
@@ -167,6 +178,7 @@ public class MainWindow extends JFrame {
                 game.companyName = name.getText().trim();
                 setTitle(game.companyName + " - Outback Logistics Tycoon");
             }
+            if (!wsName.getText().trim().isEmpty()) game.webServiceName = wsName.getText().trim();
         }
     }
 

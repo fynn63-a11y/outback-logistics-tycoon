@@ -98,7 +98,7 @@ public class Simulation implements java.io.Serializable {
             if (s.type == SiteType.DATA_CENTER && s.isOperational()) dcIncome += 800.0 * s.level;
         if (g.researched.contains(Tech.OWS_CLOUD)) dcIncome += 5_000 * (1 + g.networkThroughput() / 10_000.0);
         revenue += dcIncome;
-        g.addRev("WebServices / OWS (eigene Rechenzentren)", dcIncome);
+        g.addRev(g.webServiceName + " WebServices (eigene Rechenzentren)", dcIncome);
         if (!g.subsidiaries.isEmpty() && !g.sandboxMode) {
             revenue += g.subsidiaries.size() * 3_000;
             g.addRev("Tochterfirmen", g.subsidiaries.size() * 3_000);
@@ -138,7 +138,7 @@ public class Simulation implements java.io.Serializable {
         }
         g.primeSubscribers += (long) (g.reputation / 100.0 * g.sites.size() * 3);
         for (Site s : g.sites) {
-            if (s.type == SiteType.AMAZON_GO && s.isOperational()) {
+            if (s.type == SiteType.OUTBACK_GO && s.isOperational()) {
                 double go = g.siteThroughput(s) * 15.0;
                 revenue += go;
                 g.addRev("Outback-Go-Stores", go);
@@ -412,6 +412,7 @@ public class Simulation implements java.io.Serializable {
         double normal = main.rate(sku.category.weightClass);
         double express = main.rate(WeightClass.EXPRESS);
         double blended = g.isPrimoDay() ? 0.7 * normal + 0.3 * express : normal;
+        if (g.hasAirHub(c.name)) blended *= 0.92;
         double truckDiscount = Math.min(0.30, 0.05 * g.effectiveTrucks(c.name));
         blended *= (1.0 - truckDiscount);
         Site server = g.servingSite(c.name);

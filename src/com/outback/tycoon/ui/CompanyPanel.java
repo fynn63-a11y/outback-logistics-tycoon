@@ -72,8 +72,8 @@ public class CompanyPanel extends JPanel {
         root.add(label("LKW in " + game.selectedCity + ": " + game.trucks.getOrDefault(game.selectedCity, 0)
                 + " | Transporter: " + game.vans.getOrDefault(game.selectedCity, 0)));
         root.add(label(game.researched.contains(com.outback.tycoon.model.Tech.OWS_CLOUD)
-                ? "OWS WebServices aktiv: passive Einnahmen + Webshop-Bonus x1.15 + MF +20%"
-                : "OWS WebServices noch nicht erforscht (Techbaum, Cloud-Ära)."));
+                ? game.webServiceName + " WebServices aktiv: passive Einnahmen + Webshop-Bonus x1.15 + MF +20%"
+                : "WebServices noch nicht erforscht (Techbaum, Cloud-Ära). Dein Service heißt: " + game.webServiceName));
         root.add(Box.createVerticalStrut(10));
 
         root.add(section("Vertragshändler & Ausschreibungen (Wettbewerb-Events)"));
