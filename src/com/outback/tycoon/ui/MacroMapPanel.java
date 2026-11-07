@@ -367,7 +367,7 @@ public class MacroMapPanel extends JPanel {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setStroke(new BasicStroke(5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         g.setColor(new Color(60, 120, 180));
-        for (double[] river : RIVERS) {
+        for (double[][] river : RIVERS) {
             Path2D.Double p = new Path2D.Double();
             p.moveTo(px(river[0][0]), py(river[0][1]));
             for (int i = 1; i < river.length; i++) p.lineTo(px(river[i][0]), py(river[i][1]));
