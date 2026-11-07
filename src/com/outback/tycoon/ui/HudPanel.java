@@ -21,10 +21,13 @@ public class HudPanel extends JPanel {
     private final JList<String> alertList;
     private final DefaultListModel<String> alertModel = new DefaultListModel<>();
     private final JButton musicBtn = new JButton();
+    private final JLabel tutorialLabel = new JLabel(" ");
+    private MainWindow window;
 
     public HudPanel(Game game, Music music) {
         this.game = game;
         this.music = music;
+        tutorialLabel.setForeground(new Color(120, 200, 255));
         setPreferredSize(new Dimension(300, 800));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
@@ -114,6 +117,15 @@ public class HudPanel extends JPanel {
         add(loadBtn);
         add(Box.createVerticalStrut(8));
 
+        add(section("Tutorial"));
+        add(tutorialLabel);
+        JButton settingsBtn = new JButton("Einstellungen...");
+        settingsBtn.addActionListener(e -> {
+            if (window != null) window.openSettings();
+        });
+        add(settingsBtn);
+        add(Box.createVerticalStrut(8));
+
         add(section("Meldungen"));
         alertList = new JList<>(alertModel);
         add(new JScrollPane(alertList));
@@ -136,8 +148,14 @@ public class HudPanel extends JPanel {
                 ? "PRIME DAY aktiv! x3.5 (" + game.primeDayLeft + " Tage)"
                 : "Naechster Prime Day in " + game.primeDayIn + " Tagen");
         primeLabel.setForeground(game.isPrimeDay() ? Color.RED : Color.getHSBColor(0.33f, 0.7f, 0.6f));
+        String hint = game.tutorialHint();
+        tutorialLabel.setText(hint.isEmpty() ? " " : "<html><div style='width:260px'>" + hint + "</div></html>");
         Vector<String> v = new Vector<>(game.alerts);
         alertModel.clear();
         for (String s : v) alertModel.addElement(s);
+    }
+
+    public void setWindow(MainWindow w) {
+        this.window = w;
     }
 }

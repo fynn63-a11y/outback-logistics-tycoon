@@ -63,6 +63,19 @@ public class Game implements Serializable {
 
     public boolean sandboxMode = false;
 
+    public String companyName = "Outback Logistics";
+    public double fxCny = 0.21;
+    public double fxUsd = 0.65;
+    public final List<DealerContract> offers = new ArrayList<>();
+    public final List<DealerContract> contracts = new ArrayList<>();
+    public double quarterRevenue = 0;
+    public double quarterCosts = 0;
+    public int quarterDay = 0;
+    public double lastB2B = 0;
+    public boolean tutorialOn = true;
+    public int tutorialStep = 0;
+    public boolean settingFullscreen = true;
+
     public boolean ipoDone = false;
     public double sharePrice = 0;
     public boolean ownLastMile = false;
@@ -140,6 +153,10 @@ public class Game implements Serializable {
         catalog.add(new SKU("hz-2", "Deo-Spray 150ml", Category.HAZMAT, 3, null));
         catalog.add(new SKU("bu-1", "Loungesessel", Category.BULKY, 140, apexHome));
         catalog.add(new SKU("bu-2", "Billy Regal", Category.BULKY, 60, null));
+        catalog.add(new SKU("se-1", "Adventskalender", Category.FMCG, 8, null, new Integer[]{11, 12}));
+        catalog.add(new SKU("se-2", "Lebkuchen 500g", Category.FMCG, 4, null, new Integer[]{12}));
+        catalog.add(new SKU("se-3", "Sonnenbrille Summer", Category.APPAREL_LUXURY, 25, null, new Integer[]{12, 1, 2}));
+        catalog.add(new SKU("se-4", "Sonnencreme LSF50", Category.FMCG, 6, null, new Integer[]{12, 1, 2}));
 
         rivals.add(new RivalCompany("Apex Logistics", 0.12, new java.awt.Color(220, 90, 90)));
         rivals.add(new RivalCompany("Southern Star Freight", 0.09, new java.awt.Color(230, 160, 60)));
@@ -296,8 +313,9 @@ public class Game implements Serializable {
             return null;
         }
         Site s = new Site(nextSiteId++, type, selectedCity);
+        s.buildDaysLeft = type.buildDays;
         sites.add(s);
-        alert(type.label + " in " + selectedCity + " gebaut.");
+        alert(type.label + " in " + selectedCity + " gebaut - Baustelle, Bauzeit " + type.buildDays + " Tage.");
         return s;
     }
 
@@ -333,8 +351,9 @@ public class Game implements Serializable {
         if (hasContainerTerminal(destCity)) congestion = Math.max(0, congestion - 2);
         if (blockedCities.containsKey(destCity)) congestion += 3;
         if (congestion > 0) alert("Hafen-Stau (Port Congestion) in " + destCity + ": +" + congestion + " Tage Seefracht.");
-        if (!charge(cost)) return null;
-        Shipment sh = new Shipment(nextShipmentId++, "Shenzhen/Shanghai", destCity, goods, cost, congestion);
+        double audCost = cost * (fxCny / 0.21);
+        if (!charge(audCost)) return null;
+        Shipment sh = new Shipment(nextShipmentId++, "Shenzhen/Shanghai", destCity, goods, audCost, congestion);
         shipments.add(sh);
         return sh;
     }
@@ -441,6 +460,36 @@ public class Game implements Serializable {
         }
         vans.merge(selectedCity, 1, Integer::sum);
         alert("Transporter gekauft fuer " + selectedCity + " (+2% Durchsatz, +3% Nachfrage).");
+    }
+
+    public void offerContract(DealerContract c) {
+        if (offers.size() >= 3) return;
+        offers.add(c);
+        alert("WETTBEWERBS-EVENT: Ausschreibung von " + c.retailer + " - " + c.unitsPerDay + " Einheiten/Tag ("
+                + c.category.label + ") zum Preis " + String.format("%.2f", c.pricePerUnit) + " AUD. Annahme im Tab 'Firma & Finanzen'.");
+    }
+
+    public void acceptOffer(DealerContract c) {
+        offers.remove(c);
+        contracts.add(c);
+        alert("Vertrag mit " + c.retailer + " unterschrieben (" + c.daysLeft + " Tage).");
+    }
+
+    public void declineOffer(DealerContract c) {
+        offers.remove(c);
+        alert("Ausschreibung von " + c.retailer + " abgelehnt.");
+    }
+
+    public String tutorialHint() {
+        if (!tutorialOn) return "";
+        switch (tutorialStep) {
+            case 0: return "TUTORIAL 1/5: Baue einen Standort in Sydney (Tab 'Stadt & Bau (Meso)').";
+            case 1: return "TUTORIAL 2/5: Öffne das Mikro-Grid und platziere mind. 5 Maschinen (Packbau oben).";
+            case 2: return "TUTORIAL 3/5: Bestelle eine China-Seefracht (Autopilot-Sourcing aktivieren oder manuell).";
+            case 3: return "TUTORIAL 4/5: Erforsche eine Technologie im Tab 'Technik & F&E' (brauchst 40 RP).";
+            case 4: return "TUTORIAL 5/5: Erreiche 100.000 AUD Tagesumsatz. Dann ist das Tutorial beendet.";
+            default: return "";
+        }
     }
 
     public void negotiateCarrier(Carrier c) {
@@ -552,5 +601,17 @@ public class Game implements Serializable {
         nextSiteId = o.nextSiteId;
         nextShipmentId = o.nextShipmentId;
         lastEra = o.lastEra;
+        companyName = o.companyName;
+        fxCny = o.fxCny;
+        fxUsd = o.fxUsd;
+        offers.clear(); offers.addAll(o.offers);
+        contracts.clear(); contracts.addAll(o.contracts);
+        quarterRevenue = o.quarterRevenue;
+        quarterCosts = o.quarterCosts;
+        quarterDay = o.quarterDay;
+        lastB2B = o.lastB2B;
+        tutorialOn = o.tutorialOn;
+        tutorialStep = o.tutorialStep;
+        settingFullscreen = o.settingFullscreen;
     }
 }

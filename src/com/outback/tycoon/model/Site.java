@@ -15,6 +15,9 @@ public class Site implements java.io.Serializable {
     public final String city;
     public int level = 1;
     public int stars = 1;
+    public int buildDaysLeft = 0;
+    public int blockedDays = 0;
+    public String blockedReason = "";
     public final Map<String, Integer> stock = new HashMap<>();
     public final MachineType[][] grid = new MachineType[GRID][GRID];
 
@@ -90,7 +93,12 @@ public class Site implements java.io.Serializable {
         return total == 0 ? 0 : auto * 100.0 / total;
     }
 
+    public boolean isOperational() {
+        return buildDaysLeft <= 0 && blockedDays <= 0;
+    }
+
     public double throughput(Game g) {
+        if (!isOperational()) return 0;
         double t = type.baseThroughput * level * stars * (0.3 + 0.7 * gridEfficiency(g));
         if (chainComplete()) t *= 1.5;
         if (g.researched.contains(Tech.KIVA_ROBOTS)) t *= 1.5;

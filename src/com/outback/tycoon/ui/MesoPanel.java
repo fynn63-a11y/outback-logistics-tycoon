@@ -70,9 +70,11 @@ public class MesoPanel extends JPanel {
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
 
         String stars = "★".repeat(s.stars) + "☆".repeat(5 - s.stars);
+        String state = s.buildDaysLeft > 0 ? "IM BAU (" + s.buildDaysLeft + " Tage)"
+                : s.blockedDays > 0 ? "KRISE: " + s.blockedReason + " (" + s.blockedDays + " Tage)" : "betriebsbereit";
         JLabel info = new JLabel(String.format(
-                "%s | Stufe %d | %s | Paletten %d/%d | Durchsatz %.0f/Tag",
-                s.describe(), s.level, stars, s.palletUsed(), s.palletSlots(),
+                "%s | Stufe %d | %s | %s | Paletten %d/%d | Durchsatz %.0f/Tag",
+                s.describe(), s.level, stars, state, s.palletUsed(), s.palletSlots(),
                 s.throughput(game)));
         row.add(info);
 

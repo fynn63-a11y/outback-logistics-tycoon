@@ -6,6 +6,7 @@ import com.outback.tycoon.model.Scenario;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyStroke;
 
 public class MainWindow extends JFrame {
     private final Game game;
@@ -20,6 +21,7 @@ public class MainWindow extends JFrame {
     private final RivalsPanel rivalsPanel;
     private final DashboardPanel dashboard;
     private final ChartsPanel charts;
+    private final SupplyChainPanel supplyChain;
     private final JTabbedPane tabs = new JTabbedPane();
     private boolean gameOverShown = false;
     private boolean wonShown = false;
@@ -41,12 +43,17 @@ public class MainWindow extends JFrame {
         rivalsPanel = new RivalsPanel(game);
         dashboard = new DashboardPanel(game);
         charts = new ChartsPanel(game);
+        supplyChain = new SupplyChainPanel(game);
         hud = new HudPanel(game, music);
+        hud.setWindow(this);
 
         chooseScenario();
+        chooseCompanyName();
+        installShortcuts();
 
         tabs.addTab("Dashboard", dashboard);
         tabs.addTab("Statistik", charts);
+        tabs.addTab("Lieferkette", supplyChain);
         tabs.addTab("Karte (Makro)", macro);
         tabs.addTab("Stadt & Bau (Meso)", meso);
         tabs.addTab("Lager-Grid (Mikro)", micro);
@@ -62,6 +69,88 @@ public class MainWindow extends JFrame {
 
         Timer uiTimer = new Timer(200, e -> refresh());
         uiTimer.start();
+
+        if (game.settingFullscreen) {
+            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            if (gd.isFullScreenSupported()) gd.setFullScreenWindow(this);
+        }
+    }
+
+    private void chooseCompanyName() {
+        String name = JOptionPane.showInputDialog(this, "Wie soll deine Logistik-Firma heißen?",
+                "Firmenname", JOptionPane.QUESTION_MESSAGE);
+        if (name != null && !name.trim().isEmpty()) game.companyName = name.trim();
+        setTitle(game.companyName + " - Outback Logistics Tycoon");
+    }
+
+    private void installShortcuts() {
+        JRootPane rp = getRootPane();
+        rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(' '), "pause");
+        rp.getActionMap().put("pause", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                game.speed = game.speed == 0 ? 1 : 0;
+            }
+        });
+        for (int i = 1; i <= 8; i++) {
+            final int idx = i - 1;
+            rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke((char) ('0' + i)), "tab" + i);
+            rp.getActionMap().put("tab" + i, new AbstractAction() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    if (idx < tabs.getTabCount()) tabs.setSelectedIndex(idx);
+                }
+            });
+        }
+        rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('+'), "faster");
+        rp.getActionMap().put("faster", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                game.speed = Math.min(4, game.speed + 1);
+            }
+        });
+        rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('-'), "slower");
+        rp.getActionMap().put("slower", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                game.speed = Math.max(0, game.speed - 1);
+            }
+        });
+        rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke('m'), "music");
+        rp.getActionMap().put("music", new AbstractAction() {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                music.toggle();
+            }
+        });
+    }
+
+    public void openSettings() {
+        JPanel p = new JPanel(new GridLayout(0, 1));
+        JCheckBox fs = new JCheckBox("Vollbild", game.settingFullscreen);
+        JCheckBox mus = new JCheckBox("Musik", music.isEnabled());
+        JCheckBox sfx = new JCheckBox("Soundeffekte", com.outback.tycoon.audio.Sfx.isEnabled());
+        JTextField name = new JTextField(game.companyName, 16);
+        p.add(new JLabel("Einstellungen (Tasten: 1-8 Tabs, Leer = Pause, +/- Tempo, M Musik)"));
+        p.add(fs);
+        p.add(mus);
+        p.add(sfx);
+        p.add(new JLabel("Firmenname:"));
+        p.add(name);
+        int r = JOptionPane.showConfirmDialog(this, p, "Einstellungen", JOptionPane.OK_CANCEL_OPTION);
+        if (r == JOptionPane.OK_OPTION) {
+            game.settingFullscreen = fs.isSelected();
+            if (fs.isSelected()) {
+                GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+                if (gd.isFullScreenSupported()) gd.setFullScreenWindow(this);
+            } else {
+                GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(null);
+                setSize(1280, 800);
+                setLocationRelativeTo(null);
+            }
+            if (mus.isSelected() != music.isEnabled()) music.toggle();
+            if (sfx.isSelected() != com.outback.tycoon.audio.Sfx.isEnabled())
+                com.outback.tycoon.audio.Sfx.setEnabled(sfx.isSelected());
+            if (!name.getText().trim().isEmpty()) {
+                game.companyName = name.getText().trim();
+                setTitle(game.companyName + " - Outback Logistics Tycoon");
+            }
+        }
     }
 
     public void openMeso() {
@@ -98,6 +187,7 @@ public class MainWindow extends JFrame {
         hud.refresh();
         dashboard.refresh();
         charts.repaint();
+        supplyChain.repaint();
         macro.repaint();
         meso.refresh();
         micro.repaint();

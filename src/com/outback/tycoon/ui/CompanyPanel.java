@@ -76,6 +76,34 @@ public class CompanyPanel extends JPanel {
                 : "AWS WebServices noch nicht erforscht (Techbaum, Cloud-Ära)."));
         root.add(Box.createVerticalStrut(10));
 
+        root.add(section("Vertragshändler & Ausschreibungen (Wettbewerb-Events)"));
+        if (game.offers.isEmpty() && game.contracts.isEmpty()) {
+            root.add(label("Aktuell keine Ausschreibungen. Neue Events erscheinen periodisch."));
+        }
+        for (com.outback.tycoon.model.DealerContract o : new java.util.ArrayList<>(game.offers)) {
+            JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            row.add(label("ANGEBOT: " + o.retailer + " | " + o.unitsPerDay + "/Tag (" + o.category.label + ") à "
+                    + String.format("%.2f", o.pricePerUnit) + " AUD | Laufzeit " + o.daysLeft + " Tage"));
+            JButton yes = new JButton("Annehmen");
+            yes.addActionListener(e -> {
+                game.acceptOffer(o);
+                refresh();
+            });
+            JButton no = new JButton("Ablehnen");
+            no.addActionListener(e -> {
+                game.declineOffer(o);
+                refresh();
+            });
+            row.add(yes);
+            row.add(no);
+            root.add(row);
+        }
+        for (com.outback.tycoon.model.DealerContract c : game.contracts) {
+            root.add(label("AKTIV: " + c.retailer + " | " + c.unitsPerDay + "/Tag (" + c.category.label + ") | noch " + c.daysLeft + " Tage | Strafe bei Fehlmenge: "
+                    + String.format("%.0f", c.penaltyPerMissedUnit) + " AUD/Einheit"));
+        }
+        root.add(Box.createVerticalStrut(10));
+
         root.add(section("Marken-Inkubator (Private Labeling)"));
         JPanel brandRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JTextField nameField = new JTextField("Outback Gear", 14);

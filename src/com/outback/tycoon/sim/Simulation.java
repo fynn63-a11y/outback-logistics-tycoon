@@ -77,8 +77,69 @@ public class Simulation implements java.io.Serializable {
             revenue += web;
         }
 
+        double b2b = 0;
         for (Site s : g.sites) {
-            costs += s.type.baseCost * 0.002 * s.level;
+            if (s.isOperational() && s.type != SiteType.DATA_CENTER) b2b += s.freePallets() * 1.5;
+        }
+        if (!g.sites.isEmpty()) b2b += 500;
+        g.lastB2B = b2b;
+        revenue += b2b;
+
+        for (DealerContract ct : new java.util.ArrayList<>(g.contracts)) {
+            int stock = 0;
+            for (Site s : g.sites)
+                for (java.util.Map.Entry<String, Integer> e : s.stock.entrySet()) {
+                    SKU sk = g.skuById(e.getKey());
+                    if (sk != null && sk.category == ct.category) stock += e.getValue();
+                }
+            double rate = Math.min(1.0, stock / (double) Math.max(1, ct.unitsPerDay * 7));
+            double sold = ct.unitsPerDay * rate * (g.isPrimeDay() ? 2.0 : 1.0) * g.seasonality();
+            revenue += sold * ct.pricePerUnit;
+            if (rate < 0.8) {
+                double penalty = (0.8 - rate) * ct.unitsPerDay * ct.penaltyPerMissedUnit;
+                costs += penalty;
+            }
+            ct.daysLeft--;
+            if (ct.daysLeft <= 0) {
+                g.contracts.remove(ct);
+                g.alert("Vertrag mit " + ct.retailer + " ausgelaufen.");
+            }
+        }
+
+        g.fxCny *= 1.0 + (rnd.nextDouble() - 0.5) * 0.02;
+        g.fxUsd *= 1.0 + (rnd.nextDouble() - 0.5) * 0.02;
+        g.fxCny = Math.max(0.15, Math.min(0.30, g.fxCny));
+        g.fxUsd = Math.max(0.50, Math.min(0.85, g.fxUsd));
+
+        g.quarterRevenue += revenue;
+        g.quarterCosts += costs;
+        g.quarterDay++;
+        if (g.quarterDay >= 90) {
+            double profit = g.quarterRevenue - g.quarterCosts;
+            double tax = Math.max(0, profit) * 0.30;
+            costs += tax;
+            g.cash -= tax;
+            double eps = profit / Game.SHARES;
+            g.alert(String.format("QUARTALSBERICHT: Umsatz %,.0f AUD | Kosten %,.0f AUD | Gewinn %,.0f AUD | Steuer (30%%) %,.0f AUD | EPS %.2f AUD",
+                    g.quarterRevenue, g.quarterCosts, profit, tax, eps));
+            if (profit < 0) g.reputation = Math.max(0, g.reputation - 3);
+            g.quarterRevenue = 0;
+            g.quarterCosts = 0;
+            g.quarterDay = 0;
+        }
+
+        for (Site s : g.sites) {
+            if (s.buildDaysLeft > 0) {
+                s.buildDaysLeft--;
+                if (s.buildDaysLeft == 0) g.alert(s.describe() + " fertiggestellt und betriebsbereit!");
+            }
+            if (s.blockedDays > 0) s.blockedDays--;
+        }
+
+        for (Site s : g.sites) {
+            double rent = s.type.baseCost * 0.002 * s.level;
+            if (g.cityByName(s.city).region.equals("Nordamerika")) rent *= g.fxUsd / 0.65;
+            costs += rent;
             if (s.type == SiteType.DATA_CENTER) costs += 200;
             boolean cold = false;
             boolean haz = false;
@@ -141,6 +202,9 @@ public class Simulation implements java.io.Serializable {
         updateRivals(g);
         randomEvents(g);
         disasters(g);
+        siteCrises(g);
+        tenderEvents(g);
+        tutorialCheck(g);
         java.util.Iterator<java.util.Map.Entry<String, Integer>> bit = g.blockedCities.entrySet().iterator();
         while (bit.hasNext()) {
             java.util.Map.Entry<String, Integer> e = bit.next();
@@ -157,6 +221,7 @@ public class Simulation implements java.io.Serializable {
     }
 
     public double demand(Game g, City c, SKU sku) {
+        if (!sku.availableIn(g.month())) return 0;
         double base = DEMAND_PER_MILLION[sku.category.ordinal()] * c.popMillions();
         double primeBoost = 1.0 + c.primeQuote * 0.5;
         double season = g.seasonality();
@@ -222,6 +287,8 @@ public class Simulation implements java.io.Serializable {
         double blended = g.isPrimeDay() ? 0.7 * normal + 0.3 * express : normal;
         double truckDiscount = Math.min(0.30, 0.05 * g.trucks.getOrDefault(c.name, 0));
         blended *= (1.0 - truckDiscount);
+        blended *= 1.0 + 0.2 * sku.category.spaceFactor;
+        if (sku.category.hazardous) blended += 0.5;
         if (g.ownLastMile) blended *= 1.25;
         if (g.researched.contains(Tech.OWN_FLEET)) blended *= 0.6;
         return blended;
@@ -309,6 +376,49 @@ public class Simulation implements java.io.Serializable {
             if (m < 0.15 && sku.price < sku.baseCost * 1.6) sku.price *= 1.02;
             else if (m > 0.45 && sku.price > sku.baseCost * 1.15) sku.price *= 0.995;
             sku.price = Math.round(sku.price * 100.0) / 100.0;
+        }
+    }
+
+    private void siteCrises(Game g) {
+        if (rnd.nextDouble() > 0.008) return;
+        List<Site> candidates = new java.util.ArrayList<>();
+        for (Site s : g.sites) if (s.isOperational() && s.machineScore() > 0) candidates.add(s);
+        if (candidates.isEmpty()) return;
+        Site s = candidates.get(rnd.nextInt(candidates.size()));
+        s.blockedDays = 2 + rnd.nextInt(4);
+        String type = rnd.nextBoolean() ? "LAGERBRAND" : (rnd.nextBoolean() ? "DIEBSTAHL" : "IT-AUSFALL");
+        s.blockedReason = type;
+        g.alert("STANDORT-KRISE: " + type + " bei " + s.describe() + "! " + s.blockedDays + " Tage außer Betrieb.");
+        if (g.insured && !g.sandboxMode) {
+            g.cash += 30_000;
+            g.alert("Versicherung zahlt 30.000 AUD fuer den Schaden bei " + s.city + ".");
+        }
+    }
+
+    private void tenderEvents(Game g) {
+        if (rnd.nextDouble() < 0.04) {
+            String[] retailers = {"GreenMart", "FreshWay", "VoltCity", "MotorHub", "HomeStyle", "SportZone"};
+            Category[] cats = Category.values();
+            Category cat = cats[rnd.nextInt(cats.length)];
+            g.offerContract(new DealerContract(retailers[rnd.nextInt(retailers.length)], cat,
+                    50 + rnd.nextInt(200), 2 + rnd.nextDouble() * 20));
+        }
+    }
+
+    private void tutorialCheck(Game g) {
+        if (!g.tutorialOn || g.tutorialStep > 4) return;
+        boolean done = false;
+        switch (g.tutorialStep) {
+            case 0: done = !g.sites.isEmpty(); break;
+            case 1: done = g.sites.stream().anyMatch(s -> s.machineScore() >= 10); break;
+            case 2: done = !g.shipments.isEmpty() || g.autopilotSourcing; break;
+            case 3: done = !g.researched.isEmpty(); break;
+            case 4: done = g.lastDailyRevenue >= 100_000; break;
+        }
+        if (done) {
+            g.tutorialStep++;
+            if (g.tutorialStep > 4) g.alert("TUTORIAL abgeschlossen! Viel Erfolg mit " + g.companyName + ".");
+            else g.alert("Tutorial-Schritt " + g.tutorialStep + " erledigt!");
         }
     }
 

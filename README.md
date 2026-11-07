@@ -135,3 +135,16 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
 - **Statistik-Tab:** Verlaufsgraphen für Kasse, Tagesumsatz und Konkurrenz-Marktanteil.
 - **Speichern/Laden:** komplettes Spiel via Java-Serialisierung (Buttons im HUD).
 - **Sound:** Chiptune-Musik + Soundeffekte (Alert, Kasse bei IPO/Übernahme, Crash bei Bankrott).
+- **Vertragshändler & Wettbewerb:** periodische Ausschreibungen (fiktive Retailer wie GreenMart,
+  VoltCity) — Annahme im Tab „Firma & Finanzen"; bei Fehlmengen Strafen.
+- **Standort-Krisen:** Lagerbrand, Diebstahl, IT-Ausfall sperren Standorte für Tage (Versicherung zahlt).
+- **Lieferketten-Tab:** Flussdiagramm China → Seehäfen → Hubs → Kunden mit Live-Zahlen.
+- **Wirtschaft:** schwankende Wechselkurse (CNY/USD) beeinflussen Importkosten und NA-Mieten;
+  Quartalsbericht alle 90 Tage mit 30% Körperschaftsteuer, EPS; Bilanz (Aktiva/Passiva) im Dashboard.
+- **Saisonales Sortiment:** z. B. Adventskalender (Nov–Dez), Sonnenbrille/Sonnencreme (Dez–Feb, australischer Sommer).
+- **B2B-Lagerhotel:** freie Palettenplatz-Kapazität bringt passive Einnahmen.
+- **Bauzeiten:** Jeder Standort hat eine variable Bauzeit (Lager 10d … Container-Terminal 30d).
+- **Tutorial-Modus:** 5 geführte Schritte mit Hinweisen im HUD.
+- **Bedienung:** Start im **Vollbild** (Einstellungen änderbar), eigener **Firmenname** (Dialog beim Start),
+  **Tastenkürzel**: 1–8 Tabs, Leer = Pause, +/- Tempo, M = Musik.
+- **Warenabhängige Fracht:** Sperrgut/Bulky und Gefahrgut kosten deutlich mehr als ein T-Shirt.

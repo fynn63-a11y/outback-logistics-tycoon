@@ -46,6 +46,12 @@ public class DashboardPanel extends JPanel {
                 game.shipments.size(), game.blockedCities.size(), game.isPrimeDay() ? "AKTIV x3.5" : "in " + game.primeDayIn + " Tagen")));
         root.add(row(String.format("Konkurrenten: %d | deren Marktanteil gesamt: %d%%",
                 game.rivals.size(), (int) (game.totalRivalShare() * 100))));
+        root.add(row(String.format("Wechselkurse: 1 CNY = %.3f AUD | 1 USD = %.3f AUD | B2B-Lagerhotel gestern: %,.0f AUD",
+                game.fxCny, game.fxUsd, game.lastB2B)));
+        double assets = game.cash;
+        for (Site s : game.sites) assets += s.type.baseCost * s.level;
+        root.add(row(String.format("Bilanz: Aktiva %,.0f AUD (Kasse + Standorte) | Passiva %,.0f AUD (Kredite) | Eigenkapital %,.0f AUD | næchster Quartalsbericht in %d Tagen",
+                assets, game.loanTaken, assets - game.loanTaken, 90 - game.quarterDay)));
         root.add(row(String.format("Forschungspunkte: %.0f | Entwickler: %d | Moral: %d/100 | Streik: %s",
                 game.researchPoints, game.developers, (int) game.morale, game.strikeDaysLeft > 0 ? game.strikeDaysLeft + " Tage" : "nein")));
 
