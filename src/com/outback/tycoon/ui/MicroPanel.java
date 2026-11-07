@@ -65,17 +65,31 @@ public class MicroPanel extends JPanel {
                 int gx = cell[0];
                 int gy = cell[1];
                 if (eraseMode) {
-                    if (s.grid[gx][gy] != null) s.grid[gx][gy] = null;
+                    if (s.grid[gx][gy] != null) {
+                        s.grid[gx][gy] = null;
+                        s.upgrades[gx][gy] = 0;
+                    }
                 } else {
                     if (selectedMachine.requiredTech != null && !game.researched.contains(selectedMachine.requiredTech)) {
                         game.alert(selectedMachine.label + " erfordert Tech: " + selectedMachine.requiredTech.label + ".");
                         return;
                     }
-                    if (!game.charge(selectedMachine.cost)) {
-                        game.alert("Nicht genug Kapital fuer " + selectedMachine.label + ".");
-                        return;
+                    if (s.grid[gx][gy] == selectedMachine) {
+                        double upCost = selectedMachine.cost * 0.5 * (s.upgrades[gx][gy] + 1);
+                        if (!game.charge(upCost)) {
+                            game.alert("Modul-Upgrade kostet " + String.format("%,.0f", upCost) + " AUD.");
+                            return;
+                        }
+                        if (s.upgrades[gx][gy] < 4) s.upgrades[gx][gy]++;
+                        game.alert("Modul '" + selectedMachine.label + "' auf Stufe +" + s.upgrades[gx][gy] + " geupgradet (+50% Score/Stufe, mehr Durchsatz).");
+                    } else {
+                        if (!game.charge(selectedMachine.cost)) {
+                            game.alert("Nicht genug Kapital fuer " + selectedMachine.label + ".");
+                            return;
+                        }
+                        s.grid[gx][gy] = selectedMachine;
+                        s.upgrades[gx][gy] = 0;
                     }
-                    s.grid[gx][gy] = selectedMachine;
                 }
                 refreshStatus();
                 repaint();
@@ -202,7 +216,7 @@ public class MicroPanel extends JPanel {
                     g.drawPolygon(new int[]{cx, cx + tw / 2, cx, cx - tw / 2}, new int[]{cy - th / 2, cy, cy + th / 2, cy}, 4);
 
                     MachineType m = s.grid[x][y];
-                    if (m != null) drawMachine(g, m, cx, cy, tw, th, t);
+                    if (m != null) drawMachine(g, m, cx, cy, tw, th, t, s.upgrades[x][y]);
                     if (m == MachineType.CONVEYOR || m == MachineType.SPAWNER) {
                         double phase = ((t / 120.0) + x * 3 + y * 5) % 1.0;
                         int px = cx + (int) ((phase - 0.5) * tw * 0.6);
@@ -279,8 +293,8 @@ public class MicroPanel extends JPanel {
             }
         }
 
-        private void drawMachine(Graphics2D g, MachineType m, int cx, int cy, int tw, int th, long t) {
-            int lift = th;
+        private void drawMachine(Graphics2D g, MachineType m, int cx, int cy, int tw, int th, long t, int up) {
+            int lift = th + up * th / 2;
             int w = tw * 2 / 3;
             int h = th * 2 / 3;
             Color c = machineColor(m);
@@ -356,6 +370,66 @@ public class MicroPanel extends JPanel {
                     g.fillPolygon(new int[]{cx + w / 2, cx, cx, cx + w / 2},
                             new int[]{cy - lift, cy - lift + h / 2, cy + h / 2, cy}, 4);
                 }
+            }
+            drawModuleFx(g, m, cx, cy, lift, w, h, t, up);
+            if (up > 0) {
+                g.setColor(new Color(255, 215, 80));
+                g.setFont(g.getFont().deriveFont(Font.BOLD, 10f));
+                g.drawString("+" + up, cx - 6, cy - lift - h / 2 - 4);
+            }
+        }
+
+        private void drawModuleFx(Graphics2D g, MachineType m, int cx, int cy, int lift, int w, int h, long t, int up) {
+            switch (m) {
+                case RFID_TUNNEL: {
+                    double pulse = 0.3 + 0.7 * Math.abs(Math.sin(t / 400.0 + cx));
+                    g.setColor(new Color(200, 140, 255, (int) (pulse * 200)));
+                    g.drawArc(cx - w / 2, cy - lift - h, w, h * 2, 0, 180);
+                    break;
+                }
+                case PARCEL_SORTER:
+                case PEGASUS:
+                case SORT_CENTER: {
+                    double p = (t / 300.0 + cx) % 1.0;
+                    g.setColor(new Color(255, 210, 90));
+                    g.fillOval(cx - w / 2 + (int) (p * w) - 2, cy - lift - 2, 5, 5);
+                    break;
+                }
+                case PALLETIZER: {
+                    int blocks = 1 + (int) ((t / 700.0 + cx) % 3);
+                    g.setColor(new Color(160, 110, 60));
+                    for (int i = 0; i < blocks; i++) g.fillRect(cx - 4, cy - lift - 4 - i * 5, 8, 4);
+                    break;
+                }
+                case DOCK:
+                case LOAD_DOCK: {
+                    double door = 0.5 + 0.5 * Math.sin(t / 900.0 + cx);
+                    g.setColor(new Color(30, 22, 12, (int) (120 + door * 100)));
+                    g.fillRect(cx - w / 4, cy - lift - (int) (h * (0.3 + 0.5 * door)), w / 2, (int) (h * (0.3 + 0.5 * door)));
+                    break;
+                }
+                case DRONE_PAD: {
+                    double blink = 0.3 + 0.7 * Math.abs(Math.sin(t / 500.0 + cx));
+                    g.setColor(new Color(120, 255, 140, (int) (blink * 220)));
+                    g.drawOval(cx - w / 3, cy - lift - h / 3, w * 2 / 3, h * 2 / 3);
+                    g.setColor(Color.WHITE);
+                    g.fillOval(cx - 2 + (int) (Math.sin(t / 300.0) * 4), cy - lift - 2 + (int) (Math.cos(t / 300.0) * 3), 4, 4);
+                    break;
+                }
+                case AGV_BOT: {
+                    double p = ((t / 500.0) + cx) % 1.0;
+                    g.setColor(new Color(255, 150, 40));
+                    g.fillRoundRect(cx - w / 2 + (int) (p * w) - 3, cy - lift - 3, 6, 6, 2, 2);
+                    break;
+                }
+                case ASRS_CRANE: {
+                    double arm = Math.sin(t / 600.0 + cx) * w / 4;
+                    g.setColor(new Color(255, 255, 255));
+                    g.drawLine(cx, cy - lift - h, cx + (int) arm, cy - lift - h);
+                    g.fillRect(cx + (int) arm - 2, cy - lift - h, 4, 6);
+                    break;
+                }
+                default:
             }
         }
 

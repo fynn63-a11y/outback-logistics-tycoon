@@ -21,6 +21,7 @@ public class Site implements java.io.Serializable {
     public ServiceLevel serviceLevel = ServiceLevel.STANDARD;
     public final Map<String, Integer> stock = new HashMap<>();
     public final MachineType[][] grid = new MachineType[GRID][GRID];
+    public final int[][] upgrades = new int[GRID][GRID];
 
     public Site(int id, SiteType type, String city) {
         this.id = id;
@@ -58,7 +59,15 @@ public class Site implements java.io.Serializable {
         int s = 0;
         for (int x = 0; x < GRID; x++)
             for (int y = 0; y < GRID; y++)
-                if (grid[x][y] != null) s += grid[x][y].score;
+                if (grid[x][y] != null) s += grid[x][y].score * (1 + upgrades[x][y] / 2);
+        return s;
+    }
+
+    public int stageScore(MachineType.Stage st) {
+        int s = 0;
+        for (int x = 0; x < GRID; x++)
+            for (int y = 0; y < GRID; y++)
+                if (grid[x][y] != null && grid[x][y].stage == st) s += grid[x][y].score * (1 + upgrades[x][y] / 2);
         return s;
     }
 
@@ -67,14 +76,6 @@ public class Site implements java.io.Serializable {
         double eff = required <= 0 ? 1.0 : Math.min(1.0, machineScore() / (double) required);
         if (g.researched.contains(Tech.SMART_SLOTTING)) eff = Math.min(1.0, eff * 1.25);
         return eff;
-    }
-
-    public int stageScore(MachineType.Stage st) {
-        int s = 0;
-        for (int x = 0; x < GRID; x++)
-            for (int y = 0; y < GRID; y++)
-                if (grid[x][y] != null && grid[x][y].stage == st) s += grid[x][y].score;
-        return s;
     }
 
     private static final MachineType.Stage[] CHAIN = {
