@@ -189,6 +189,18 @@ public class CompanyPanel extends JPanel {
         root.add(mkt);
         root.add(Box.createVerticalStrut(10));
 
+        root.add(section("Waehrungsspekulation (CNY)"));
+        JPanel fx = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        fx.add(label(String.format("Kurs: 1 CNY = %.3f AUD | Bestand: %,.0f CNY (EK %.3f)", game.fxCny, game.cnyHoldings, game.cnyAvgRate)));
+        JButton buyCny = new JButton("100.000 AUD in CNY kaufen");
+        buyCny.addActionListener(e -> { game.buyCny(100_000); refresh(); });
+        JButton sellCny = new JButton("Alle CNY verkaufen");
+        sellCny.addActionListener(e -> { game.sellCny(); refresh(); });
+        fx.add(buyCny);
+        fx.add(sellCny);
+        root.add(fx);
+        root.add(Box.createVerticalStrut(10));
+
         root.add(section("Blitzangebote & Tochterfirmen"));
         JPanel promoRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton flashAll = new JButton("Blitzangebot ALLE Kategorien (20.000 AUD, 3 Tage: -20% Preis, x1.6 Nachfrage)");

@@ -26,7 +26,12 @@ public class Game implements Serializable {
     public double cash = 500_000;
     public double debtLimit = DEBT_LIMIT;
     public double loanTaken = 0;
-    public boolean insured = false;
+    public int insuranceTier = 0;
+    public int tradeDealDays = 0;
+    public int embargoDays = 0;
+    public double cnyHoldings = 0;
+    public double cnyAvgRate = 0;
+    public int pressDays = 0;
     public final Map<String, Integer> blockedCities = new HashMap<>();
     public double reputation = 50;
     public boolean gameOver = false;
@@ -422,6 +427,24 @@ public class Game implements Serializable {
         return powerUsed() > powerProduced();
     }
 
+    public void buyCny(double aud) {
+        if (!charge(aud)) return;
+        double cny = aud / fxCny;
+        cnyAvgRate = (cnyAvgRate * cnyHoldings + fxCny * cny) / (cnyHoldings + cny);
+        cnyHoldings += cny;
+        alert(String.format("FX-SPEC: %.0f CNY gekauft zu %.3f AUD/CNY (Bestand %.0f CNY).", cny, fxCny, cnyHoldings));
+    }
+
+    public void sellCny() {
+        if (cnyHoldings <= 0) return;
+        double proceeds = cnyHoldings * fxCny;
+        double pnl = proceeds - cnyHoldings * cnyAvgRate;
+        cash += proceeds;
+        alert(String.format("FX-SPEC: %.0f CNY verkauft für %,.0f AUD (P/L %+,.0f AUD).", cnyHoldings, proceeds, pnl));
+        cnyHoldings = 0;
+        cnyAvgRate = 0;
+    }
+
     public void buyMarketing(String channel) {
         int lvl = marketing.getOrDefault(channel, 0);
         double cost = 50_000.0 * (lvl + 1);
@@ -674,6 +697,8 @@ public class Game implements Serializable {
         if (hasContainerTerminal(destCity)) congestion = Math.max(0, congestion - 2);
         if (blockedCities.containsKey(destCity)) congestion += 3;
         if (congestion > 0) alert("Hafen-Stau (Port Congestion) in " + destCity + ": +" + congestion + " Tage Seefracht.");
+        if (tradeDealDays > 0) cost *= 0.90;
+        if (embargoDays > 0) cost *= 1.25;
         double audCost = cost * (fxCny / 0.21);
         if (!charge(audCost)) return null;
         Shipment sh = new Shipment(nextShipmentId++, "Shenzhen/Shanghai", destCity, goods, audCost, congestion);
@@ -925,7 +950,12 @@ public class Game implements Serializable {
         cash = o.cash;
         debtLimit = o.debtLimit;
         loanTaken = o.loanTaken;
-        insured = o.insured;
+        insuranceTier = o.insuranceTier;
+        tradeDealDays = o.tradeDealDays;
+        embargoDays = o.embargoDays;
+        cnyHoldings = o.cnyHoldings;
+        cnyAvgRate = o.cnyAvgRate;
+        pressDays = o.pressDays;
         blockedCities.clear();
         blockedCities.putAll(o.blockedCities);
         reputation = o.reputation;

@@ -11,7 +11,7 @@ public class HrPanel extends JPanel {
     private final JProgressBar moraleBar = new JProgressBar(0, 100);
     private final JLabel staffLabel = new JLabel();
     private final JCheckBox tempsBox = new JCheckBox("Saisonale Aushilfen im Dezember (Leiharbeiter-Agentur)", true);
-    private final JCheckBox insBox = new JCheckBox("Versicherung gegen Katastrophen (8.000 AUD/Monat, zahlt 50.000 AUD Schadenersatz)", false);
+    private final JComboBox<String> insBox = new JComboBox<>(new String[]{"Versicherung: aus", "Basis (8.000/Monat, 50% Schadenersatz)", "Voll (20.000/Monat, 100%)"});
 
     public HrPanel(Game game) {
         this.game = game;
@@ -19,7 +19,7 @@ public class HrPanel extends JPanel {
         root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
         add(new JScrollPane(root), BorderLayout.CENTER);
         tempsBox.addActionListener(e -> game.tempsDecember = tempsBox.isSelected());
-        insBox.addActionListener(e -> game.insured = insBox.isSelected());
+        insBox.addActionListener(e -> game.insuranceTier = insBox.getSelectedIndex());
     }
 
     public void refresh() {

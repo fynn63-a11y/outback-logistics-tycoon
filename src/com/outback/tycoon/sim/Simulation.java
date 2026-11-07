@@ -198,6 +198,31 @@ public class Simulation implements java.io.Serializable {
         }
 
         for (Site s : g.sites) {
+            boolean haz = false;
+            boolean cold = false;
+            for (String skuId : s.stock.keySet()) {
+                SKU sk = g.skuById(skuId);
+                if (sk != null && s.stock.get(skuId) > 0) {
+                    if (sk.category.hazardous) haz = true;
+                    if (sk.category.coldChain) cold = true;
+                }
+            }
+            if (haz && s.type != SiteType.HAZ_STORAGE && rnd.nextDouble() < 0.02) {
+                g.cash -= 20_000;
+                g.alert("UMWELTVERSTOSS in " + s.city + ": Gefahrgut ohne Lizenzlager - Strafe 20.000 AUD!");
+            }
+            if (cold && s.type != SiteType.COLD_STORAGE && !g.researched.contains(Tech.ST_TEMP) && rnd.nextDouble() < 0.015) {
+                int lost = 0;
+                for (String skuId : new java.util.ArrayList<>(s.stock.keySet())) {
+                    SKU sk = g.skuById(skuId);
+                    if (sk != null && sk.category.coldChain && s.stock.get(skuId) > 0) {
+                        int l = s.stock.get(skuId) / 5;
+                        s.removeStock(skuId, l);
+                        lost += l;
+                    }
+                }
+                g.alert("KUEHLKETTEN-AUSFALL in " + s.city + "! " + lost + " Einheiten verloren.");
+            }
             if (s.isOperational() && s.throughput(g) > 0) {
                 double wearRate = g.researched.contains(Tech.ST_PREDICT) ? 0.001 : 0.002;
                 s.wear = Math.min(1.0, s.wear + wearRate);
@@ -238,7 +263,7 @@ public class Simulation implements java.io.Serializable {
             costs += c.fixedFeePerMonth / 30.0;
             g.addCost("Frachtpartner (Fixkosten)", c.fixedFeePerMonth / 30.0);
         }
-        if (g.insured && !g.sandboxMode) { costs += 8_000.0 / 30.0; g.addCost("Versicherung", 8_000.0 / 30.0); }
+        if (g.insuranceTier > 0 && !g.sandboxMode) { double prem = (g.insuranceTier == 2 ? 20_000.0 : 8_000.0) / 30.0; costs += prem; g.addCost("Versicherung", prem); }
         if (g.cash < 0 && !g.sandboxMode) { double z = -g.cash * 0.12 / 365.0; costs += z; g.addCost("Zinsen (12% p.a.)", z); }
 
         g.cash += revenue - costs;
@@ -288,6 +313,10 @@ public class Simulation implements java.io.Serializable {
         g.morale += (moraleTarget - g.morale) * 0.01;
         sellRefurbished(g, refurbDemand);
         updateWeather(g);
+        diplomacy(g);
+        if (g.tradeDealDays > 0) g.tradeDealDays--;
+        if (g.embargoDays > 0) g.embargoDays--;
+        if (g.pressDays > 0) g.pressDays--;
         updateRivals(g);
         randomEvents(g);
         disasters(g);
@@ -343,7 +372,7 @@ public class Simulation implements java.io.Serializable {
         double eventFactor = worldEventFactor(g, c, sku) * weatherFactor(g, sku);
         return base * primeBoost * season * primeDay * repFactor * brandFactor * rivalFactor
                 * sku.category.volumeFactor * eraFactor * webFactor * lastMileFactor * vanFactor * serviceFactor * ratingFactor * flashFactor * catRivalFactor * freshFactor
-                * (1.0 + g.techBonus(Tech.Bonus.DEMAND)) * eventFactor * marketingFactor(g, c);
+                * (1.0 + g.techBonus(Tech.Bonus.DEMAND)) * eventFactor * marketingFactor(g, c) * (g.pressDays > 0 ? 0.97 : 1.0);
     }
 
     private void sellRefurbished(Game g, double refurbDemand) {
@@ -564,7 +593,7 @@ public class Simulation implements java.io.Serializable {
         int days = 2 + rnd.nextInt(3);
         g.fleetDown.put(city, days);
         g.alert("FLOTTEN-UNFALL in " + city + "! Fahrzeuge " + days + " Tage ausgefallen (kein LKW-/Transporter-Bonus). Reparatur kostet 5.000 AUD.");
-        if (g.insured && !g.sandboxMode) {
+        if (g.insuranceTier > 0 && !g.sandboxMode) {
             g.alert("Versicherung uebernimmt die Reparatur in " + city + ".");
         } else if (!g.sandboxMode) {
             g.cash -= 5_000;
@@ -599,14 +628,16 @@ public class Simulation implements java.io.Serializable {
         for (Shipment sh : g.shipments)
             if (sh.destCity.equals(port)) sh.daysLeft += 5;
         g.alert("HAFEN-STREIK in " + port + "! Stadt " + days + " Tage gesperrt, alle Seefrachten +5 Tage.");
-        if (g.insured && !g.sandboxMode) {
-            g.cash += 40_000;
+        if (g.insuranceTier > 0 && !g.sandboxMode) {
+            g.cash += 40_000 * (g.insuranceTier == 2 ? 1.0 : 0.5);
             g.alert("Versicherung zahlt 40.000 AUD Betriebsunterbrechung fuer " + port + ".");
         }
     }
 
     private void siteCrises(Game g) {
-        if (rnd.nextDouble() > 0.008) return;
+        int hour = java.time.LocalTime.now().getHour();
+        double nightBoost = (hour >= 21 || hour < 6) ? 1.5 : 1.0;
+        if (rnd.nextDouble() > 0.008 * nightBoost) return;
         List<Site> candidates = new java.util.ArrayList<>();
         for (Site s : g.sites) if (s.isOperational() && s.machineScore() > 0) candidates.add(s);
         if (candidates.isEmpty()) return;
@@ -616,8 +647,8 @@ public class Simulation implements java.io.Serializable {
         String type = rnd.nextBoolean() ? "LAGERBRAND" : (rnd.nextBoolean() ? "DIEBSTAHL" : "IT-AUSFALL");
         s.blockedReason = type;
         g.alert("STANDORT-KRISE: " + type + " bei " + s.describe() + "! " + s.blockedDays + " Tage außer Betrieb.");
-        if (g.insured && !g.sandboxMode) {
-            g.cash += 30_000;
+        if (g.insuranceTier > 0 && !g.sandboxMode) {
+            g.cash += 30_000 * (g.insuranceTier == 2 ? 1.0 : 0.5);
             g.alert("Versicherung zahlt 30.000 AUD fuer den Schaden bei " + s.city + ".");
         }
     }
@@ -662,6 +693,20 @@ public class Simulation implements java.io.Serializable {
             boolean online = sku.category == Category.ELECTRONICS || sku.category == Category.FMCG || sku.category == Category.COLD_CHAIN;
             f *= online ? 1.5 : 0.7;
             flagOnce(g, "covid2020", "WELT-EVENT: Pandemie 2020! Online-Kategorien x1.5, Rest x0.7 (Mrz-Jun).");
+        }
+        java.util.Map<String, int[]> holidays = new java.util.HashMap<>();
+        holidays.put("Sydney", new int[]{3});
+        holidays.put("Melbourne", new int[]{11});
+        holidays.put("Adelaide", new int[]{3});
+        holidays.put("Perth", new int[]{10});
+        holidays.put("Brisbane", new int[]{8});
+        if (holidays.containsKey(c.name)) {
+            for (int hm : holidays.get(c.name)) {
+                if (m == hm) {
+                    f *= 1.8;
+                    flagOnce(g, "feiertag" + c.name + y, "LOKALER FEIERTAG in " + c.name + "! Nachfrage x1.8 diesen Monat.");
+                }
+            }
         }
         if (m == 11 && d >= 22 && d <= 30) {
             f *= 2.5;
@@ -754,6 +799,28 @@ public class Simulation implements java.io.Serializable {
         return 1.0 + Math.min(0.5, boost * (0.5 + c.popMillions() * 0.1));
     }
 
+    private void diplomacy(Game g) {
+        if (rnd.nextDouble() < 0.008) {
+            if (rnd.nextBoolean()) {
+                g.tradeDealDays = 60;
+                g.alert("DIPLOMATIE: Handelsabkommen mit China! -10% Importkosten fuer 60 Tage.");
+            } else {
+                g.embargoDays = 60;
+                g.alert("DIPLOMATIE: EMBARGO! +25% Importkosten fuer 60 Tage.");
+            }
+        }
+        if (g.rivals.isEmpty() && g.dayIndex > 30 && rnd.nextDouble() < 0.01) {
+            g.cash -= 5_000_000;
+            g.reputation = Math.max(0, g.reputation - 15);
+            g.alert("KARTELLVERFAHREN! Monopol -> 5 Mio. AUD Strafe, Reputation -15.");
+        }
+        if (rnd.nextDouble() < 0.01) {
+            g.pressDays = 3;
+            g.reputation = Math.max(0, g.reputation - 3);
+            g.alert("NEGATIVE PRESSE: Skandal bei " + g.companyName + "! Nachfrage -3% fuer 3 Tage.");
+        }
+    }
+
     private void disasters(Game g) {
         if (rnd.nextDouble() > 0.012 * g.difficulty.disasterMult) return;
         List<City> open = new java.util.ArrayList<>();
@@ -765,8 +832,8 @@ public class Simulation implements java.io.Serializable {
         String type = bushfire ? "Buschfeuer" : (rnd.nextBoolean() ? "Zyklon" : "Hochwasser");
         g.blockedCities.put(c.name, days);
         g.alert("KATASTROPHE: " + type + " in " + c.name + "! Stadt " + days + " Tage gesperrt.");
-        if (g.insured && !g.sandboxMode) {
-            g.cash += 50_000;
+        if (g.insuranceTier > 0 && !g.sandboxMode) {
+            g.cash += 50_000 * (g.insuranceTier == 2 ? 1.0 : 0.5);
             g.alert("Versicherung zahlt 50.000 AUD Schadenersatz fuer " + c.name + ".");
         }
     }

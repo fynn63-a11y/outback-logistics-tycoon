@@ -209,6 +209,8 @@ public class Site implements java.io.Serializable {
         t *= flowPenalty();
         t *= 1.0 - 0.3 * wear;
         if (g.powerShortage()) t *= 0.5;
+        int hour = java.time.LocalTime.now().getHour();
+        if (hour >= 21 || hour < 6) t *= 1.2;
         if (g.researched.contains(Tech.KIVA_ROBOTS)) t *= 1.5;
         if (g.researched.contains(Tech.HIGH_SPEED_CONVEYORS)) t *= 1.3;
         if (g.tempsDecember && g.month() == 12 && g.strikeDaysLeft <= 0) t *= 1.5;
