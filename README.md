@@ -181,3 +181,14 @@ prozedurale Texturen nach dem Standard-Verfahren (Perlin-/Value-Noise + fBm):
   x Saison x Epoche x Reputation x Konkurrenz x Service-Level x Webshop/Last-Mile. Angebot = Durchsatz
   der zugewiesenen Standorte (Stufe x Sterne x Grid-Effizienz x Prozesskette x Tech x Skills x Flotte).
   Ungedeckte Nachfrage = verlorene Verkaeufe; Frachtkosten = Gewichtsklasse x Distanz x Service x Rabatte.
+
+## Neueste Features (Stand 2026-11)
+
+- **Variable Hallengrößen:** 15×15 bis 40×40 wählbar, Baukosten skalieren mit der Fläche; Grid rendert die gewählte Größe
+- **Karte:** Satelliten-Terrain (Höhenrelief), optional **3D-Schrägansicht** („3D-Ansicht"-Button), Standorte als Gebäude-Icons (eigene grün, Rivals in ihrer Farbe)
+- **Lager-Innenansicht (2.5D):** 10-Stufen-Prozesskette (Anlieferung→Entladen→Buchen→Wareneingang→Einlagern→Kommissionieren→Verpacken→Sortieren→Verladen→Versand) mit **Engpass-Modell** (schwächste Stage begrenzt Durchsatz, live angezeigt)
+- **Module:** 25+ Maschinen mit eigenen Animationen (Förderband-Rollen, Palettierer, Tore, Drohnen-Pad, AGV, ASRS-Kran …), **in-place Upgrades** (+1..+4, teurer, mehr Durchsatz), Förderband-Ketten & Linien-Synergien, Flussrichtungs-Malus
+- **Blaupausen** speichern & auf andere Standorte anwenden; **Bau-Roboter-Tech** (−20%); **Verschleiß/Wartung**; **E-Stop-Zonen**
+- **Techbaum als HoI4-artiger visueller Baum** (Epochen-Spalten, Kategorie-Farben, Tooltips, Klick = erforschen), ~95 Technologien
+- **ESC-Menü** (Speichern/Laden/Einstellungen/Beenden), Vollbild-Start, eigener Firmenname + Web-Service-Name (lazy beim ersten Rechenzentrum)
+- Sabotage/Preiskrieg/Insolvenz-Übernahmen bei Rivals, Bahnanschlüsse, Luftfracht-Vertrag, Kühllager/Gefahrgut-Lager, Abteilungsleiter, Wohnheim, Welt-Events (Olympia 2000, Pandemie 2020, Black Friday), 4 Epochen-Missionen
