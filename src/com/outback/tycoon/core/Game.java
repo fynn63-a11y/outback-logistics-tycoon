@@ -164,18 +164,8 @@ public class Game implements Serializable {
         cities.add(new City("Brisbane", "Queensland", "Australien", 2_600_000, 0.22, 0.925, 0.653));
         cities.add(new City("Perth", "Western Australia", "Australien", 2_100_000, 0.18, 0.822, 0.678));
         cities.add(new City("Adelaide", "South Australia", "Australien", 1_400_000, 0.20, 0.885, 0.694));
-        cities.add(new City("London", "England", "Europa", 9_000_000, 0.40, 0.500, 0.214));
-        cities.add(new City("Berlin", "Deutschland", "Europa", 6_000_000, 0.30, 0.537, 0.208));
-        cities.add(new City("Rotterdam", "Niederlande", "Europa", 660_000, 0.45, 0.513, 0.212));
-        cities.add(new City("Los Angeles", "Kalifornien", "Nordamerika", 4_000_000, 0.38, 0.172, 0.311));
-        cities.add(new City("New York", "New York", "Nordamerika", 8_500_000, 0.42, 0.294, 0.274));
-        cities.add(new City("Toronto", "Ontario", "Nordamerika", 3_000_000, 0.33, 0.279, 0.257));
-        cities.add(new City("Vancouver", "British Columbia", "Nordamerika", 700_000, 0.35, 0.158, 0.226));
 
         addDataCities("Australien", CityData.AUSTRALIEN, 0.875, 0.700, 0.100, 0.090);
-        addDataCities("Europa", CityData.EUROPA, 0.525, 0.215, 0.055, 0.055);
-        addDataCities("Nordamerika", CityData.USA, 0.220, 0.295, 0.130, 0.065);
-        addDataCities("Nordamerika", CityData.KANADA, 0.260, 0.245, 0.080, 0.030);
         generateMinorCities();
 
         carriers.add(new Carrier("Outback Freight Co.", 4_000));
@@ -253,7 +243,7 @@ public class Game implements Serializable {
         RivalCompany apex = new RivalCompany("Apex Logistics", 0.12, new java.awt.Color(220, 90, 90));
         apex.sites = 2;
         apex.siteCities.add("Melbourne");
-        apex.siteCities.add("London");
+        apex.siteCities.add("Perth");
         apex.aggression = 1.6;
         apex.categories.add(Category.ELECTRONICS);
         RivalCompany southern = new RivalCompany("Southern Star Freight", 0.09, new java.awt.Color(230, 160, 60));
@@ -263,7 +253,7 @@ public class Game implements Serializable {
         southern.categories.add(Category.FMCG);
         RivalCompany pacific = new RivalCompany("Pacific Rim Fulfilment", 0.07, new java.awt.Color(120, 140, 230));
         pacific.sites = 1;
-        pacific.siteCities.add("New York");
+        pacific.siteCities.add("Brisbane");
         pacific.aggression = 1.2;
         pacific.categories.add(Category.BULKY);
         rivals.add(apex);
@@ -284,11 +274,8 @@ public class Game implements Serializable {
                 {"dorf", "stadt", "burg", "berg", "feld", "heim", "hausen", "tal"},
                 {"ville", "ton", "ville", "field", " Harbour", "ville", "ton", " City"}};
         double[][] regions = {
-                {0.875, 0.700, 0.100, 0.090, 320, 0},
-                {0.525, 0.215, 0.055, 0.055, 420, 2},
-                {0.220, 0.295, 0.130, 0.065, 520, 1},
-                {0.260, 0.245, 0.080, 0.030, 260, 3}};
-        String[] regionNames = {"Australien", "Nordamerika", "Europa", "Nordamerika"};
+                {0.875, 0.700, 0.100, 0.090, 900, 0}};
+        String[] regionNames = {"Australien"};
         for (double[] reg : regions) {
             int pIdx = (int) reg[5];
             for (int i = 0; i < (int) reg[4]; i++) {
@@ -485,14 +472,10 @@ public class Game implements Serializable {
     }
 
     public boolean isUnlocked(City c) {
-        if (c.region.equals("Australien")) return true;
-        if (c.region.equals("Europa")) return ipoDone;
-        return marketCapEstimate() >= 200_000_000;
+        return true;
     }
 
     public String unlockHint(City c) {
-        if (c.region.equals("Europa")) return "Europa schaltest du mit dem IPO an der ASX frei.";
-        if (c.region.equals("Nordamerika")) return "Nordamerika (USA/Kanada) ab 200 Mio. AUD Marktkapitalisierung.";
         return "";
     }
 

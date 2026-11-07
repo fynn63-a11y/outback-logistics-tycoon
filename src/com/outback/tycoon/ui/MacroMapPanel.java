@@ -19,17 +19,6 @@ public class MacroMapPanel extends JPanel {
     static final int VW = 2000;
     static final int VH = 1000;
 
-    private static final double[][] NORDAMERIKA = {
-            {-168, 66}, {-140, 70}, {-125, 72}, {-110, 73}, {-95, 72}, {-85, 70}, {-80, 73},
-            {-70, 62}, {-60, 52}, {-65, 45}, {-70, 42}, {-75, 35}, {-80, 30}, {-81, 25},
-            {-90, 29}, {-97, 26}, {-105, 22}, {-110, 23}, {-115, 30}, {-125, 40}, {-130, 55},
-            {-150, 60}, {-165, 60}
-    };
-    private static final double[][] EUROPA = {
-            {-10, 36}, {-2, 37}, {5, 38}, {12, 38}, {20, 35}, {28, 36}, {30, 42}, {40, 45},
-            {48, 46}, {40, 52}, {30, 55}, {38, 60}, {30, 70}, {18, 70}, {12, 65}, {5, 62},
-            {0, 58}, {-5, 58}, {-10, 52}, {-5, 48}, {-2, 44}
-    };
     private static final double[][] AUSTRALIEN = {
             {113.5, -22.0}, {115.0, -20.5}, {122.0, -17.5}, {129.5, -14.5}, {130.5, -12.3},
             {136.0, -12.0}, {142.5, -10.7}, {142.7, -16.0}, {146.0, -19.0}, {149.5, -21.5},
@@ -39,8 +28,7 @@ public class MacroMapPanel extends JPanel {
     };
     private static final double SHENZHEN_X = (114.0 + 180) / 360.0;
     private static final double SHENZHEN_Y = (90 - 22.5) / 180.0;
-    private static final String[] CAPITALS = {"Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide",
-            "London", "Berlin", "Rotterdam", "Los Angeles", "New York", "Toronto", "Vancouver"};
+    private static final String[] CAPITALS = {"Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"};
     private static final double[][] REGION_BBOX = {
             {110, -44, 156, -10},
             {-12, 34, 50, 72},
@@ -52,7 +40,7 @@ public class MacroMapPanel extends JPanel {
     private BufferedImage baseCache;
     private int mouseX = -1;
     private int mouseY = -1;
-    private String regionView = "Welt";
+    private String regionView = "Australien";
     private final JComboBox<String> regionBox;
 
     public MacroMapPanel(Game game, MainWindow window) {
@@ -60,7 +48,7 @@ public class MacroMapPanel extends JPanel {
         this.window = window;
         setLayout(new BorderLayout());
         setBackground(new Color(8, 24, 48));
-        regionBox = new JComboBox<>(new String[]{"Welt", "Australien", "Europa", "Nordamerika"});
+        regionBox = new JComboBox<>(new String[]{"Australien"});
         regionBox.addActionListener(e -> {
             regionView = (String) regionBox.getSelectedItem();
             repaint();
@@ -139,20 +127,13 @@ public class MacroMapPanel extends JPanel {
     }
 
     private double viewScale() {
-        if (regionView.equals("Australien")) return (double) getWidth() / (px(156) - px(110));
-        if (regionView.equals("Europa")) return (double) getWidth() / (px(50) - px(-12));
-        if (regionView.equals("Nordamerika")) return (double) getWidth() / (px(-50) - px(-170));
-        return (double) getWidth() / VW;
+        return (double) getWidth() / (px(156) - px(110));
     }
 
     private int[] viewOffset() {
         double s = viewScale();
-        int ox;
         int oy = (int) ((getHeight() - VH * s) / 2);
-        if (regionView.equals("Australien")) ox = (int) ((getWidth() - (px(156) - px(110)) * s) / 2 - px(110) * s);
-        else if (regionView.equals("Europa")) ox = (int) ((getWidth() - (px(50) - px(-12)) * s) / 2 - px(-12) * s);
-        else if (regionView.equals("Nordamerika")) ox = (int) ((getWidth() - (px(-50) - px(-170)) * s) / 2 - px(-170) * s);
-        else ox = 0;
+        int ox = (int) ((getWidth() - (px(156) - px(110)) * s) / 2 - px(110) * s);
         return new int[]{ox, oy};
     }
 
@@ -186,32 +167,19 @@ public class MacroMapPanel extends JPanel {
             }
         }
 
-        Path2D.Double na = continent(NORDAMERIKA);
-        Path2D.Double eu = continent(EUROPA);
         Path2D.Double au = continent(AUSTRALIEN);
-        renderTerrain(g, na, 11);
-        renderTerrain(g, eu, 23);
         renderTerrain(g, au, 37);
-
-        provinces(g, na);
-        provinces(g, eu);
         provinces(g, au);
 
         g.setColor(new Color(200, 225, 255, 70));
         g.setStroke(new BasicStroke(7f));
-        g.draw(na);
-        g.draw(eu);
         g.draw(au);
         g.setColor(new Color(20, 16, 10));
         g.setStroke(new BasicStroke(3f));
-        g.draw(na);
-        g.draw(eu);
         g.draw(au);
 
         g.setColor(new Color(225, 232, 242));
         g.setFont(g.getFont().deriveFont(Font.BOLD, 30f));
-        g.drawString("NORDAMERIKA", px(-128), py(60));
-        g.drawString("EUROPA", px(4), py(58));
         g.drawString("AUSTRALIEN", px(122), py(-24));
         g.dispose();
     }
@@ -436,8 +404,7 @@ public class MacroMapPanel extends JPanel {
             g.fillOval(tx + 6, ty + 7, 6, 6);
         }
 
-        drawPlane(g, game.cityByName("Sydney"), game.cityByName("London"), t, 0.00045);
-        drawPlane(g, game.cityByName("Sydney"), game.cityByName("Los Angeles"), t, 0.00035);
+        drawPlane(g, game.cityByName("Sydney"), game.cityByName("Perth"), t, 0.0006);
         drawPlane(g, game.cityByName("Sydney"),
                 new City("Shenzhen", "China", "Asien", 17_000_000, 0.5, SHENZHEN_X, SHENZHEN_Y), t, 0.00055);
     }
