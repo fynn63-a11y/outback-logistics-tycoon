@@ -17,6 +17,7 @@ public class MicroPanel extends JPanel {
     private final JLabel status = new JLabel();
     private MachineType selectedMachine = MachineType.CONVEYOR;
     private boolean eraseMode = false;
+    private int[] hover = null;
     private Timer animTimer;
 
     public MicroPanel(Game game) {
@@ -44,6 +45,13 @@ public class MicroPanel extends JPanel {
         bottom.add(status);
         add(bottom, BorderLayout.SOUTH);
 
+        canvas.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                hover = canvas.cellAt(e.getX(), e.getY());
+                canvas.repaint();
+            }
+        });
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -202,6 +210,16 @@ public class MicroPanel extends JPanel {
                         g.fillRect(px - 2, py - 2, 5, 5);
                     }
                 }
+            }
+            if (hover != null && !eraseMode && s.grid[hover[0]][hover[1]] == null) {
+                int cx = originX() + (hover[0] - hover[1]) * tw / 2;
+                int cy = originY() + (hover[0] + hover[1]) * th / 2;
+                Color c = machineColor(selectedMachine);
+                g.setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), 110));
+                diamond(g, cx, cy - th, tw * 2 / 3, th * 2 / 3, new Color(c.getRed(), c.getGreen(), c.getBlue(), 110));
+                g.setColor(new Color(255, 255, 255, 160));
+                g.drawPolygon(new int[]{cx, cx + tw / 3, cx, cx - tw / 3},
+                        new int[]{cy - th - th / 3, cy - th, cy - th + th / 3, cy - th}, 4);
             }
         }
 

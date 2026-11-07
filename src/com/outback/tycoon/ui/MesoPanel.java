@@ -20,9 +20,17 @@ public class MesoPanel extends JPanel {
         siteList.setLayout(new BoxLayout(siteList, BoxLayout.Y_AXIS));
         add(new JScrollPane(siteList), BorderLayout.CENTER);
 
-        JPanel buildBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel buildBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        buildBar.setBackground(new Color(24, 28, 38));
+        buildBar.setBorder(BorderFactory.createTitledBorder("BAUMENÜ - Standort wählen und bauen"));
         for (SiteType t : SiteType.values()) {
-            JButton b = new JButton("Bauen: " + t.label + " (" + String.format("%,.0f", t.baseCost) + " AUD)");
+            JButton b = new JButton(t.label + "  |  " + String.format("%,.0f", t.baseCost) + " AUD  |  Bauzeit " + t.buildDays + "d");
+            b.setBackground(typeColor(t));
+            b.setForeground(Color.WHITE);
+            b.setOpaque(true);
+            b.setBorderPainted(true);
+            b.setFocusPainted(false);
+            b.setFont(b.getFont().deriveFont(Font.BOLD, 12f));
             b.addActionListener(e -> {
                 Site s = game.buildSite(t);
                 if (s != null) game.selectedSite = s;
@@ -62,11 +70,29 @@ public class MesoPanel extends JPanel {
         siteList.repaint();
     }
 
+    private Color typeColor(SiteType t) {
+        switch (t) {
+            case WAREHOUSE: return new Color(96, 125, 139);
+            case FC_HUB: return new Color(46, 125, 50);
+            case DEPOT: return new Color(141, 110, 99);
+            case VERTEILZENTRUM: return new Color(25, 118, 210);
+            case UMSCHLAGZENTRUM: return new Color(0, 151, 167);
+            case CONTAINER_TERMINAL: return new Color(69, 90, 160);
+            case AIR_HUB: return new Color(100, 181, 246);
+            case HIGHLAGER: return new Color(121, 85, 72);
+            case DATA_CENTER: return new Color(103, 58, 183);
+            case OUTBACK_GO: return new Color(230, 126, 34);
+            default: return new Color(60, 66, 80);
+        }
+    }
+
     private JPanel siteRow(Site s) {
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
+        row.setBackground(new Color(30, 35, 48));
+        row.setOpaque(true);
         row.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(s == game.selectedSite ? Color.BLUE : Color.GRAY),
-                BorderFactory.createEmptyBorder(3, 6, 3, 6)));
+                BorderFactory.createLineBorder(s == game.selectedSite ? new Color(255, 213, 79) : typeColor(s.type), 2),
+                BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
 
         String stars = "★".repeat(s.stars) + "☆".repeat(5 - s.stars);
