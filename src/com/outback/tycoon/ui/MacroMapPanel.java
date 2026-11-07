@@ -323,11 +323,10 @@ public class MacroMapPanel extends JPanel {
                 g.drawString("!", x - 7, y + 10);
             }
             for (int i = 0; i < citySites.size(); i++) {
-                int sz = 7 + citySites.get(i).level * 2;
-                g.setColor(new Color(90, 230, 140));
-                g.fillRect(x - r - 5 - (sz + 3) * i - sz, y + r + 6, sz, sz);
-                g.setColor(new Color(20, 60, 35));
-                g.drawRect(x - r - 5 - (sz + 3) * i - sz, y + r + 6, sz, sz);
+                int sz = 10 + citySites.get(i).level * 3;
+                int bx = x - r - 6 - (sz + 4) * i - sz;
+                int by = y + r + 8;
+                drawBuilding(g, bx, by, sz);
             }
             if (c.popMillions() >= 1.0 || selected || !citySites.isEmpty()) {
                 String label = c.name + (unlocked ? "" : " (gesperrt)");
@@ -375,6 +374,20 @@ public class MacroMapPanel extends JPanel {
         g.setColor(new Color(255, 200, 90));
         g.drawString(game.isPrimoDay() ? "PRIMO DAY aktiv!" : "Naechster Primo Day in " + game.primeDayIn + " Tagen",
                 VW - 640, 42);
+    }
+
+    private void drawBuilding(Graphics2D g, int bx, int by, int sz) {
+        g.setColor(new Color(90, 220, 140));
+        g.fillRect(bx, by, sz, sz);
+        g.setColor(new Color(150, 50, 40));
+        g.fillPolygon(new int[]{bx - 2, bx + sz / 2, bx + sz + 2}, new int[]{by, by - sz / 2, by}, 3);
+        g.setColor(new Color(30, 70, 45));
+        g.drawRect(bx, by, sz, sz);
+        g.drawLine(bx - 2, by, bx + sz / 2, by - sz / 2);
+        g.drawLine(bx + sz / 2, by - sz / 2, bx + sz + 2, by);
+        g.setColor(new Color(255, 255, 180));
+        g.fillRect(bx + sz / 4, by + sz / 4, sz / 5, sz / 5);
+        g.fillRect(bx + sz * 3 / 5, by + sz / 4, sz / 5, sz / 5);
     }
 
     private void drawStar(Graphics2D g, int cx, int cy, int r, int points) {

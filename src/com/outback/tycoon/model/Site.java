@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class Site implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
-    public static final int GRID = 20;
+    public static final int GRID = 30;
     private static final int UNITS_PER_PALLET = 100;
 
     public final int id;
